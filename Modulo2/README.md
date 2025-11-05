@@ -8,8 +8,8 @@ En esta sesión, vamos a:
 - generar datos listos para llevar a cabo análisis de genética de poblaciones.
 
 ## Los datos
-<p>Vamos a analizar los datos de genotipos de individuos antiguos y modernos del Cono Sur de Ámerica, y particularmente del Sur de Patagonia.</p>
-Existen muchos formatos para este tipo de dato. Vamos a enfocarnos en dos de los más comunes: [<em>plink binary</em>](https://www.cog-genomics.org/plink2/input) y [<em>eigenstrat</em>](https://reich.hms.harvard.edu/software/InputFileFormats).<br>
+Vamos a analizar los datos de genotipos de individuos antiguos y modernos del Cono Sur de Ámerica, y particularmente del Sur de Patagonia.
+Existen muchos formatos para este tipo de dato. Vamos a enfocarnos en dos de los más comunes: [plink binary<](https://www.cog-genomics.org/plink2/input) y [<em>eigenstrat</em>](https://reich.hms.harvard.edu/software/InputFileFormats).<br>
 Ambos formatos, se constituyen de 3 ficheros: 
 - uno con la matriz de <strong>genotipos</strong> que puede ser binario, es decir no lisible como texto (<strong>.bed</strong> para <em>plink</em> o <strong>.geno</strong> para <em>eigenstrat</em>).
 - uno con la información de las <strong>variantes</strong> analizadas (<strong>.bim</strong> para <em>plink</em> y <strong>.snp</strong> para <em>eigenstrat</em> ).
