@@ -50,17 +50,17 @@ El genotipo de un individuo a una variante se codifica por el número de copias 
 
 Tenemos 3 individuos (IndA, IndB y IndC) genotipifacos en 4 variantes (snp1, snp2, snp3, snp4).
 Archivo `.snp.txt`:
-snp1  1 0.1001  100000  A C
-snp2  1 0.6162  600000  T G
-snp3  2 0.5125  513341  C G
-snp4  4 0.1512  251334  G A
+snp1  1 0.1001  100000  A C<br>
+snp2  1 0.6162  600000  T G<br>
+snp3  2 0.5125  513341  C G<br>
+snp4  4 0.1512  251334  G A<br>
 
 
 Archivo `.ind.txt`:
-IndA  M Pop1
-IndB  M Pop1
-IndC  F Pop2
-IndD  M Pop3
+IndA  M Pop1<br>
+IndB  M Pop1<br>
+IndC  F Pop2<br>
+IndD  M Pop3<br>
 
 Archivo `.geno.txt`:
 0192
@@ -88,7 +88,17 @@ setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pr
 datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink",ind.metafile="PatagoniaDataSetWithOutgroups_ALAB2025/finalSet.metadataPerind.txt")
 ```
 
-Al leer los datos, en <em>verbose</em>, vemos algunas metricas de los datos (número de individuos, variantes etc.)
+Al leer los datos, en <em>verbose</em>, vemos algunos mensajes (si hay monomorfismos, si hay loci sin datos, etc.).
+En algunas versiones de dartR.base, puede aparecer el mensaje:<br>
+<em>Warning: Locus metafile not provided, locus metrics will be
+        calculated where this is possible</em>.<br>
+En este caso, se puede solucionar corriendo lo siguiente.
+
+```### fix allele names
+bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", header = FALSE)
+# Columns: CHR SNP CM POS A1 A2
+datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")```
+
 
 
 
