@@ -71,7 +71,7 @@ Archivo `.geno.txt`:<br>
 Permite saber que el individuo IndA de la pop1 tiene el genotipo C/C para snp1, A/C para snp2, Faltante para snp3 y A/A para snp4
 
 ### Leer los datos
-Existen varios paquetes de R que permiten leer y procesar estos formatos, pero vamos a usar <em>dartR.base</em> que permite leer el formato plink.
+Existen varios paquetes de R que permiten leer y procesar estos formatos, pero vamos a usar <em>dartR.base</em> que permite leer el formato plink con la función `gl.read.PLINK`, a la cual le damos también como input un fichero de metadato para individuo llamado `finalSet.metadataPerind.txt`
 
 ```
 require(dartRverse)
@@ -86,8 +86,7 @@ datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink",
 
 Al leer los datos, en <em>verbose</em>, vemos algunos mensajes (si hay monomorfismos, si hay loci sin datos, etc.).
 En algunas versiones de dartR.base, puede aparecer el mensaje:<br>
-<em>Warning: Locus metafile not provided, locus metrics will be
-        calculated where this is possible</em>.<br>
+<em>The slot loc.all, which stores allele name for each locus, is empty. Creating a dummy variable (A/C) to insert in this slot.</em>.<br>
 En este caso, se puede solucionar corriendo lo siguiente.
 
 ```
