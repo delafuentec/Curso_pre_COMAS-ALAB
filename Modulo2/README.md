@@ -70,7 +70,7 @@ Archivo `.geno.txt`:<br>
 
 Permite saber que el individuo IndA de la pop1 tiene el genotipo C/C para snp1, A/C para snp2, Faltante para snp3 y A/A para snp4
 
-### Leer los datos
+## Leer los datos
 Existen varios paquetes de R que permiten leer y procesar estos formatos, pero vamos a usar <em>dartR.base</em> que permite leer el formato plink con la función `gl.read.PLINK`, a la cual le damos también como input un fichero de metadato para individuo llamado `finalSet.metadataPerind.txt`
 
 ```
@@ -113,7 +113,7 @@ datosGeno$pop<-fam$V1
 Podemos ver la tasa de individuos con datos por locus, y la frecuencia alélica haciendo lo siguiente:
  ```
 hist(datosGeno@other$loc.metrics$CallRate,main="Call Rate per Locus")
-hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequenct per Locus",n=100)
+hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequency per Locus",n=100)
 ```
 Vemos que hay locis con un call rate bajo (<0.2) y que son monorficos (MAF=0).
 
@@ -121,14 +121,16 @@ Podemos ver la tasa de loci con datos por individuo.
  ```
 hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=10)
 ```
-Algunos analísis pueden requerir filtrar variantes e individuos por valores faltantes. No lo vamos a hacer de momento.<br>
+Algunos análisis pueden requerir filtrar variantes e individuos por valores faltantes. No lo vamos a hacer de momento.<br>
 
 En cuanto a la tasa de Heterosigosidad, vemos que son todos los individuos homocigotos:
 ```
 table(datosGeno@other$ind.metrics$Heterozygosity)
 ```
 
+Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar a generar datos seudo-haploides. En la práctica, esto significa que para cada posición genómica y cada individuo se selecciona al azar una de las lecturas disponibles, y el nucleótido observado en ella se asigna como un genotipo homocigota para ese individuo.
 
+## Parentesco
 
 
 
