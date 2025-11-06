@@ -80,8 +80,8 @@ require(ade4)
 
 ### you maybe need to change the directory below
 setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB")
-datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink",
-                          ind.metafile="PatagoniaDataSetWithOutgroups_ALAB2025/finalSet.metadataPerind.txt")
+datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink",
+                          ind.metafile="PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.metadataPerind.txt")
 ```
 
 Al leer los datos, en <em>verbose</em>, vemos algunos mensajes (si hay monomorfismos, si hay loci sin datos, etc.).
@@ -95,6 +95,40 @@ bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", he
 # Columns: CHR SNP CM POS A1 A2
 datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
 ```
+
+Vamos a verificar los nombres de las poblaciones.
+A algunas versiones de dartR.base tampoco les gusta los nombres de población con puntuación.
+ ```
+ datosGeno$pop
+ ```
+ Si vemos que son solo "A"", lo podemos solucionar con lo siguiente:
+ 
+ ```
+ fam<-read.table("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink.fam",stringsAsFactors=F,header=F)
+datosGeno$pop<-fam$V1
+```
+
+
+## Explorar los datos
+Podemos ver la tasa de individuos con datos por locus, y la frecuencia alélica haciendo lo siguiente:
+ ```
+hist(datosGeno@other$loc.metrics$CallRate,main="Call Rate per Locus")
+hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequenct per Locus",n=100)
+```
+Vemos que hay locis con un call rate bajo (<0.2) y que son monorficos (MAF=0).
+
+Podemos ver la tasa de loci con datos por individuo.
+ ```
+hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=10)
+```
+Algunos analísis pueden requerir filtrar variantes e individuos por valores faltantes. No lo vamos a hacer de momento.<br>
+
+En cuanto a la tasa de Heterosigosidad, vemos que son todos los individuos homocigotos:
+```
+table(datosGeno@other$ind.metrics$Heterozygosity)
+```
+
+
 
 
 
