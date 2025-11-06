@@ -62,19 +62,14 @@ IndB  M Pop1<br>
 IndC  F Pop2<br>
 IndD  M Pop3<br>
 
-Archivo `.geno.txt`:
-0192
-1122
-2222
-0211
+Archivo `.geno.txt`:<br>
+0192<br>
+1122<br>
+2222<br>
+0211<br>
 
 Permite saber que el individuo IndA de la pop1 tiene el genotipo C/C para snp1, A/C para snp2, Faltante para snp3 y A/A para snp4
 
-
-
-
-
-Genotypes coded as 0, 1, 2 (number of derived alleles), or 9 (missing)
 ### Leer los datos
 Existen varios paquetes de R que permiten leer y procesar estos formatos, pero vamos a usar <em>dartR.base</em> que permite leer el formato plink.
 
@@ -85,7 +80,8 @@ require(ade4)
 
 ### you maybe need to change the directory below
 setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB")
-datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink",ind.metafile="PatagoniaDataSetWithOutgroups_ALAB2025/finalSet.metadataPerind.txt")
+datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink",
+                          ind.metafile="PatagoniaDataSetWithOutgroups_ALAB2025/finalSet.metadataPerind.txt")
 ```
 
 Al leer los datos, en <em>verbose</em>, vemos algunos mensajes (si hay monomorfismos, si hay loci sin datos, etc.).
@@ -94,10 +90,12 @@ En algunas versiones de dartR.base, puede aparecer el mensaje:<br>
         calculated where this is possible</em>.<br>
 En este caso, se puede solucionar corriendo lo siguiente.
 
-```### fix allele names
+```
+### fix allele names
 bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", header = FALSE)
 # Columns: CHR SNP CM POS A1 A2
-datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")```
+datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
+```
 
 
 
