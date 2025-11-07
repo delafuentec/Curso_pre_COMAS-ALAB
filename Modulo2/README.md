@@ -49,14 +49,14 @@ El genotipo de un individuo a una variante se codifica por el número de copias 
 ### Ejemplo
 
 Tenemos 3 individuos (IndA, IndB y IndC) genotipifacos en 4 variantes (snp1, snp2, snp3, snp4).
-Archivo `.snp.txt`:
+Archivo `.snp.txt`:<br>
 snp1  1 0.1001  100000  A C<br>
 snp2  1 0.6162  600000  T G<br>
 snp3  2 0.5125  513341  C G<br>
 snp4  4 0.1512  251334  G A<br>
 
 
-Archivo `.ind.txt`:
+Archivo `.ind.txt`:<br>
 IndA  M Pop1<br>
 IndB  M Pop1<br>
 IndC  F Pop2<br>
@@ -96,7 +96,7 @@ bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", he
 datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
 ```
 
-Vamos a asignar los nombres de las poblaciones que ahora están guardadas como "Family" en `ind.metrics`
+Vamos a asignar los nombres de las poblaciones que por ahora están guardadas como "Family" en `ind.metrics`
 ``` 
 datosGeno$pop<-as.factor(datosGeno$other$ind.metrics$Family)
 ```
@@ -108,7 +108,7 @@ Podemos ver la tasa de individuos con datos por locus, y la frecuencia alélica 
 hist(datosGeno@other$loc.metrics$CallRate,main="Call Rate per Locus")
 hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequency per Locus",n=100)
 ```
-Vemos que hay locis con un call rate bajo (<0.2) y que son monorficos (MAF=0).
+Vemos que hay locis con un call rate bajo (<0.2) y que son monomórficos (MAF=0).
 
 Podemos ver la tasa de loci con datos por individuo.
  ```
@@ -123,8 +123,8 @@ Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar 
 
 ## Filtrar
 Algunos análisis pueden requerir filtrar variantes e individuos por valores faltantes. 
-De momento vamos solamente guardar en dos vectores las posiciones monorficas y las que tienen datos para solo 1 individuo (Call Rate inferior a 2/64 = 0.03125), y luego los individuos con datos para más de 5000 variantes restantes.<br>
-Noten que los siguientes comandos no guardan en memoria los datos filtrados, solo las listas de SNPs e Individuos que tendríamos que sacar (volveremos alas mismas luego).
+De momento vamos solamente guardar en dos vectores las posiciones monomórficas y las que tienen datos para solo 1 individuo (Call Rate inferior a 2/64 = 0.03125), y luego los individuos con datos para más de 5000 variantes restantes.<br>
+Noten que los siguientes comandos, por razón de memoria, no guardan los datos filtrados, y solo generar las listas de SNPs e Individuos que tendríamos que sacar (volveremos alas mismas luego).
 ```
 ###filtro de SNPs
 SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[datosGeno$other$loc.metrics$CallRate<0.03125 | datosGeno$other$loc.metrics$maf==0]  
@@ -141,9 +141,34 @@ INDs_to_exclude=metricsInds_forKeptSNPs$id[metricsInds_forKeptSNPs$CalledSNPs< 5
 
 ## Parentesco
 
+Existen varios métodos para detectar individuos aparentados. Vamos a usar [<em>BREADR</em>[https://joss.theoj.org/papers/10.21105/joss.07916]. 
+<huge>DESCRIPTIVO BREVE</huge>.
 
+Usa el formato <em>eigenstrat</em>. Vamos a analizar solamente los individuos antiguos.
 
+Vamos a calcular la métrica PMR para 
+```
+require(BREADR)
 
+prefEigenstrat="PatagoniaDataSetWithOutgroups_ALAB2025/Ancient"
+##preprocess
+countsPMR <- processEigenstrat(
+  indfile = paste(prefEigenstrat,".ind.txt",sep=""),
+  snpfile = paste(prefEigenstrat,".snp.txt",sep=""),
+  genofile = paste(prefEigenstrat,".geno.txt",sep=""),
+  outfile = "Modulo2/PMR_allAncientTogether.txt")
+)
+
+```
+
+Ahora vamos a ver cuales son los individuos aparentados si usamos todas las poblaciones juntas.
+```
+relatedness_allAncientTogether <- callRelatedness(countsPMR)
+```
+
+El problema con el análisis de parentesco es que definir si el escore usado para medir la afinidad genética entre individuos (PMR en el caso de <em>BREADR</em>) va a depender de la diversidad genética esperada.
+En poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore de afinidad genética entre individuos aparentados mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes.
+Si comparamos todas las poblaciones de Sudamérica
 
 
 
