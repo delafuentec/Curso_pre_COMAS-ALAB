@@ -96,16 +96,9 @@ bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", he
 datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
 ```
 
-Vamos a verificar los nombres de las poblaciones.
-A algunas versiones de dartR.base tampoco les gusta los nombres de población con puntuación.
- ```
- datosGeno$pop
- ```
- Si vemos que son solo "A"", lo podemos solucionar con lo siguiente:
- 
- ```
- fam<-read.table("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink.fam",stringsAsFactors=F,header=F)
-datosGeno$pop<-fam$V1
+Vamos a asignar los nombres de las poblaciones que ahora están guardadas como "Family" en `ind.metrics`
+``` 
+datosGeno$pop<-as.factor(datosGeno$other$ind.metrics$Family)
 ```
 
 
@@ -121,14 +114,30 @@ Podemos ver la tasa de loci con datos por individuo.
  ```
 hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=10)
 ```
-Algunos análisis pueden requerir filtrar variantes e individuos por valores faltantes. No lo vamos a hacer de momento.<br>
-
 En cuanto a la tasa de Heterosigosidad, vemos que son todos los individuos homocigotos:
 ```
 table(datosGeno@other$ind.metrics$Heterozygosity)
 ```
 
 Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar a generar datos seudo-haploides. En la práctica, esto significa que para cada posición genómica y cada individuo se selecciona al azar una de las lecturas disponibles, y el nucleótido observado en ella se asigna como un genotipo homocigota para ese individuo.
+
+## Filtrar
+Algunos análisis pueden requerir filtrar variantes e individuos por valores faltantes. 
+De momento vamos solamente guardar en dos vectores las posiciones monorficas y las que tienen datos para solo 1 individuo (Call Rate inferior a 2/64 = 0.03125), y luego los individuos con datos para más de 5000 variantes restantes.<br>
+Noten que los siguientes comandos no guardan en memoria los datos filtrados, solo las listas de SNPs e Individuos que tendríamos que sacar (volveremos alas mismas luego).
+```
+###filtro de SNPs
+SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[datosGeno$other$loc.metrics$CallRate<0.03125 | datosGeno$other$loc.metrics$maf==0]  
+### get number of SNPs still included 
+numSNPs=datosGeno$n.loc-length(SNPs_to_exclude)
+###get inds metrics 
+metricsInds_forKeptSNPs <- gl.drop.loc(datosGeno, loc.list=SNPs_to_exclude)$other$ind.metrics
+###add a column of the number of called snps (Call.rate*numSNPs)
+metricsInds_forKeptSNPs$CalledSNPs=metricsInds_forKeptSNPs$Call.rate*numSNPs
+###save in a vector individuals with less than 50000 SNPs
+INDs_to_exclude=metricsInds_forKeptSNPs$id[metricsInds_forKeptSNPs$CalledSNPs< 50000]
+```
+
 
 ## Parentesco
 
