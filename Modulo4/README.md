@@ -1,5 +1,10 @@
 # Análisis de genomas antiguos: estadísticos F
-En este practico utilizaremos el paquete de R admixtools2 para evaluar la afinidad genética y posible eventos de mestizaje en individuos antiguos de Patagonia. Para ello se utilizarán los estadísticos outgroup-ƒ3 y ƒ4
+En este practico utilizaremos el paquete de R admixtools2 para evaluar la afinidad genética y posible eventos de mestizaje en individuos antiguos de Patagonia. Para ello se utilizarán los estadísticos outgroup-ƒ3 y ƒ4. Archivos para este módulo puede descargarse aquí:
+
+
+https://www.dropbox.com/scl/fi/jiehanqgpciljyu1g8rqh/Input_modulo4.zip?rlkey=j8r08c3064sx0wsz52zz2clq6&dl=0
+
+
 
 ##       Instalación de paquetes necesarios (sólo una vez) en Rstudio
 
