@@ -17,6 +17,9 @@ Descargado en: https://www.ncbi.nlm.nih.gov/nuccore/NC_012920.1
 `sample2_E1_L1_P1.fastq.gz` \
 `sample3_E1_L1_P1.fastq.gz`
 
+Estos archivos están disponibles aquí: 
+https://www.dropbox.com/scl/fi/5dl822pp8mv81sher4d44/Input_modulo1.zip?rlkey=33p8nprde64c05qq9703z925w&dl=0
+
 
 ### 2. FastQC: control de calidad y filtros iniciales  
 Este paso nos permite evaluar la calidad de la secuenciación, número de reads (fragmentos o lecturas), largo de reads, presencia de adaptadores, etc.
