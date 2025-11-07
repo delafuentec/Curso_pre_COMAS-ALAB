@@ -27,7 +27,7 @@ En este practico utilizaremos el paquete de R admixtools2 para evaluar la afinid
 `remotes::install_github("uqrmaie1/admixtools")`
 
 
-##       Análisis
+#       Análisis: outgroup-ƒ3
 
 ### Cargar modulos
 `library(admixtools)`
@@ -105,7 +105,7 @@ Podemos simplemente evaluar los resultados mirando la tabla con resultados o gra
   theme(plot.title = element_text(hjust = 0.5))`
 
 
-<img width="2400" height="1800" alt="outf3_v1" src="https://github.com/user-attachments/assets/c6692d67-312f-4fff-979c-3cd6d2974e10" />
+<img width="1200" height="900" alt="outf3_v1" src="https://github.com/user-attachments/assets/c6692d67-312f-4fff-979c-3cd6d2974e10" />
 
 
 2. Mapa de calor
@@ -154,14 +154,77 @@ g1 +
 `
 
 
-<img width="1459" height="1357" alt="outf3_v2" src="https://github.com/user-attachments/assets/ecaf33d8-f782-4077-b726-6840ab74d141" />
+<img width="1000" height="900" alt="outf3_v2" src="https://github.com/user-attachments/assets/ecaf33d8-f782-4077-b726-6840ab74d141" />
 
 
-#### Preguntas y ejercicios adicionales
-¿Es posible identificar una tendencia?
+## Preguntas y ejercicios adicionales
+1. ¿Es posible identificar una tendencia?
+2. ¿Hay diferencias significativas entre las afinidades genéticas de Ancient Beringia y los otros individuos antiguos de América?
 
-¿Hay diferencias significativas entre las afinidades genéticas de Ancient Beringia y los otros individuos antiguos de América?
+### Caso 2: Repetir con Anzick es posición de popA (y sacar Anzick de popB).
 
-Repetir con Anzick es posición de popA (y sacar Anzick de popB)
 
+### Caso 3: Repetir usando sólo poblaciones de Patagonia, distinguiendo entre: individuos del Holoceno Medio (en popA) versus Tardío (en popB)
+
+`popA = c('Chile_WesternArchipelago_Ayayema_5100BP.SG','Chile_PuntaSantaAna_7300BP.SG','Argentina_NorthTierradelFuego_LaArcillosa2_5800BP')`
+
+`popB = c('Chile_WesternArchipelago_800BP.SG',
+         'Chile_WesternArchipelago_1200BP.SG',
+         'Chile_BeagleChannel_800BP.SG',
+         'Argentina_NorthTierradelFuego_500BP',
+         'Argentina_BeagleChannel_1500BP',
+         'Argentina_MitrePeninsula_400BP',
+         'Argentina_BeagleChannel_100BP',
+         'Chile_SouthernContinent_400BP',
+         'Chile_NorthTierradelFuego_100BP',
+         'Chile_StraitOfMagellan_100BP.SG',
+         'Argentina_NorthTierradelFuego_100BP.SG',
+         'Argentina_BeagleChannel_100BP.SG')`
+
+`outg = c("Mbuti")`      
+
+
+Luego de realizar el análisis, se puede graficar de la siguiente manera:
+
+`
+ggplot(f3res, aes(x = reorder(pop3, est), y = est, color = pop2)) +
+  geom_point(position = position_dodge(width = 0.5), size = 3) +
+  geom_errorbar(aes(ymin = (est - se*3), ymax = (est + se*3)),
+                width = 0.2,
+                position = position_dodge(width = 0.5)) +
+  scale_color_manual(values = c("orange2", "steelblue1", "pink3")) +
+  coord_flip() +
+  labs(x = "Target population",
+       y = expression(f[3]),
+       color = "Pop2") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "right")
+`
+
+¿Qué grupos tardíos tienen mayor afinidad con individuos tempranos? ¿Se observan diferencias significativas?
+
+
+#       Análisis: d-statistics o f4
+
+### Cargar modulos
+`library(admixtools)`
+
+`library(tidyverse)`
+
+`library(ggplot2)`
+
+`library(dplyr)`
+
+### Especificar directorio de trabajo (cambiar según corresponda)
+`setwd("~/Dropbox/2025/CONFERENCES/ALAB2025/Workshop/Analysis/3.Practico_Fstatistics/")`
+
+### Leer archivo con metadatos
+Este archivo contiene información sobre los individuos a analizar
+
+`metadf = read.csv("finalSet_metadata.csv", 
+                  sep = ",", header = T,na.strings=c(""," ","NA"))`
+
+### Prefijo de archivos eigenstrat
+`prefix <- "finalSet" `
 
