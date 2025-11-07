@@ -80,8 +80,7 @@ require(ade4)
 
 ### you maybe need to change the directory below
 setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB")
-datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink",
-                          ind.metafile="PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.metadataPerind.txt")
+datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink")
 ```
 
 Al leer los datos, en <em>verbose</em>, vemos algunos mensajes (si hay monomorfismos, si hay loci sin datos, etc.).
@@ -127,7 +126,8 @@ De momento vamos solamente guardar en dos vectores las posiciones monomórficas 
 Noten que los siguientes comandos, por razón de memoria, no guardan los datos filtrados, y solo generar las listas de SNPs e Individuos que tendríamos que sacar (volveremos alas mismas luego).
 ```
 ###filtro de SNPs
-SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[datosGeno$other$loc.metrics$CallRate<0.03125 | datosGeno$other$loc.metrics$maf==0]  
+SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[ datosGeno$other$loc.metrics$CallRate<0.03125 |
+                                                      datosGeno$other$loc.metrics$maf==0 ]  
 ### get number of SNPs still included 
 numSNPs=datosGeno$n.loc-length(SNPs_to_exclude)
 ###get inds metrics 
@@ -161,14 +161,85 @@ countsPMR <- processEigenstrat(
 
 ```
 
-Ahora vamos a ver cuales son los individuos aparentados si usamos todas las poblaciones juntas.
+Ahora vamos a ver cuales son los individuos supuestamente aparentados si usamos todas las poblaciones juntas.
 ```
+##estimate relatedness
 relatedness_allAncientTogether <- callRelatedness(countsPMR)
+
+### add population label
+##define some functions for that first
+#This function will be used to split a string containing pairs of individuals
+change<-function(string,split,pos){
+  return(strsplit(string,split=split)[[1]][pos])
+}
+#This function will be used to add 2 columns to the relatedness results table: "Pops" (containing pop of each individual) and "Regions" (conaining region of each individual)
+addPops<-function(tableRel,metaData){
+  tableRel$Ind1=sapply(tableRel$pair,change,split=" - ",pos=1)
+  tableRel$Pop1 <- metaData$pop[match(tableRel$Ind1, metaData$id)]
+  tableRel$Region1 <- metaData$Region[match(tableRel$Ind1, metaData$id)]
+  tableRel$Ind2=sapply(tableRel$pair,change,split=" - ",pos=2)
+  tableRel$Pop2 <- metaData$pop[match(tableRel$Ind2, metaData$id)]
+  tableRel$Region2 <- metaData$Region[match(tableRel$Ind2, metaData$id)]
+  
+  return(tableRel)
+}
+# We read the metadata
+meta<-read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.metadataPerind.txt",sep="\t",header=T)
+#and we use the above functions to add Pops and Regions
+relatedness_allAncientTogether<-addPops(tableRel=relatedness_allAncientTogether,
+                                        metaData=meta
+                                        )
+
+```
+Vamos ahora a ver que resultados obtuvimos. Cuantos pares de individuos aparentados, en qué región y población.
+
+```
+###Number of related pairs indivuduals:
+related_allAncientTogether<-relatedness_allAncientTogether[ relatedness_allAncientTogether$relationship!="Unrelated",]
+nrow(related_allAncientTogether)
+table(related_allAncientTogether$relationship)
+
+### we see a lot of related pairs. Let's see in which region
+table(related_allAncientTogether$Region1,related_allAncientTogether$Region2)
+
+###Let's see in which populations we have pairs of 1st-degree or Twins/Duplicated
+first_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree"),]
+table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
+
+### We can already see some temporal/spatial inconsistencies 
 ```
 
-El problema con el análisis de parentesco es que definir si el escore usado para medir la afinidad genética entre individuos (PMR en el caso de <em>BREADR</em>) va a depender de la diversidad genética esperada.
-En poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore de afinidad genética entre individuos aparentados mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes.
-Si comparamos todas las poblaciones de Sudamérica
+
+Vemos entonces inconsistencias. El problema con el análisis de parentesco es que definir si el escore usado para medir la afinidad genética entre individuos es  (PMR en el caso de <em>BREADR</em>) significa parentesco depende de la diversidad genética esperada en la población.
+Lo que hace <em>BREADR</em> por defecto es usar la mediana de los PMR observados para todos los pares de individuos analizados.
+Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes.
+Entonces, si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia.
+Para evitar estos falsos positivos podemos:
+1. realizar las inferencias de parentesco por región pasando al método lo que llaman escore "Promedio de parentesco", pero que en realidad es la mediana observada en todos los pares de individuos posibles en la muestra analizada.
+2. pasar al método solo la tabla de escore PMR para el subconjunto de individuos de intéres.
+Esta ultima opción es la que vamos a hacer ahora: vamos a ir, región por región, generar la sub-tabla, verificar que hay suficientes pares (digamos por lo menos 5) y en este caso proceder.
+Se va a generar una lista, con un elemento por región siendo la tabla de inferencia de parentesco.
+
+```
+print(unique(meta$Region))
+### regions were actually divided temporaly, we will not do so... 
+listRelatednessPerRegion<-list()
+for(region in c("SouthPatagonia","CentralChile","Beringia","SouthernNorthAmerica","Brazil","CentralAndes","Pampa")){
+  print(paste("analyzing",region))
+  tmpRegion<-relatedness_allAncientTogether[ grepl(region,relatedness_allAncientTogether$Region1) & grepl(region,relatedness_allAncientTogether$Region2),c("pair","nsnps","mismatch","pmr")]
+  npairs<-nrow(tmpRegion)
+  print(paste(npairs,"individual pairs to be analyzed"))
+  if(npairs <6){
+    print("not enough... skip")
+    next
+  }
+  listRelatednessPerRegion[[region]]<-callRelatedness(tmpRegion)
+  print(paste(sum(listRelatednessPerRegion[[region]]$relationship!="Unrelated"),"pairs of related individuals found"))
+  
+}
+```
+
+Vemos que reducimos drastícamente el número de pares de aparentados encontrados.
 
 
 
