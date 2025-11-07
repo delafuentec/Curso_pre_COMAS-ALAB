@@ -10,37 +10,29 @@ https://www.dropbox.com/scl/fi/jiehanqgpciljyu1g8rqh/Input_modulo4.zip?rlkey=j8r
 
 ### 1A. Instalar paquete admixtools2
 
-`install.packages("devtools")` # correr si "devtools" no está instalado 
-
+`install.packages("devtools")` # correr si "devtools" no está instalado \
 `devtools::install_github("uqrmaie1/admixtools")`
 
 ### 2A: En caso de problemas, instalar manualmente los siguientes paquetes:
-`install.packages("Rcpp")`
-
-`install.packages("tidyverse")`
-
-`install.packages("igraph")`
-
-`install.packages("plotly")`
+`install.packages("Rcpp")` \
+`install.packages("tidyverse")` \
+`install.packages("igraph")` \
+`install.packages("plotly")` 
 
 ### 2B: Volver a intentar
 `devtools::install_github("uqrmaie1/admixtools")`
 
 ### 3A: Otra opción para isntallar admixtools2
-`install.packages("remotes")`
-
+`install.packages("remotes")` \
 `remotes::install_github("uqrmaie1/admixtools")`
 
 
 #       Análisis: outgroup-ƒ3
 
 ### Cargar modulos
-`library(admixtools)`
-
-`library(tidyverse)`
-
-`library(ggplot2)`
-
+`library(admixtools)` \
+`library(tidyverse)` \
+`library(ggplot2)` \
 `library(dplyr)`
 
 ### Especificar directorio de trabajo (cambiar según corresponda)
@@ -59,8 +51,7 @@ Este archivo contiene información sobre los individuos a analizar
 
 Primero tenemos que definir las poblaciones a utilizar:
 
-`popA = c('USA_Ancient_Beringian.SG')`
-
+`popA = c('USA_Ancient_Beringian.SG')` \
 `popB = c('USA_Anzick.SG',
          'USA_Nevada_SpiritCave_11000BP.SG',
          'Brazil_Sumidouro_10100BP.SG',
@@ -83,8 +74,7 @@ Primero tenemos que definir las poblaciones a utilizar:
          'Argentina_ArroyoSeco2_7700BP',
          'Chile_StraitOfMagellan_100BP.SG',
          'Argentina_NorthTierradelFuego_100BP.SG',
-         'Argentina_BeagleChannel_100BP.SG')`
-
+         'Argentina_BeagleChannel_100BP.SG')` \
 `outg = c("Mbuti")`        
 
 Análisis:
@@ -117,20 +107,17 @@ Podemos simplemente evaluar los resultados mirando la tabla con resultados o gra
 
   a) Agregar coordenadas geográficas:
 
-  `f3res$lat = metadf$latitude[match(f3res$pop3, metadf$popId)]`
-  
+  `f3res$lat = metadf$latitude[match(f3res$pop3, metadf$popId)]` \
   `f3res$lon = metadf$longitude[match(f3res$pop3, metadf$popId)]`
 
   b) Graficar:
 
-`library(tidyverse)`
-
-`library(ggthemes)`
+`library(tidyverse)` \
+`library(ggthemes)` 
 
 `world <- map_data("world")`
 
-`latlimits <- c(-56,56)` bottom, top
-
+`latlimits <- c(-56,56)` bottom, top \
 `longlimits <- c(-140,-35)` left, right
 
 `
@@ -171,8 +158,7 @@ g1 +
 
 ### Caso 3: Repetir usando sólo poblaciones de Patagonia, distinguiendo entre: individuos del Holoceno Medio (en popA) versus Tardío (en popB)
 
-`popA = c('Chile_WesternArchipelago_Ayayema_5100BP.SG','Chile_PuntaSantaAna_7300BP.SG','Argentina_NorthTierradelFuego_LaArcillosa2_5800BP')`
-
+`popA = c('Chile_WesternArchipelago_Ayayema_5100BP.SG','Chile_PuntaSantaAna_7300BP.SG','Argentina_NorthTierradelFuego_LaArcillosa2_5800BP')` \
 `popB = c('Chile_WesternArchipelago_800BP.SG',
          'Chile_WesternArchipelago_1200BP.SG',
          'Chile_BeagleChannel_800BP.SG',
@@ -184,8 +170,7 @@ g1 +
          'Chile_NorthTierradelFuego_100BP',
          'Chile_StraitOfMagellan_100BP.SG',
          'Argentina_NorthTierradelFuego_100BP.SG',
-         'Argentina_BeagleChannel_100BP.SG')`
-
+         'Argentina_BeagleChannel_100BP.SG')` \
 `outg = c("Mbuti")`      
 
 
@@ -213,12 +198,9 @@ ggplot(f3res, aes(x = reorder(pop3, est), y = est, color = pop2)) +
 #       Análisis: d-statistics o f4
 
 ### Cargar modulos
-`library(admixtools)`
-
-`library(tidyverse)`
-
-`library(ggplot2)`
-
+`library(admixtools)` \
+`library(tidyverse)` \
+`library(ggplot2)` \
 `library(dplyr)`
 
 ### Especificar directorio de trabajo (cambiar según corresponda)
