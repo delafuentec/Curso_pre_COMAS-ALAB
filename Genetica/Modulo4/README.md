@@ -215,3 +215,132 @@ Este archivo contiene información sobre los individuos a analizar
 ### Prefijo de archivos eigenstrat
 `prefix <- "finalSet" `
 
+### Caso 1: Linajes tempranos
+Usando outgroup-ƒ3 evaluamos, por separado, la afinidad genética entre individuos antiguos de América con un linaje temprano de Beringia (USA_Ancient_Beringian.SG) y un linaje temprano de América representado por Anzick, siendo este último el representante mas temprano de un linaje característico de poblaciones en Sudamérica. A continuación, evaluaremos las afinidades genéticas de individuos antiguos de América contra estos dos individuos tempranos utilizando el estadístico f4. ¿Qué expectativas tenemos respecto a estos resultados? 
+
+A recordar: \
+D ~ 0, pop1 y pop2 están simétricamente relacionadas a pop3 \
+D >> 0, pop1 comparte mas alelos con pop3 que con pop2 \
+D << 0, pop2 comparte mas alelos con pop3 que con pop1 \
+No sólo es importante el valor del estadístico. El valor de z nos indicará si este valor es significativamente distinto de 0. \
+
+Tenemos entonces que definir la posición de 4 poblaciones. Podemos visualizarlo de la siguiente manera:
+
+<img width="800" height="400" alt="tree_plot" src="https://github.com/user-attachments/assets/d9a5f618-e006-46a4-a2c5-090bfaa388a8" />
+
+
+En la posición de pop1 usaremos a USA_Ancient_Beringian.SG, en pop2 a USA_Anzick.SG, pop3 será una lista de individuos antiguos de América, mientras que pop4 es un outgroup (Mbuti). 
+
+`popC = c('USA_Nevada_SpiritCave_11000BP.SG',
+         'Brazil_Sumidouro_10100BP.SG',
+         'Brazil_LapaDoSanto_9600BP',
+         'Peru_Lauricocha_8600BP',
+         'Chile_WesternArchipelago_800BP.SG',
+         'Chile_WesternArchipelago_1200BP.SG',
+         'Chile_BeagleChannel_800BP.SG',
+         'Chile_LosRieles_12000BP',
+         'Chile_Conchali_700BP',
+         'Chile_WesternArchipelago_Ayayema_5100BP.SG',
+         'Chile_PuntaSantaAna_7300BP.SG',
+         'Argentina_NorthTierradelFuego_500BP',
+         'Argentina_BeagleChannel_1500BP',
+         'Argentina_MitrePeninsula_400BP',
+         'Argentina_NorthTierradelFuego_LaArcillosa2_5800BP',
+         'Argentina_BeagleChannel_100BP',
+         'Chile_SouthernContinent_400BP',
+         'Chile_NorthTierradelFuego_100BP',
+         'Argentina_ArroyoSeco2_7700BP',
+         'Chile_StraitOfMagellan_100BP.SG',
+         'Argentina_NorthTierradelFuego_100BP.SG',
+         'Argentina_BeagleChannel_100BP.SG')`
+
+
+`dstat1 = qpdstat(prefix, pop1="USA_Ancient_Beringian.SG", pop2="USA_Anzick.SG", pop3=popC, pop4="Mbuti")`
+
+¿Están pop1 y pop2 igualmente relacionados a los individuos de pop3? ¿Se ajusta este resultado a las expectativas?
+
+### Caso 2: Linajes tempranos de Sudamérica
+Usaremos ahora los individuos con fechados mas tempranos (~10.000) de América y evaluaremos si presentan afinidades genéticas diferenciales con un set de individuos antiguos de América. En particular, compararemos Anzick con otros individuos tempranos. ¿Qué expectativas tenemos respecto a estos resultados? 
+
+Definir grupos en pop2 \
+`popB = c('USA_Nevada_SpiritCave_11000BP.SG',
+         'Brazil_Sumidouro_10100BP.SG',
+         'Brazil_LapaDoSanto_9600BP',
+         'Chile_LosRieles_12000BP')`
+
+Definir grupos en pop3 \
+`popC = c('Peru_Lauricocha_8600BP',
+         'Chile_WesternArchipelago_800BP.SG',
+         'Chile_WesternArchipelago_1200BP.SG',
+         'Chile_BeagleChannel_800BP.SG',
+         'Chile_Conchali_700BP',
+         'Chile_WesternArchipelago_Ayayema_5100BP.SG',
+         'Chile_PuntaSantaAna_7300BP.SG',
+         'Argentina_NorthTierradelFuego_500BP',
+         'Argentina_BeagleChannel_1500BP',
+         'Argentina_MitrePeninsula_400BP',
+         'Argentina_NorthTierradelFuego_LaArcillosa2_5800BP',
+         'Argentina_BeagleChannel_100BP',
+         'Chile_SouthernContinent_400BP',
+         'Chile_NorthTierradelFuego_100BP',
+         'Argentina_ArroyoSeco2_7700BP',
+         'Chile_StraitOfMagellan_100BP.SG',
+         'Argentina_NorthTierradelFuego_100BP.SG',
+         'Argentina_BeagleChannel_100BP.SG')`
+
+Correr análisis \
+`dstat2 = qpdstat(prefix, pop1="USA_Anzick.SG", pop2=popB, pop3=popC, pop4="Mbuti")`
+
+Figura con resultados: \
+`ggplot(dstat2, aes(x = pop3, y = est, color = pop2)) +
+  geom_point(position = position_dodge(width = 0.5), size = 3) +
+  geom_errorbar(aes(ymin = (est - se*3), ymax = (est + se*3)),
+                width = 0.2,
+                position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  scale_color_manual(values = c("orange2", "steelblue1", "pink3","yellow2")) +
+  coord_flip() +
+  labs(x = "Target population",
+       y = " <- Target",
+       color = "Pop2") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "right")`
+
+
+¿Qué podemos concluir de este resultado?
+
+
+### Caso 3: Patagonia
+Ahora realizaremos un análisis específico de Patagonia, evaluando si existen diferencias genéticas significativas entre individuos del Holoceno Medio y del Holoceno Tardío en la región. Específicamente, evaluaremos si algún individuo del Holoceno Medio tiene mayor afinidad genética hacia algún individuo/grupo del Holoceno Tardío. 
+
+Los individuos del Holoceno Medio son: \
+`'Chile_WesternArchipelago_Ayayema_5100BP.SG', 'Chile_PuntaSantaAna_7300BP.SG', 'Argentina_NorthTierradelFuego_LaArcillosa2_5800BP'`
+
+Los individuos/grupos del Holoceno tardío son: \
+`'Chile_WesternArchipelago_800BP.SG',
+         'Chile_WesternArchipelago_1200BP.SG',
+         'Chile_BeagleChannel_800BP.SG',
+         'Argentina_NorthTierradelFuego_500BP',
+         'Argentina_BeagleChannel_1500BP',
+         'Argentina_MitrePeninsula_400BP',
+         'Argentina_BeagleChannel_100BP',
+         'Chile_SouthernContinent_400BP',
+         'Chile_NorthTierradelFuego_100BP',
+         'Chile_StraitOfMagellan_100BP.SG',
+         'Argentina_NorthTierradelFuego_100BP.SG',
+         'Argentina_BeagleChannel_100BP.SG'`
+
+
+¿Qué posición ocupará cada uno de estos individuos en el análisis? \
+Grafique sus resultados
+
+Podemos también realizar preguntas mas específicas en la región, tales como la relación entre individuos cazadores-recolectores marinos y terrestres, o quienes habitaron la región de los archipiélagos occidentales versus Tierra del Fuego. Proponga configuraciones apropiadas para realizar estos análisis. 
+
+
+
+
+
+
+
+
