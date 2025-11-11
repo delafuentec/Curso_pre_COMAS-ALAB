@@ -141,6 +141,7 @@ INDs_to_exclude=metricsInds_forKeptSNPs$id[metricsInds_forKeptSNPs$CalledSNPs< 5
 
 ## Parentesco
 
+### Introducción al análisis de parentesco
 Existen varios métodos para detectar individuos aparentados. Vamos a usar [<em>BREADR</em>](https://joss.theoj.org/papers/10.21105/joss.07916). 
 Este método es una extensión del método quizás más usado en el campo ([<em>READv2</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03350-3)), ya que se base en el escore PMR.
 Este escore es la proporción de sitios superpuestos con genotipos no coincidentes, es decir la fracción de posiciones del genoma en las que dos individuos tienen datos genotípicos válidos (no faltantes) y sus llamadas de genotipo difieren. En otras palabras, mide qué porcentaje de los sitios comparables entre ambos individuos presentan genotipos distintos, reflejando el grado de discrepancia genética entre ellos.
@@ -150,6 +151,9 @@ Las diferencias más importantes con READv2 son:
 
 Noten que estos métodos implementan aproximaciones que tomen en cuenta las limitaciones de los datos en ADN antiguo (pseudo-haploides y con baja cobertura). Para analizar datos modernos que no padecen de estas limitaciones, se recomienda usar otros métodos, por ejemplo [<em>KING</em>](https://www.kingrelatedness.com/).
 <em>BREADR</em>  usa el formato <em>eigenstrat</em>. Vamos a analizar solamente los individuos antiguos.
+
+### Inferencia de los grados de parentesco
+#### Generación de la métrica necesaria (PMR)
 Primero se calculan las métricas PMR para cada par de individuo, es la parte más demandante computacionalmente, por lo cual, vamos a leer directamente la tabla de resultado.
 
 ```
@@ -174,6 +178,8 @@ print(head(countsPMR))
 
 ```
 Se genera entonces una tabla, con 4 columnas: par analizado | número de variantes | numero de variantes disconcordantes | PMR
+
+#### Definir el grado de parentesco
 Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grado de parentesco. Para definir el parentesco entre 2 individuos, se calcula los niveles de PMR esperados en la población, según la distribución de los PMR en todos los pares de individuos analizados.
 Para esto se asume que el conjunto de datos muestreados está compuesto principalmente por pares no emparentados (hasta segundo grado), entonces la mediana del PMR,  denotado $\bar{p}$, será una estimación confiable.
 Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como: <br>
@@ -230,7 +236,6 @@ table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
 ### We can already see some temporal/spatial inconsistencies 
 ```
 
-
 Vemos entonces que detectamos muchos pares de aparentados en el Sur de Patagonia. Además mirando la temporalidad y la geografía de cada individuo en un par de individuos aprentados, vemos incosnistencias ya que con esta separación temporal y espacial imposible que sean aparentados.<br>
 La mayor dificulta en un análisis de parentesco es definir si el escore usado para medir la distancia genética (PMR en el caso de <em>BREADR</em>) se puede interpretar como parentesco. De hecho, la distribución del PMRdepende de la diversidad genética esperada en la población. <br>
 Lo que acabmos de hacer es decir a <em>BREADR</em> de usar la mediana de los PMR observados para todos los pares de individuos analizados. Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes. <br>
@@ -286,6 +291,8 @@ for(region in names(listRelatednessPerRegion)){
 ```  
 Vemos que es bastante coherente también, sin embargo muchos pares de parentesco que encontramos en este ejercicio no fueron reportados en los trabajos originales. Esto se debe que usamos otro método, un conjunto de variantes diferentes y se generaron los datos pseudo-haploides analizados nuevamente (es decir rehaciendo un muestreo aleatorio de las lecturas).
 Vemos entonces la necesidad de no confiar en nuestros resultados ciegamente. Se recomienda, visualizar los resultados de <em>BREADR</em>, para apreciar los margenes de error asociados a los PMR.<br>
+
+#### Inspección de los resultados de parentesco
 El paquete <em>BREADR</em> provee diferentes funciones para esto:
 1. plotLOAF: Grafica todos los valores observados de PMR (ordenados de menor a mayor), con las clasificaciones de máxima probabilidad posterior representadas mediante color y forma.
 2. plotSLICE: Una función para graficar la información diagnóstica al clasificar un par específico de individuos (definido por el número de fila o el nombre del par).
@@ -311,13 +318,13 @@ Sin embargo, <BREADR> da como resultado "1er grado". Esto se debe al número de 
  ### plotSlice
  plotSLICE(relatednessPatagonia,"AM66 - AM71")
  ```
- Vemos entonces que a lo mejor sería más prudente definir este par aparentado al 2o grado.
-
+Vemos entonces que, a lo mejor, sería más prudente definir este par aparentado  al 2o grado y no al 1er grado.<br> 
+Lo mismo, cuando miramos los resultados de PMR para pares de aparentados al 2o grado, vemos que varios pares están por encima del valor esperado para 2o grado, y que la significancia de 2o grado o No aparentados son similares. Entonces podrían ser falsos positivos.
 Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
-Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere de mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
+Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
 
 
-
+## Generación del conjunto de datos filtrado
 
 
 
@@ -332,4 +339,4 @@ for(region in names(listRelatednessPerRegion)){
 }
 
 
-
+## Parentesco
