@@ -177,9 +177,8 @@ Se genera entonces una tabla, con 4 columnas: par analizado | número de variant
 Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grado de parentesco. Para definir el parentesco entre 2 individuos, se calcula los niveles de PMR esperados en la población, según la distribución de los PMR en todos los pares de individuos analizados.
 Para esto se asume que el conjunto de datos muestreados está compuesto principalmente por pares no emparentados (hasta segundo grado), entonces la mediana del PMR,  denotado $\bar{p}$, será una estimación confiable.
 Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como: <br>
-$p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right)$
-
-
+$p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right)$.<br>
+Vamos ahora calcular el parentesco entre todos los pares de individuos de la muestra, analizados en su conjunto.
 
 ```
 ##estimate relatedness
@@ -210,7 +209,7 @@ relatedness_allAncientTogether<-addPops(tableRel=relatedness_allAncientTogether,
                                         )
 
 ```
-Vamos ahora a ver que resultados obtuvimos. Cuantos pares de individuos aparentados, en qué región y población.
+Vemoa cuantos pares de individuos aparentados, en qué región y población.
 
 ```
 ###Number of related pairs indivuduals:
