@@ -178,7 +178,7 @@ Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grad
 Para esto se asume que el conjunto de datos muestreados está compuesto principalmente por pares no emparentados (hasta segundo grado), entonces la mediana del PMR,  denotado $\bar{p}$, será una estimación confiable.
 Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como: <br>
 $p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right)$.<br>
-Una vez definidos este valor medio esperado del PMR para cada relación de grado, podemos poner a prueba si el PMR para un par de individuos dados es significativamente más pequeño que cada nivel <em>k</em>. El parentesco será entonces el <em>k</em> más bajo que no da significativo, tal como se observa en la figura abajo. <br>
+Una vez definidos este valor medio esperado del PMR para cada relación de grado, podemos poner a prueba si el PMR para un par de individuos dados es significativamente más pequeño que cada nivel esperado <em>k</em>. El parentesco será entonces el <em>k</em> más bajo que no da significativo, tal como se observa en la figura abajo. <br>
 <img width="729" height="344" alt="image" src="https://github.com/user-attachments/assets/d11688e8-3d94-48aa-bb11-d3e9cbef8cb9" />
 
 Vamos ahora calcular el parentesco entre todos los pares de individuos de la muestra, analizados en su conjunto.
@@ -212,7 +212,7 @@ relatedness_allAncientTogether<-addPops(tableRel=relatedness_allAncientTogether,
                                         )
 
 ```
-Vemoa cuantos pares de individuos aparentados, en qué región y población.
+Veamos cuantos pares de individuos aparentados, en qué región y población.
 
 ```
 ###Number of related pairs indivuduals:
@@ -223,7 +223,7 @@ table(related_allAncientTogether$relationship)
 ### we see a lot of related pairs. Let's see in which region
 table(related_allAncientTogether$Region1,related_allAncientTogether$Region2)
 
-###Let's see in which populations we have pairs of 1st-degree or Twins/Duplicated
+###Let's see in which groups we have pairs of 1st-degree or Twins/Duplicated
 first_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree"),]
 table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
 
@@ -231,15 +231,13 @@ table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
 ```
 
 
-Vemos entonces inconsistencias. El problema con el análisis de parentesco es que definir si el escore usado para medir la afinidad genética entre individuos es  (PMR en el caso de <em>BREADR</em>) significa parentesco depende de la diversidad genética esperada en la población.
-Lo que hace <em>BREADR</em> por defecto es usar la mediana de los PMR observados para todos los pares de individuos analizados.
-Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes.
-Entonces, si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia.
-Para evitar estos falsos positivos podemos:
-1. realizar las inferencias de parentesco por región pasando al método lo que llaman escore "Promedio de parentesco", pero que en realidad es la mediana observada en todos los pares de individuos posibles en la muestra analizada.
-2. pasar al método solo la tabla de escore PMR para el subconjunto de individuos de intéres.
-Esta ultima opción es la que vamos a hacer ahora: vamos a ir, región por región, generar la sub-tabla, verificar que hay suficientes pares (digamos por lo menos 5) y en este caso proceder.
-Se va a generar una lista, con un elemento por región siendo la tabla de inferencia de parentesco.
+Vemos entonces que detectamos muchos pares de aparentados en el Sur de Patagonia. Además mirando la temporalidad y la geografía de cada individuo en un par de individuos aprentados, vemos incosnistencias ya que con esta separación temporal y espacial imposible que sean aparentados.<br>
+La mayor dificulta en un análisis de parentesco es definir si el escore usado para medir la distancia genética (PMR en el caso de <em>BREADR</em>) se puede interpretar como parentesco. De hecho, la distribución del PMRdepende de la diversidad genética esperada en la población. <br>
+Lo que acabmos de hacer es decir a <em>BREADR</em> de usar la mediana de los PMR observados para todos los pares de individuos analizados. Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes. <br>
+Entonces, si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia, que son poblaciones que evolucionaron con más deriva génica, por ende que tienen menor diversidad genética.
+Para evitar estos falsos positivos podemos pasar al método solo la tabla de escore PMR para el subconjunto de individuos para los cuales esperamos niveles de diversidad genética similares por pertenecer a la misma (meta)población.<br>
+En lo que sigue, vamos a ir, región por región, generar la sub-tabla de PMR por los pares de individuos de esta región, verificar que hay suficientes pares (digamos por lo menos 5) y proceder de nuevo a las inferencias de parentesco desde valor medio esperado del PMR para cada relación de grado según estos pares únicamente.<br>
+Para esto, vamos a generar una lista que contienen la tabla de inferencia de parentesco por región.
 
 ```
 print(unique(meta$Region))
@@ -254,12 +252,75 @@ for(region in c("SouthPatagonia","CentralChile","Beringia","SouthernNorthAmerica
     print("not enough... skip")
     next
   }
-  listRelatednessPerRegion[[region]]<-callRelatedness(tmpRegion)
+  tmpRelatedness<-callRelatedness(tmpRegion)
   print(paste(sum(listRelatednessPerRegion[[region]]$relationship!="Unrelated"),"pairs of related individuals found"))
+  ##we can add the Population and Region label for each individual
+  tmpRelatedness<-addPops(tableRel=tmpRelatedness,metaData=meta)
+  ##we keep the result for that region in an element of our list
+  listRelatednessPerRegion[[region]]<-tmpRelatedness
+  
   
 }
 ```
-Vemos que reducimos drastícamente el número de pares de aparentados encontrados. 
+Vemos que reducimos drastícamente el número de pares de aparentados encontrados. Por ejemplo, ahora encontramos 20 en el Sur de Patagonia, contra 321 en el analísis con todos los individuos a la vez.
+Podemos verificar de nuevo si los resultados de parentesco (hasta el 1er grado) son concordantes con la distribución temporal y geografíca.
+```
+for(region in names(listRelatednessPerRegion)){
+  print(region)
+  ###Let's see in which groups we have pairs of 1st-degree or Twins/Duplicated for this region
+  tmpRelatedness<-listRelatednessPerRegion[[region]]
+  tmpFirst<-tmpRelatedness[ tmpRelatedness$relationship %in% c("Same_Twins","First_Degree"),]
+  print(table(tmpFirst$Pop1,tmpFirst$Pop2))
+}
+```  
+Ahora vemos que los parentescos al 1er grado son coherentes.
+Podemos verificar también si los resultados de parentesco (hasta el 2ndo grado) son concordantes con la distribución temporal y geografíca.
+```
+for(region in names(listRelatednessPerRegion)){
+  print(region)
+  ###Let's see in which groups we have pairs of 1st-degree or Twins/Duplicated for this region
+  tmpRelatedness<-listRelatednessPerRegion[[region]]
+  tmpSecond<-tmpRelatedness[ tmpRelatedness$relationship %in% c("Second_Degree"),]
+  print(table(tmpSecond$Pop1,tmpSecond$Pop2))
+}
+```  
+Vemos que es bastante coherente también, sin embargo muchos pares de parentesco que encontramos en este ejercicio no fueron reportados en los trabajos originales. Esto se debe que usamos otro método, un conjunto de variantes diferentes y se generaron los datos pseudo-haploides analizados nuevamente (es decir rehaciendo un muestreo aleatorio de las lecturas).
+Vemos entonces la necesidad de no confiar en nuestros resultados ciegamente. Se recomienda, visualizar los resultados de <em>BREADR</em>, para apreciar los margenes de error asociados a los PMR.<br>
+El paquete <em>BREADR</em> provee diferentes funciones para esto:
+1. plotLOAF: Grafica todos los valores observados de PMR (ordenados de menor a mayor), con las clasificaciones de máxima probabilidad posterior representadas mediante color y forma.
+2. plotSLICE: Una función para graficar la información diagnóstica al clasificar un par específico de individuos (definido por el número de fila o el nombre del par).
+
+Veamos entonces si hay pares que pueden ser potencialmente falso positivos. Primero veamos los PMR para los pares con PMR más bajo (los 20 pares de aprentados no son necesariamente los con PMR más bajo como veremos).
+
+```
+### generate table from the result list per  region (and remove  columns 13 to 18 that we added with pop labels)
+relatednessPatagonia=listRelatednessPerRegion[["SouthPatagonia"]][,c(1:12)]
+###sort the table according to pmr
+relatednessPatagonia<-relatednessPatagonia[ order(relatednessPatagonia$pmr),]
+### get the ranks of the related pairs 
+which(relatednessPatagonia$relationship!="Unrelated")
+###to see all the related pairs we need to plot upong rank 22 then
+plotLOAF(relatednessPatagonia,N=22)
+```
+
+Vemos entonces que el par AM66 - AM71 tiene un error estandar asociado al PMR muy grande, y de hecho no es significativamente diferente del nivel esperado para el 1er grado ni el 2o grado.
+Sin embargo, <BREADR> da como resultado "1er grado". Esto se debe al número de SNPs limitado en esta comparación. Veamos más en detalle este par.
+ ```
+ ### call rate para ambos:
+ datosGeno$other$ind.metrics[datosGeno$other$ind.metrics$id %in% c("AM66","AM71"),]
+ ### plotSlice
+ plotSLICE(relatednessPatagonia,"AM66 - AM71")
+ ```
+ Vemos entonces que a lo mejor sería más prudente definir este par aparentado al 2o grado.
+
+Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
+Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs.
+
+
+
+
+
+
 vamos a generar una tabla que resume las relaciones al primer grado (en aDNA antiguo se suelen guardar los individuos aparentados al segundo grado). 
 
 ```
