@@ -314,7 +314,8 @@ Sin embargo, <BREADR> da como resultado "1er grado". Esto se debe al número de 
  Vemos entonces que a lo mejor sería más prudente definir este par aparentado al 2o grado.
 
 Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
-Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs.
+Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere de mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
+
 
 
 
