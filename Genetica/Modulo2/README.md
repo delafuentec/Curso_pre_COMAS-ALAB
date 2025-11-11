@@ -178,6 +178,9 @@ Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grad
 Para esto se asume que el conjunto de datos muestreados está compuesto principalmente por pares no emparentados (hasta segundo grado), entonces la mediana del PMR,  denotado $\bar{p}$, será una estimación confiable.
 Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como: <br>
 $p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right)$.<br>
+Una vez definidos este valor medio esperado del PMR para cada relación de grado, podemos poner a prueba si el PMR para un par de individuos dados es significativamente más pequeño que cada nivel <em>k</em>. El parentesco será entonces el <em>k</em> más bajo que no da significativo, tal como se observa en la figura abajo. <br>
+<img width="729" height="344" alt="image" src="https://github.com/user-attachments/assets/d11688e8-3d94-48aa-bb11-d3e9cbef8cb9" />
+
 Vamos ahora calcular el parentesco entre todos los pares de individuos de la muestra, analizados en su conjunto.
 
 ```
