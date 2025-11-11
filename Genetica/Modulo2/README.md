@@ -176,8 +176,8 @@ print(head(countsPMR))
 Se genera entonces una tabla, con 4 columnas: par analizado | número de variantes | numero de variantes disconcordantes | PMR
 Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grado de parentesco. Para definir el parentesco entre 2 individuos, se calcula los niveles de PMR esperados en la población, según la distribución de los PMR en todos los pares de individuos analizados.
 Para esto se asume que el conjunto de datos muestreados está compuesto principalmente por pares no emparentados (hasta segundo grado), entonces la mediana del PMR,  denotado $\bar{p}$, será una estimación confiable.
-Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como:
-$ p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right) $
+Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como: <br>
+$p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right)$
 
 
 
