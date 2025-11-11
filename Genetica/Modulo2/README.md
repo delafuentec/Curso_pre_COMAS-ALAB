@@ -79,7 +79,7 @@ require(dartR.base)
 require(ade4)
 
 ### you maybe need to change the directory below
-setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB")
+setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB/Genetica/")
 datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink")
 ```
 
@@ -142,7 +142,7 @@ INDs_to_exclude=metricsInds_forKeptSNPs$id[metricsInds_forKeptSNPs$CalledSNPs< 5
 ## Parentesco
 
 Existen varios métodos para detectar individuos aparentados. Vamos a usar [<em>BREADR</em>](https://joss.theoj.org/papers/10.21105/joss.07916). 
-Este método es una extensión al gold-standard en el campo ([<em>READv2</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03350-3)), ya que se base en el escore PMR.
+Este método es una extensión del método quizás más usado en el campo ([<em>READv2</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03350-3)), ya que se base en el escore PMR.
 Este escore es la proporción de sitios superpuestos con genotipos no coincidentes, es decir la fracción de posiciones del genoma en las que dos individuos tienen datos genotípicos válidos (no faltantes) y sus llamadas de genotipo difieren. En otras palabras, mide qué porcentaje de los sitios comparables entre ambos individuos presentan genotipos distintos, reflejando el grado de discrepancia genética entre ellos.
 Las diferencias más importantes con READv2 son:
 1. el uso de sitios independientes (separados por recombinación durante la meiosis). Por defecto, el programa usa un locus cada 10,000 par de bases (paramétro ` filter_length`).
@@ -174,8 +174,13 @@ print(head(countsPMR))
 
 ```
 Se genera entonces una tabla, con 4 columnas: par analizado | número de variantes | numero de variantes disconcordantes | PMR
-Ahora vamos a ver cuales son los individuos supuestamente aparentados, es decir los que tienen un PMR bajo.
-Para definir 
+Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grado de parentesco. Para definir el parentesco entre 2 individuos, se calcula los niveles de PMR esperados en la población, según la distribución de los PMR en todos los pares de individuos analizados.
+Para esto se asume que el conjunto de datos muestreados está compuesto principalmente por pares no emparentados (hasta segundo grado), entonces la mediana del PMR,  denotado $\bar{p}$, será una estimación confiable.
+Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como:
+$ p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right) $
+
+
+
 ```
 ##estimate relatedness
 relatedness_allAncientTogether <- callRelatedness(countsPMR)
