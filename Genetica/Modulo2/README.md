@@ -1,77 +1,118 @@
 # Datos de genotipos: Control de Calidad y Parentesco
 
 ## Objetivos
-En esta sesión, vamos a:
-- repasar la organización de datos de genotipos.
-- realizar unos pasos de control de calidad.
-- estimar el grado de parentesco entre individuos.
-- generar datos listos para llevar a cabo análisis de genética de poblaciones.
+En esta sesión vamos a:  
+- repasar la organización de los datos de genotipos,  
+- realizar algunos pasos de control de calidad,  
+- estimar el grado de parentesco entre individuos, y  
+- generar datos listos para realizar análisis de genética de poblaciones.  
 
-## Intrudcción a los datos
-Vamos a analizar los datos de genotipos de individuos antiguos y modernos del Cono Sur de Ámerica, y particularmente del Sur de Patagonia.
-Existen muchos formatos para este tipo de dato. Vamos a enfocarnos en dos de los más comunes: [</em>plink binary</em>](https://www.cog-genomics.org/plink2/input) y [<em>eigenstrat</em>](https://reich.hms.harvard.edu/software/InputFileFormats).<br>
-Ambos formatos, se constituyen de 3 ficheros: 
-- uno con la matriz de `genotipos` que puede ser binario, es decir no lisible como texto (`.bed` para <em>plink</em> o `.geno` para <em>packed eigenstrat</em>). 
-- uno con la información de las `variantes` analizadas (`.bim` para <em>plink</em> y `.snp` para <em>eigenstrat</em> ).
-- uno con la información de los `individuos` analizados (`.fam` para <em>plink</em> y `.ind` para <em>eigenstrat</em>).
+---
 
-Para <em>eigenstrat</em>, se suele añadir el sufijo `.txt` a los 3 ficheros asociados al formato no binario (es decir `<preffile>.geno.txt`, `<preffile>.snp.txt`, `<preffile>.ind.txt`).
+## Introducción a los datos
+Analizaremos datos de genotipos de individuos antiguos y modernos del Cono Sur de América, en particular del sur de la Patagonia.  
+Existen muchos formatos para este tipo de datos, pero nos enfocaremos en dos de los más comunes: [**PLINK binary**](https://www.cog-genomics.org/plink2/input) y [**EIGENSTRAT**](https://reich.hms.harvard.edu/software/InputFileFormats).  
+
+Ambos formatos se componen de tres ficheros principales:
+- un archivo con la matriz de **genotipos**, que puede ser binario (no legible como texto): `.bed` para *PLINK* o `.geno` para *packed EIGENSTRAT*,  
+- un archivo con la información de las **variantes** analizadas (`.bim` para *PLINK* y `.snp` para *EIGENSTRAT*),  
+- y un archivo con la información de los **individuos** analizados (`.fam` para *PLINK* y `.ind` para *EIGENSTRAT*).  
+
+En el caso de *EIGENSTRAT*, es común añadir el sufijo `.txt` a los tres ficheros cuando se utilizan en formato no binario (por ejemplo: `<prefijo>.geno.txt`, `<prefijo>.snp.txt`, `<prefijo>.ind.txt`).
+
+---
 
 ### Fichero de anotación de las variantes
-Los ficheros `.bim` y `.snp` contienen una linea por variante y 6 columnas con la misma información. La única diferencia es el orden de las 2 primeras columnas:
-- ID de la variante: columna 1 para .snp y 2 para .bim
-- cromosoma: columna 2 para .snp y 1 para.bim
-- posición genética: columna 3. Se trata de la posición de la variante en función de los eventos de recombinación pasados. Para este curso, no es relevante.
-- posición física: columna 4. Se trata del par de base en cual se encuentra la variante en la secuencia del cromosoma.
-- Alelo 1: columna 5. Suele ser el alelo de menor frecuencia en la muestra analizada
-- Alelo 2: columna 6. Ser ser el alelo de mayor frecuencia en la muestra analizada.
+Los archivos `.bim` y `.snp` contienen una línea por variante y seis columnas con información equivalente.  
+La única diferencia entre ellos es el orden de las dos primeras columnas:
 
-Noten entonces que ambos formatos son compatibles solamente para variantes bialélicas.
+| Información         | `.snp`     | `.bim`     |
+|---------------------|------------|-------------|
+| ID de la variante   | Columna 1  | Columna 2   |
+| Cromosoma           | Columna 2  | Columna 1   |
+| Posición genética   | Columna 3  | Columna 3   |
+| Posición física     | Columna 4  | Columna 4   |
+| Alelo 1             | Columna 5  | Columna 5   |
+| Alelo 2             | Columna 6  | Columna 6   |
 
-### Fichero de anotación de las individuos
-Los ficheros `.ind` (<em>eigenstrat</em>) contienen 3 columnas, en este orden:
-- ID del Individuo
-- Sexo (M, F o U)
-- Grupo poblacional.
+- **Posición genética:** indica la ubicación de la variante según los eventos históricos de recombinación (no será relevante para este curso).  
+- **Posición física:** corresponde al par de bases donde se encuentra la variante en la secuencia del cromosoma.  
+- **Alelo 1:** suele ser el alelo de menor frecuencia en la muestra.  
+- **Alelo 2:** suele ser el alelo de mayor frecuencia.  
 
-Los ficheros <em>plink</em> son un poco más completos porque están pensados más por estudios de genética epidemiologíca. Contiene 6 columnas:
-- ID de la familia del individuo (se suele poner el grupo poblacional en los estudios de antropología molecular )
-- ID del individuo
-- ID del padre biológico ('0' si no presente en el conjunto de datos)
-- ID de la madre biológica ('0' si no presente en el conjunto de datos)
-- Sexo biológico  ('1' = hombre, '2' = mujer, '0' = desconocido)
-- Valor fenotípico (se suele poner también en esta columna el grupo poblacional en los estudios de antropología molecular ). 
+> *Atención: Ambos formatos solo son compatibles con variantes **bialélicas**.*
+
+### Fichero de anotación de los individuos
+
+Los ficheros `.ind` (*EIGENSTRAT*) contienen tres columnas, en el siguiente orden:  
+1. **ID del individuo**  
+2. **Sexo** (`M`, `F` o `U`)  
+3. **Grupo poblacional**
+
+Los ficheros de *PLINK* son algo más completos, ya que están diseñados originalmente para estudios de genética epidemiológica. Contienen seis columnas:  
+1. **ID de la familia** del individuo (en estudios de antropología molecular suele usarse para indicar el grupo poblacional),  
+2. **ID del individuo**,  
+3. **ID del padre biológico** (`0` si no está presente en el conjunto de datos),  
+4. **ID de la madre biológica** (`0` si no está presente),  
+5. **Sexo biológico** (`1` = hombre, `2` = mujer, `0` = desconocido),  
+6. **Valor fenotípico** (en estudios de antropología molecular también suele utilizarse para indicar el grupo poblacional).  
+
+>  *En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 de los ficheros `.fam` suelen utilizarse para almacenar información de grupo o contexto arqueológico.*
+
+---
 
 ### Fichero de matriz de genotipos
-El fichero de genotipos de <em>eigenstrat</em>, el fichero de genotipos se constituye de 1 línea por variantes, con 1 columna por individuo (columna de 1 caracater <strong>no</strong> separadas).<br>
-El genotipo de un individuo a una variante se codifica por el número de copias de este individuo del Alelo1 de esta variante como aparece en el archivo `.snp.txt`. 9 significa valor faltante <br>
+
+En *EIGENSTRAT*, el archivo de genotipos contiene **una línea por variante** y **una columna por individuo**, con caracteres **no separados por espacios**.  
+El genotipo de un individuo para una variante se codifica como el **número de copias del alelo 1** (según el archivo `.snp.txt`).  
+El valor `9` indica un **dato faltante**.  
+
+> *Por ejemplo, si el alelo 1 es `A`, el genotipo `0` corresponde a “no tiene A”, `1` a “heterocigota”, `2` a “homocigota A/A” y `9` a dato faltante.*
+
+---
 
 ### Ejemplo
 
-Tenemos 3 individuos (IndA, IndB y IndC) genotipifacos en 4 variantes (snp1, snp2, snp3, snp4).
-Archivo `.snp.txt`:<br>
-snp1  1 0.1001  100000  A C<br>
-snp2  1 0.6162  600000  T G<br>
-snp3  2 0.5125  513341  C G<br>
-snp4  4 0.1512  251334  G A<br>
+Supongamos que tenemos tres individuos (`IndA`, `IndB` y `IndC`) genotipificados en cuatro variantes (`snp1`, `snp2`, `snp3`, `snp4`).
+
+**Archivo `.snp.txt`:**<br>:
+
+snp1 1 0.1001 100000 A C<br>
+snp2 1 0.6162 600000 T G<br>
+snp3 2 0.5125 513341 C G<br>
+snp4 4 0.1512 251334 G A<br>
 
 
-Archivo `.ind.txt`:<br>
-IndA  M Pop1<br>
-IndB  M Pop1<br>
-IndC  F Pop2<br>
-IndD  M Pop3<br>
+**Archivo `.ind.txt`:**<br>
 
-Archivo `.geno.txt`:<br>
+IndA M Pop1<br>
+IndB M Pop1<br>
+IndC F Pop2<br>
+IndD M Pop3<br>
+
+
+**Archivo `.geno.txt`:**<br>
+
 0192<br>
 1122<br>
 2222<br>
 0211<br>
 
-Permite saber que el individuo IndA de la pop1 tiene el genotipo C/C para snp1, A/C para snp2, Faltante para snp3 y A/A para snp4
 
-## Leer los datos
-Existen varios paquetes de R que permiten leer y procesar estos formatos, pero vamos a usar <em>dartR.base</em> que permite leer el formato plink con la función `gl.read.PLINK`, a la cual le damos también como input un fichero de metadato para individuo llamado `finalSet.metadataPerind.txt`
+Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1**, presenta los siguientes genotipos:
+- `snp1`: C/C  
+- `snp2`: A/C  
+- `snp3`: faltante  
+- `snp4`: A/A
+
+
+
+## Lectura de los datos
+
+Existen varios paquetes de **R** que permiten leer y procesar estos formatos de genotipos.  
+En este curso utilizaremos el paquete *dartR.base*, que incluye la función `gl.read.PLINK()`, la cual permite importar directamente archivos en formato **PLINK** en un objeto [`genlight`](https://rdrr.io/cran/adegenet/man/genlight.html).  
+
+Además, esta función admite incorporar un archivo de metadatos por individuo (por ejemplo, `finalSet.metadataPerind.txt`), que contiene información complementaria como la población, la región o el estudio de origen.
 
 ```
 require(dartRverse)
@@ -83,10 +124,13 @@ setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pr
 datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink")
 ```
 
-Al leer los datos, en <em>verbose</em>, vemos algunos mensajes (si hay monomorfismos, si hay loci sin datos, etc.).
-En algunas versiones de dartR.base, puede aparecer el mensaje:<br>
-<em>The slot loc.all, which stores allele name for each locus, is empty. Creating a dummy variable (A/C) to insert in this slot.</em>.<br>
-En este caso, se puede solucionar corriendo lo siguiente.
+Al leer los datos con la opción `verbose = TRUE`, se muestran varios mensajes informativos (por ejemplo, sobre loci monomórficos o con datos faltantes).  
+
+En algunas versiones de *dartR.base*, puede aparecer el siguiente mensaje:  
+*“The slot loc.all, which stores allele name for each locus, is empty. Creating a dummy variable (A/C) to insert in this slot.”*  
+
+Este mensaje indica que la información sobre los alelos de cada locus está vacía, y el programa crea una variable ficticia (“A/C”) para completarla.  
+Para corregirlo de forma manual, puede ejecutarse el siguiente comando:
 
 ```
 ### fix allele names
@@ -95,31 +139,51 @@ bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", he
 datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
 ```
 
-Vamos a asignar los nombres de las poblaciones que por ahora están guardadas como "Family" en `ind.metrics`
+A continuación, vamos a asignar los nombres de las poblaciones a los individuos.   Esta información se encuentra almacenada en la columna **"Family"** del elemento `ind.metrics` de `datosGeno`. Vamos a transferir esos nombres para que queden correctamente asociados a la variable `pop`.
 ``` 
 datosGeno$pop<-as.factor(datosGeno$other$ind.metrics$Family)
 ```
 
 
-## Explorar los datos
-Podemos ver la tasa de individuos con datos por locus, y la frecuencia alélica haciendo lo siguiente:
- ```
+## Exploración de los datos
+
+Podemos examinar la calidad general del conjunto de datos observando, por ejemplo:  
+- la **proporción de individuos con datos disponibles por locus**, y  
+- la **frecuencia alélica** de cada variante.  
+
+Para ello, podemos ejecutar las siguientes funciones:
+```
 hist(datosGeno@other$loc.metrics$CallRate,main="Call Rate per Locus")
 hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequency per Locus",n=100)
 ```
-Vemos que hay locis con un call rate bajo (<0.2) y que son monomórficos (MAF=0).
+Observamos que existen loci con una **tasa de llamado** (*call rate*) baja (< 0.2) y posiciones **monomórficas** (MAF = 0).  
 
-Podemos ver la tasa de loci con datos por individuo.
+También podemos explorar la **proporción de loci con datos disponibles por individuo**, para identificar muestras con una alta proporción de datos faltantes.
  ```
 hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=10)
 ```
-En cuanto a la tasa de Heterosigosidad, vemos que son todos los individuos homocigotos:
+Ahora podemos miramos la **tasa de heterocigosidad** por cada individuo.
 ```
 table(datosGeno@other$ind.metrics$Heterozygosity)
 ```
+> Observamos que todos los individuos presentan genotipos **homocigotos**.
+> Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar a generar datos seudo-haploides. En la práctica, esto significa que para cada posición genómica y cada individuo se selecciona al azar una de las lecturas disponibles, y el nucleótido observado en ella se asigna como un genotipo homocigota para ese individuo.
 
-Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar a generar datos seudo-haploides. En la práctica, esto significa que para cada posición genómica y cada individuo se selecciona al azar una de las lecturas disponibles, y el nucleótido observado en ella se asigna como un genotipo homocigota para ese individuo.
+## Filtrado
 
+Algunos análisis requieren aplicar filtros a las variantes o a los individuos en función de la proporción de **datos faltantes**.  
+
+Por ahora, vamos a crear dos vectores que almacenen:  
+- las posiciones **monomórficas**, y  
+- aquellas con datos disponibles para **solo un individuo** (es decir, con una tasa de llamado inferior a 2/64 = 0.03125).  
+
+Luego, identificaremos los individuos que conservan **más de 5.000 variantes** tras este filtrado inicial.  
+
+> Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  
+> En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  
+> Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
+
+<<<<<<< HEAD
 ## Filtrar
 Algunos análisis requieren aplicar filtros a las variantes o a los individuos en función de la proporción de **datos faltantes**.  
 
@@ -131,6 +195,8 @@ Luego, identificaremos los individuos que conservan **más de 5.000 variantes** 
 
 Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
 
+=======
+>>>>>>> bcdbf330397c4408dd7ecb394d0569180498a2e6
 ```
 ###filtro de SNPs
 SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[ datosGeno$other$loc.metrics$CallRate<0.03125 |
@@ -244,10 +310,12 @@ table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
 ```
 
 Vemos entonces que detectamos muchos pares de aparentados en el Sur de Patagonia. Además mirando la temporalidad y la geografía de cada individuo en un par de individuos aprentados, vemos incosnistencias ya que con esta separación temporal y espacial imposible que sean aparentados.<br>
-La mayor dificulta en un análisis de parentesco es definir si el escore usado para medir la distancia genética (PMR en el caso de <em>BREADR</em>) se puede interpretar como parentesco. De hecho, la distribución del PMRdepende de la diversidad genética esperada en la población. <br>
-Lo que acabmos de hacer es decir a <em>BREADR</em> de usar la mediana de los PMR observados para todos los pares de individuos analizados. Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes. <br>
-Entonces, si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia, que son poblaciones que evolucionaron con más deriva génica, por ende que tienen menor diversidad genética.
-Para evitar estos falsos positivos podemos pasar al método solo la tabla de escore PMR para el subconjunto de individuos para los cuales esperamos niveles de diversidad genética similares por pertenecer a la misma (meta)población.<br>
+
+> La mayor dificulta en un análisis de parentesco es definir si el escore usado para medir la distancia genética (PMR en el caso de <em>BREADR</em>) se puede interpretar como parentesco. De hecho, la distribución del PMRdepende de la diversidad genética esperada en la población. <br>
+>Lo que acabmos de hacer es decir a <em>BREADR</em> de usar la mediana de los PMR observados para todos los pares de individuos analizados. Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes. <br>
+> Si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia, que son poblaciones que evolucionaron con más deriva génica, por ende que tienen menor diversidad genética.
+> Para evitar estos falsos positivos podemos pasar al método solo la tabla de escore PMR para el subconjunto de individuos para los cuales esperamos niveles de diversidad genética similares por pertenecer a la misma (meta)población.<br>
+
 En lo que sigue, vamos a ir, región por región, generar la sub-tabla de PMR por los pares de individuos de esta región, verificar que hay suficientes pares (digamos por lo menos 5) y proceder de nuevo a las inferencias de parentesco desde valor medio esperado del PMR para cada relación de grado según estos pares únicamente.<br>
 Para esto, vamos a generar una lista que contienen la tabla de inferencia de parentesco por región.
 
@@ -297,7 +365,7 @@ for(region in names(listRelatednessPerRegion)){
 }
 ```  
 Vemos que es bastante coherente también, sin embargo muchos pares de parentesco que encontramos en este ejercicio no fueron reportados en los trabajos originales. Esto se debe que usamos otro método, un conjunto de variantes diferentes y se generaron los datos pseudo-haploides analizados nuevamente (es decir rehaciendo un muestreo aleatorio de las lecturas).
-Vemos entonces la necesidad de no confiar en nuestros resultados ciegamente. Se recomienda, visualizar los resultados de <em>BREADR</em>, para apreciar los margenes de error asociados a los PMR.<br>
+> Es primordial no confiar en nuestros resultados ciegamente. Se recomienda, visualizar los resultados de <em>BREADR</em>, para apreciar los margenes de error asociados a los PMR.<br>
 
 #### Inspección de los resultados de parentesco
 El paquete <em>BREADR</em> provee diferentes funciones para esto:
@@ -327,9 +395,8 @@ Sin embargo, <BREADR> da como resultado "1er grado". Esto se debe al número de 
  ```
 Vemos entonces que, a lo mejor, sería más prudente definir este par aparentado  al 2o grado y no al 1er grado.<br> 
 Lo mismo, cuando miramos los resultados de PMR para pares de aparentados al 2o grado, vemos que varios pares están por encima del valor esperado para 2o grado, y que la significancia de 2o grado o No aparentados son similares. Entonces podrían ser falsos positivos.
-Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
-Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
-
+> Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
+> Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
 
 ## Generación del conjunto de datos filtrado
 
