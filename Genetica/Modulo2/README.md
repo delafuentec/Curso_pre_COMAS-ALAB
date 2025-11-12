@@ -40,7 +40,7 @@ La única diferencia entre ellos es el orden de las dos primeras columnas:
 - **Alelo 1:** suele ser el alelo de menor frecuencia en la muestra.  
 - **Alelo 2:** suele ser el alelo de mayor frecuencia.  
 
-Atención: Ambos formatos solo son compatibles con variantes **bialélicas**.
+> *Atención: Ambos formatos solo son compatibles con variantes **bialélicas**.*
 
 ### Fichero de anotación de los individuos
 
@@ -57,7 +57,7 @@ Los ficheros de *PLINK* son algo más completos, ya que están diseñados origin
 5. **Sexo biológico** (`1` = hombre, `2` = mujer, `0` = desconocido),  
 6. **Valor fenotípico** (en estudios de antropología molecular también suele utilizarse para indicar el grupo poblacional).  
 
-> 💡 *En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 de los ficheros `.fam` suelen utilizarse para almacenar información de grupo o contexto arqueológico.*
+>  *En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 de los ficheros `.fam` suelen utilizarse para almacenar información de grupo o contexto arqueológico.*
 
 ---
 
