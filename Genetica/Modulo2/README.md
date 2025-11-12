@@ -182,20 +182,6 @@ Luego, identificaremos los individuos que conservan **más de 5.000 variantes** 
 Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
 
 
-<<<<<<< HEAD
-## Filtrar
-Algunos análisis requieren aplicar filtros a las variantes o a los individuos en función de la proporción de **datos faltantes**.  
-
-Por ahora, vamos a crear dos vectores que almacenen:  
-- las posiciones **monomórficas**, y  
-- aquellas con datos disponibles para **solo un individuo** (es decir, con una tasa de llamado inferior a 2/64 = 0.03125).  
-
-Luego, identificaremos los individuos que conservan **más de 5.000 variantes** tras este filtrado inicial.  
-
-Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
-
-=======
->>>>>>> bcdbf330397c4408dd7ecb394d0569180498a2e6
 ```
 ###filtro de SNPs
 SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[ datosGeno$other$loc.metrics$CallRate<0.03125 |
@@ -397,7 +383,89 @@ Lo mismo, cuando miramos los resultados de PMR para pares de aparentados al 2o g
 > Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
 > Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
 
-## Generación del conjunto de datos filtrado
+### Identificar que individuos sacar para evitar pares de aparentados
+
+En lo que sigue, vamos a sacar individuos para evitar los pares de individuos aparentados hasta el 1er-grado. Por tema de tiempo, vamos a considerar que los pares identificados por **BREADR** son correctas sin validarlas como sería necesario, tal como vimos justo antes. 
+Primero, generamos una tabla que contiene estos pares, concatenando los resultados por región, y lo resumimos en una tabla de una linea por individuo y 4 columnas:<br>
+1. id: id del individuo
+2. NumKin: Número de individuos aparentados a este individuo
+3. ListKin: Lista de dicho individuos (separados por |)
+4. Call.Rate (que vamos a recuperar de  `metricsInds_forKeptSNPs` que generamos antes )
+
+> En general es preferible sacar los aparentados al 2o-grado, pero en este ejercicio vemos que muchos parentescos pueden ser falsos positivos, entonces en este ejercicio nos concentramos solo en el 1er grado por tema de tiempo.
+
+```
+###keep all pairs
+Pairs<-c()
+for(region in names(listRelatednessPerRegion)){
+  tmp<-listRelatednessPerRegion[[region]]
+  tmp<-tmp[ tmp$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
+  Pairs<-rbind(Pairs,tmp)
+}
+
+###sum up
+sumUpPairs<-data.frame(matrix(NA,0,4))
+names(sumUpPairs)<-c("id","NumKin","ListKin","Call.Rate")
+for(line in c(1:nrow(Pairs))){
+  Ind1=Pairs$Ind1[line];
+  Ind2=Pairs$Ind2[line];
+
+  
+  if(Ind1 %in% sumUpPairs$id){
+    ###case that Ind1 already found in a pair --> Update
+    sumUpPairs$NumKin[sumUpPairs$id==Ind1]=as.numeric(sumUpPairs$NumKin[sumUpPairs$id==Ind1]) + 1
+    sumUpPairs$ListKin[sumUpPairs$id==Ind1]=paste(sumUpPairs$ListKin[sumUpPairs$id==Ind1],Ind2,sep="|")
+  }else{
+    ###case that Ind1 first find found in a pair --> add line
+    sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind1,
+                                      "NumKin"=1,
+                                      "ListKin"=Ind2,
+                                      "Call.rate"=metricsInds_forKeptSNPs$Call.rate[metricsInds_forKeptSNPs$id==Ind1]))
+  }
+  
+  if(Ind2 %in% sumUpPairs$id){
+    ###case that Ind2 already found in a pair --> Update
+    sumUpPairs$NumKin[sumUpPairs$id==Ind2]=as.numeric(sumUpPairs$NumKin[sumUpPairs$id==Ind2]) + 1
+    sumUpPairs$ListKin[sumUpPairs$id==Ind2]=paste(sumUpPairs$ListKin[sumUpPairs$id==Ind2],Ind1,sep="|")
+  }else{
+    ###case that Ind2 first find found in a pair --> add line
+    sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind2,
+                                      "NumKin"=1,
+                                      "ListKin"=Ind1,
+                                      "Call.rate"=metricsInds_forKeptSNPs$Call.rate[metricsInds_forKeptSNPs$id==Ind2]))
+  }
+
+}
+
+sumUpPairs$NumKin<-as.numeric(sumUpPairs$NumKin)
+sumUpPairs$Call.rate<-as.numeric(sumUpPairs$Call.rate)
+```  
+
+Esta tabla permitirá luego eliminar el número mínimo de  individuos para evitar cualquier relación hasta el 1er-grado, dando prioridad a la eliminación de los primeros individuos involucrados en el mayor número de relaciones por pares y, en caso de empates, a los individuos con menos datos (`Call.rate`).
+```
+listToRemove<-data.frame(matrix(NA,0,3))
+names(listToRemove)<-c("id","NumKin","Call.rate")
+sumUpPairs_BU<-sumUpPairs
+while(nrow(sumUpPairs)>0){
+	  tmp<-sumUpPairs[ sumUpPairs$NumKin  == max(sumUpPairs$NumKin),]
+	  tmp<-tmp[order(tmp$Call.rate),]
+	  id<-tmp$id[1]
+	  Call.rate<-tmp$Call.rate[1]
+	  NumKin<-sumUpPairs_BU$NumKin[sumUpPairs_BU$id==id]
+	  listAssoc<-strsplit(tmp$ListKin[1],split="\\|")[[1]]
+	  listToRemove<-rbind(listToRemove,cbind(id,NumKin,Call.rate))
+	  sumUpPairs<-sumUpPairs[ sumUpPairs$id != id,]
+	  
+	  for(i in which(sumUpPairs$id %in% listAssoc)){
+	    tmp<-strsplit(sumUpPairs$List[i],split="\\|")[[1]]
+	    tmp<-tmp[ tmp!=id]
+	    sumUpPairs$ListKin[i]<-paste(tmp,collapse="|")
+	    sumUpPairs$NumKin[i]<-sumUpPairs$NumKin[i]-1
+	  }
+	  sumUpPairs<-sumUpPairs[ sumUpPairs$NumKin!=0,]
+}
+
+```
 
 
 
@@ -412,4 +480,3 @@ for(region in names(listRelatednessPerRegion)){
 }
 
 
-## Parentesco
