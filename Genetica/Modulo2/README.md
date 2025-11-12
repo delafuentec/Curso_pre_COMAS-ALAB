@@ -179,9 +179,8 @@ Por ahora, vamos a crear dos vectores que almacenen:
 
 Luego, identificaremos los individuos que conservan **más de 5.000 variantes** tras este filtrado inicial.  
 
-> Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  
-> En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  
-> Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
+Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
+
 
 <<<<<<< HEAD
 ## Filtrar
