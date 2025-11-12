@@ -42,47 +42,81 @@ La única diferencia entre ellos es el orden de las dos primeras columnas:
 
 Atención: Ambos formatos solo son compatibles con variantes **bialélicas**.
 
-### Fichero de anotación de las individuos
-Los ficheros `.ind` (<em>eigenstrat</em>) contienen 3 columnas, en este orden:
-- ID del Individuo
-- Sexo (M, F o U)
-- Grupo poblacional.
+### Fichero de anotación de los individuos
 
-Los ficheros <em>plink</em> son un poco más completos porque están pensados más por estudios de genética epidemiologíca. Contiene 6 columnas:
-- ID de la familia del individuo (se suele poner el grupo poblacional en los estudios de antropología molecular )
-- ID del individuo
-- ID del padre biológico ('0' si no presente en el conjunto de datos)
-- ID de la madre biológica ('0' si no presente en el conjunto de datos)
-- Sexo biológico  ('1' = hombre, '2' = mujer, '0' = desconocido)
-- Valor fenotípico (se suele poner también en esta columna el grupo poblacional en los estudios de antropología molecular ). 
+Los ficheros `.ind` (*EIGENSTRAT*) contienen tres columnas, en el siguiente orden:  
+1. **ID del individuo**  
+2. **Sexo** (`M`, `F` o `U`)  
+3. **Grupo poblacional**
+
+Los ficheros de *PLINK* son algo más completos, ya que están diseñados originalmente para estudios de genética epidemiológica. Contienen seis columnas:  
+1. **ID de la familia** del individuo (en estudios de antropología molecular suele usarse para indicar el grupo poblacional),  
+2. **ID del individuo**,  
+3. **ID del padre biológico** (`0` si no está presente en el conjunto de datos),  
+4. **ID de la madre biológica** (`0` si no está presente),  
+5. **Sexo biológico** (`1` = hombre, `2` = mujer, `0` = desconocido),  
+6. **Valor fenotípico** (en estudios de antropología molecular también suele utilizarse para indicar el grupo poblacional).  
+
+::: tip
+En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 de los ficheros `.fam` suelen utilizarse para almacenar información de grupo o contexto arqueológico.
+:::
+
+---
 
 ### Fichero de matriz de genotipos
-El fichero de genotipos de <em>eigenstrat</em>, el fichero de genotipos se constituye de 1 línea por variantes, con 1 columna por individuo (columna de 1 caracater <strong>no</strong> separadas).<br>
-El genotipo de un individuo a una variante se codifica por el número de copias de este individuo del Alelo1 de esta variante como aparece en el archivo `.snp.txt`. 9 significa valor faltante <br>
+
+En *EIGENSTRAT*, el archivo de genotipos contiene **una línea por variante** y **una columna por individuo**, con caracteres **no separados por espacios**.  
+El genotipo de un individuo para una variante se codifica como el **número de copias del alelo 1** (según el archivo `.snp.txt`).  
+El valor `9` indica un **dato faltante**.  
+
+::: info
+Por ejemplo, si el alelo 1 es `A`, el genotipo `0` corresponde a `no tiene A`, `1` a `heterocigota`, `2` a `homocigota A/A` y `9` a dato faltante.
+:::
+
+---
 
 ### Ejemplo
 
-Tenemos 3 individuos (IndA, IndB y IndC) genotipifacos en 4 variantes (snp1, snp2, snp3, snp4).
-Archivo `.snp.txt`:<br>
-snp1  1 0.1001  100000  A C<br>
-snp2  1 0.6162  600000  T G<br>
-snp3  2 0.5125  513341  C G<br>
-snp4  4 0.1512  251334  G A<br>
+Supongamos que tenemos tres individuos (`IndA`, `IndB` y `IndC`) genotipificados en cuatro variantes (`snp1`, `snp2`, `snp3`, `snp4`).
 
+::: code-block
+**Archivo `.snp.txt`:**
 
-Archivo `.ind.txt`:<br>
-IndA  M Pop1<br>
-IndB  M Pop1<br>
-IndC  F Pop2<br>
-IndD  M Pop3<br>
+snp1 1 0.1001 100000 A C
+snp2 1 0.6162 600000 T G
+snp3 2 0.5125 513341 C G
+snp4 4 0.1512 251334 G A
 
-Archivo `.geno.txt`:<br>
-0192<br>
-1122<br>
-2222<br>
-0211<br>
+:::
 
-Permite saber que el individuo IndA de la pop1 tiene el genotipo C/C para snp1, A/C para snp2, Faltante para snp3 y A/A para snp4
+::: code-block
+**Archivo `.ind.txt`:**
+
+IndA M Pop1
+IndB M Pop1
+IndC F Pop2
+IndD M Pop3
+
+:::
+
+::: code-block
+**Archivo `.geno.txt`:**
+
+0192
+1122
+2222
+0211
+
+:::
+
+::: example
+Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1**, presenta los siguientes genotipos:
+- `snp1`: C/C  
+- `snp2`: A/C  
+- `snp3`: faltante  
+- `snp4`: A/A  
+:::
+
 
 ## Leer los datos
 Existen varios paquetes de R que permiten leer y procesar estos formatos, pero vamos a usar <em>dartR.base</em> que permite leer el formato plink con la función `gl.read.PLINK`, a la cual le damos también como input un fichero de metadato para individuo llamado `finalSet.metadataPerind.txt`
