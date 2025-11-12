@@ -106,6 +106,25 @@ Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1
 - `snp4`: A/A
 
 
+### Posiciones de Transversiones
+### ¿Por qué analizamos solo transversiones?
+
+En los análisis de **ADN antiguo**, es común restringirse a las **transversiones**, que son un tipo de cambio entre bases que **no involucra nucleótidos del mismo tipo químico**.  
+
+Existen dos tipos de mutaciones puntuales:  
+
+- **Transiciones**, que ocurren entre bases del mismo tipo:  
+  - purinas ↔ purinas (*A ↔ G*)  
+  - pirimidinas ↔ pirimidinas (*C ↔ T*)  
+- **Transversiones**, que ocurren entre bases de distinto tipo:  
+  - purinas ↔ pirimidinas (*A o G ↔ C o T*)
+
+Las **transiciones** son más frecuentes, pero en el ADN antiguo pueden estar **enriquecidas artificialmente** debido al daño post mortem característico de este tipo de material genético.  
+En particular, la **desaminación de citosinas** genera un exceso de mutaciones aparentes **C→T y G→A**, lo que puede distorsionar las estimaciones genéticas si no se corrige.  
+
+Por esta razón, al limitar los análisis a **transversiones** —que **no se ven afectadas por estos procesos de daño**— se obtiene una señal genética más confiable y libre de artefactos de degradación.
+
+Es lo que haremos en los modulos 2 y 3.
 
 ## Lectura de los datos
 
@@ -121,7 +140,8 @@ require(ade4)
 
 ### you maybe need to change the directory below
 setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB/Genetica/")
-datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink")
+pref="PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.TVs.plink"
+datosGeno<-gl.read.PLINK(pref)
 ```
 
 Al leer los datos con la opción `verbose = TRUE`, se muestran varios mensajes informativos (por ejemplo, sobre loci monomórficos o con datos faltantes).  
@@ -134,7 +154,7 @@ Para corregirlo de forma manual, puede ejecutarse el siguiente comando:
 
 ```
 ### fix allele names
-bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", header = FALSE)
+bim <- read.table(paste(pref,".bim",sep=""), header = FALSE)
 # Columns: CHR SNP CM POS A1 A2
 datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
 ```
@@ -156,11 +176,12 @@ Para ello, podemos ejecutar las siguientes funciones:
 hist(datosGeno@other$loc.metrics$CallRate,main="Call Rate per Locus")
 hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequency per Locus",n=100)
 ```
-Observamos que existen loci con una **tasa de llamado** (*call rate*) baja (< 0.2) y posiciones **monomórficas** (MAF = 0).  
+Observamos que existen loci con una **tasa de llamado** (*call rate*) baja (< 0.2) y muchas posiciones **monomórficas** (MAF = 0). 
+> Usamos el panel 1240K que se basa en posiciones encontradas por ser polimorficas en una muestra mundial. Sin embargo, por el hecho que hubo mucha deriva génica durante la historia evolutiva de las poblaciones de Sudamerica (p.ej. con varios efectos fundadores), la diversidad genética en el sub-continente es reducida, particularmente en el Sur de Patagonia. Lo cual llevó a muchas variantesobservadas en el mundo siendo fijadas en las poblaciones que nos interesan. [de la Fuente et al. (2024)](https://pivotscipub.com/hpgg/4/1/0003) lo describieron en detalle.
 
 También podemos explorar la **proporción de loci con datos disponibles por individuo**, para identificar muestras con una alta proporción de datos faltantes.
  ```
-hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=10)
+hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual")
 ```
 Ahora podemos miramos la **tasa de heterocigosidad** por cada individuo.
 ```
@@ -170,11 +191,10 @@ table(datosGeno@other$ind.metrics$Heterozygosity)
 > Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar a generar datos seudo-haploides. En la práctica, esto significa que para cada posición genómica y cada individuo se selecciona al azar una de las lecturas disponibles, y el nucleótido observado en ella se asigna como un genotipo homocigota para ese individuo.
 
 
-<HUGE>VER ACÁ QUE DECIMOS</HUGE>
-Para el análisis de parentesco que sigue, no hace falta filtrar los datos por valores faltantes o frecuencia del alelo menor, por lo cual haremos 
+
 
 ## Parentesco
-
+Para el análisis de parentesco que sigue, no hace falta filtrar los datos por valores faltantes o frecuencia del alelo menor, por lo cual haremos el análisis sobre 
 ### Introducción al análisis de parentesco
 Existen varios métodos para detectar individuos aparentados. Vamos a usar [<em>BREADR</em>](https://joss.theoj.org/papers/10.21105/joss.07916). 
 Este método es una extensión del método quizás más usado en el campo ([<em>READv2</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03350-3)), ya que se base en el escore PMR.
@@ -194,18 +214,18 @@ Primero se calculan las métricas PMR para cada par de individuo, es la parte m�
 require(BREADR)
 require(tibble)
 
-prefEigenstrat="PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.snps5000.MAF0.01"
+prefEigenstrat="PatagoniaDataSetWithOutgroups_ALAB2025/Ancient"
 
 ## we can read directly the table that would be generated by the "preprocess" which ios 
-if(! file.exists("Modulo2/PMR_allAncientTogether_MAF0.01.txt")){
+if(! file.exists("Modulo2/PMR_allAncientTogether.txt")){
   countsPMR <- processEigenstrat(
     indfile = paste(prefEigenstrat,".ind.txt",sep=""),
     snpfile = paste(prefEigenstrat,".snp.txt",sep=""),
     genofile = paste(prefEigenstrat,".geno.txt",sep=""),
-    outfile = "Modulo2/PMR_allAncientTogether_MAF0.01.txt")
+    outfile = "Modulo2/PMR_allAncientTogether.txt")
   
 }else{
-  countsPMR<-as_tibble(read.table("Modulo2/PMR_allAncientTogether_MAF0.01.txt",stringsAsFactors = F,header=T,sep="\t"))
+  countsPMR<-as_tibble(read.table("Modulo2/PMR_allAncientTogether.txt",stringsAsFactors = F,header=T,sep="\t"))
 }
 
 print(head(countsPMR))
@@ -263,9 +283,9 @@ table(related_allAncientTogether$relationship)
 ### we see a lot of related pairs. Let's see in which region
 table(related_allAncientTogether$Region1,related_allAncientTogether$Region2)
 
-###Let's see in which groups we have pairs of 1st-degree or Twins/Duplicated
-first_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree"),]
-table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
+###Let's see in which groups we have pairs of up to 2-degree
+second_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
+table(second_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
 
 ### We can already see some temporal/spatial inconsistencies 
 ```
@@ -294,12 +314,11 @@ for(region in c("SouthPatagonia","CentralChile","Beringia","SouthernNorthAmerica
     next
   }
   tmpRelatedness<-callRelatedness(tmpRegion)
-  print(paste(sum(listRelatednessPerRegion[[region]]$relationship!="Unrelated"),"pairs of related individuals found"))
   ##we can add the Population and Region label for each individual
   tmpRelatedness<-addPops(tableRel=tmpRelatedness,metaData=meta)
   ##we keep the result for that region in an element of our list
   listRelatednessPerRegion[[region]]<-tmpRelatedness
-  
+  print(paste(sum(listRelatednessPerRegion[[region]]$relationship!="Unrelated"),"pairs of related individuals found"))
   
 }
 ```
@@ -325,8 +344,9 @@ for(region in names(listRelatednessPerRegion)){
   print(table(tmpSecond$Pop1,tmpSecond$Pop2))
 }
 ```  
-Vemos que es bastante coherente también, sin embargo muchos pares de parentesco que encontramos en este ejercicio no fueron reportados en los trabajos originales. Esto se debe que usamos otro método, un conjunto de variantes diferentes y se generaron los datos pseudo-haploides analizados nuevamente (es decir rehaciendo un muestreo aleatorio de las lecturas).
-> Es primordial no confiar en nuestros resultados ciegamente. Se recomienda, visualizar los resultados de <em>BREADR</em>, para apreciar los margenes de error asociados a los PMR.<br>
+Vemos que es bastante coherente también, sin embargo quedan algunas inconsistencias temporales y muchos pares de parentesco que encontramos acá no fueron reportados en los trabajos originales. 
+> Usamos otro método que los usados en los trabajos originales, y se generamos los datos pseudo-haploides nuevamente (es decir rehaciendo un muestreo aleatorio de las lecturas).<br>
+Es primordial no confiar en nuestros resultados ciegamente. Se recomienda, visualizar los resultados de <em>BREADR</em>, para apreciar los margenes de error asociados a los PMR.<br>
 
 #### Inspección de los resultados de parentesco
 El paquete <em>BREADR</em> provee diferentes funciones para esto:
@@ -354,8 +374,8 @@ Sin embargo, <BREADR> da como resultado "1er grado". Esto se debe al número de 
  ### plotSlice
  plotSLICE(relatednessPatagonia,"AM66 - AM71")
  ```
-Vemos entonces que, a lo mejor, sería más prudente definir este par aparentado  al 2o grado y no al 1er grado.<br> 
-Lo mismo, cuando miramos los resultados de PMR para pares de aparentados al 2o grado, vemos que varios pares están por encima del valor esperado para 2o grado, y que la significancia de 2o grado o No aparentados son similares. Entonces podrían ser falsos positivos.
+Vemos que las distribuciones de los valors PMR esperados para distinguir entre diferentes grados de parentesco se solapan bastante, dificultando discriminir corretamente el grado de parentesco para este par de individuos. <br> 
+Lo mismo, cuando miramos los resultados de PMR para pares de aparentados al 2o grado (gráfico obtenido con `plotLOAF`), vemos que varios pares están por encima del valor esperado para 2o grado, y que la significancia de 2o grado o No aparentados son similares. Entonces podrían ser falsos positivos.
 > Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
 > Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
 
@@ -378,6 +398,7 @@ for(region in names(listRelatednessPerRegion)){
   tmp<-tmp[ tmp$relationship == "First_Degree",]
   #### next command would be f you want to remove up to 2nd-degree
   ##tmp<-tmp[ tmp$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
+  
   Pairs<-rbind(Pairs,tmp)
 }
 
@@ -465,30 +486,59 @@ Ahora que tenemos: las variantes que queremos filtrar (con muchos datos faltante
 
 Vamos a filtros los datos para las variantes o a los individuos en función de la proporción de **datos faltantes**.  Vamos también a eliminar las posiciones con una frecuencia del Alelo Menor inferior al 1%.
 
-Por ahora, vamos a crear dos vectores que almacenen:  
+Vamos a eliminar primero los SNPs con datos disponibles para **solo un individuo** (es decir, con una tasa de llamado inferior a 2/66).  
 
-- aquellas con datos disponibles para **solo un individuo** (es decir, con una tasa de llamado inferior a 2/64 = 0.03125).  
-
-Luego, identificaremos los individuos que conservan **más de 5.000 variantes** tras este filtrado inicial.  
 
 Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
 
 
 ```
-###filtro de SNPs
-SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[ datosGeno$other$loc.metrics$CallRate<0.03125 |
-                                                      datosGeno$other$loc.metrics$maf==0 ]  
-### get number of SNPs still included 
-numSNPs=datosGeno$n.loc-length(SNPs_to_exclude)
-###get inds metrics 
-metricsInds_forKeptSNPs <- gl.drop.loc(datosGeno, loc.list=SNPs_to_exclude)$other$ind.metrics
-###add a column of the number of called snps (Call.rate*numSNPs)
-metricsInds_forKeptSNPs$CalledSNPs=metricsInds_forKeptSNPs$Call.rate*numSNPs
-###save in a vector individuals with less than 50000 SNPs
-INDs_to_exclude=metricsInds_forKeptSNPs$id[metricsInds_forKeptSNPs$CalledSNPs< 50000]
+###filter  SNPs for call.rate (we force to recalculate the metrics and remove monomorhisms)
+nLoc_init=datosGeno$n.loc
+nInd_init=length(datosGeno$ind.names)
+datosGeno_filter<-gl.filter.callrate(datosGeno, threshold=2/66,recalc=TRUE,mono.rm=TRUE) 
+nLoc_callRate=datosGeno_filter$n.loc
+print(paste("N SNPs before call.rate:",nLoc_init,"; N SNPs after call.rate and monomorphism filtering:",nLoc_callRate))
+```
+Pueden aparecer uno <em>warnings meassge</em> pero verán que solo se tratan de mensajes asociados a los histogramas que se generan.
+
+Luego, vamos a eliminar los individuos que conservan **más de 10,000 variantes** tras este filtrado inicial y los que identificamos para evitar parentesco en la muestra.
+```
+metricsInds_forKeptSNPs <- datosGeno_filter$other$ind.metrics
+###add a column of the number of called snps (Call.rate*nLoc_callrate)
+metricsInds_forKeptSNPs$CalledSNPs=metricsInds_forKeptSNPs$Call.rate*nLoc_callRate
+###save in a vector individuals with less than 10000 SNPs
+INDs_to_exclude=metricsInds_forKeptSNPs$id[metricsInds_forKeptSNPs$CalledSNPs< 10000]
+print(paste("excluding ",length(INDs_to_exclude),"individuals with less than 10000 SNPs"))
+### some may have been already flagged in our kinship analyses
+print(paste("of which  ",sum(INDs_to_exclude %in% listToRemove$id)," already flagged to be remived from kinship analyses"))
+### update the list to exlude with list from kinship
+INDs_to_exclude<-unique(c(INDs_to_exclude,listToRemove$id))
+### we can now remove those individuals (and we ask to recalculate)
+datosGeno_filter<-gl.drop.ind(x=datosGeno_filter,ind.list=INDs_to_exclude,recalc = TRUE,mono.rm=TRUE)
+##
+nInd_final=length(datosGeno_filter$ind.names)
+nLoc_final=datosGeno_filter$n.loc
+print(paste("filtered dataset contains:",nInd_final,"inds and",nLoc_final,"snps"))
+
 ```
 
+Ahora podemos escribir los datos. En los paquetes que ocupamos no hay una función que permita escribir al formato <em>EIGENSTRAT</em> directamente, pero desde el objeto `genLight` que creamos es sencillo.
+
 ```
-datosGenogl.drop.ind(x, ind.list, recalc = FALSE, mono.rm = FALSE, verbose = NULL)
-
-
+prefOUT="Modulo2/filteredDataSet"
+### Convert genlight genotype data to a numeric matrix
+geno_mat <- as.matrix(datosGeno_filter)
+# Replace missing data with 9 (per convention)
+geno_mat[is.na(geno_mat)] <- 9
+###check size
+dim(geno_mat)
+##write the genotype data. Watchout you have to transpose the matrix
+write.table(t(geno_mat), paste(prefOUT,".geno.txt",sep=""),col.names=F,row.names=F,quote=F,sep="")
+##write the individual annotation file
+indData<-datosGeno_filter$other$ind.metrics[,c("id","Sex","Family")]
+indData$Sex[is.na(indData$Sex)]<-"U"
+write.table(indData, paste(prefOUT,".ind.txt",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+##write the snp annotation file
+snpData<-datosGeno_filter$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
+write.table(snpData, paste(prefOUT,".snp.txt",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
