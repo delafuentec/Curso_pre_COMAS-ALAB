@@ -75,28 +75,28 @@ El valor `9` indica un **dato faltante**.
 
 Supongamos que tenemos tres individuos (`IndA`, `IndB` y `IndC`) genotipificados en cuatro variantes (`snp1`, `snp2`, `snp3`, `snp4`).
 
-**Archivo `.snp.txt`:**
+**Archivo `.snp.txt`:**<br?:
 
-snp1 1 0.1001 100000 A C
-snp2 1 0.6162 600000 T G
-snp3 2 0.5125 513341 C G
-snp4 4 0.1512 251334 G A
-
-
-**Archivo `.ind.txt`:**
-
-IndA M Pop1
-IndB M Pop1
-IndC F Pop2
-IndD M Pop3
+snp1 1 0.1001 100000 A C<br?
+snp2 1 0.6162 600000 T G<br?
+snp3 2 0.5125 513341 C G<br?
+snp4 4 0.1512 251334 G A<br?
 
 
-**Archivo `.geno.txt`:**
+**Archivo `.ind.txt`:**<br?
 
-0192
-1122
-2222
-0211
+IndA M Pop1<br?
+IndB M Pop1<br?
+IndC F Pop2<br?
+IndD M Pop3<br?
+
+
+**Archivo `.geno.txt`:**<br?
+
+0192<br?
+1122<br?
+2222<br?
+0211<br?
 
 
 Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1**, presenta los siguientes genotipos:
