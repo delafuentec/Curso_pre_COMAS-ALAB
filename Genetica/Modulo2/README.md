@@ -296,10 +296,12 @@ table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
 ```
 
 Vemos entonces que detectamos muchos pares de aparentados en el Sur de Patagonia. Además mirando la temporalidad y la geografía de cada individuo en un par de individuos aprentados, vemos incosnistencias ya que con esta separación temporal y espacial imposible que sean aparentados.<br>
-La mayor dificulta en un análisis de parentesco es definir si el escore usado para medir la distancia genética (PMR en el caso de <em>BREADR</em>) se puede interpretar como parentesco. De hecho, la distribución del PMRdepende de la diversidad genética esperada en la población. <br>
-Lo que acabmos de hacer es decir a <em>BREADR</em> de usar la mediana de los PMR observados para todos los pares de individuos analizados. Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes. <br>
-Entonces, si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia, que son poblaciones que evolucionaron con más deriva génica, por ende que tienen menor diversidad genética.
-Para evitar estos falsos positivos podemos pasar al método solo la tabla de escore PMR para el subconjunto de individuos para los cuales esperamos niveles de diversidad genética similares por pertenecer a la misma (meta)población.<br>
+
+> La mayor dificulta en un análisis de parentesco es definir si el escore usado para medir la distancia genética (PMR en el caso de <em>BREADR</em>) se puede interpretar como parentesco. De hecho, la distribución del PMRdepende de la diversidad genética esperada en la población. <br>
+>Lo que acabmos de hacer es decir a <em>BREADR</em> de usar la mediana de los PMR observados para todos los pares de individuos analizados. Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes. <br>
+> Si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia, que son poblaciones que evolucionaron con más deriva génica, por ende que tienen menor diversidad genética.
+> Para evitar estos falsos positivos podemos pasar al método solo la tabla de escore PMR para el subconjunto de individuos para los cuales esperamos niveles de diversidad genética similares por pertenecer a la misma (meta)población.<br>
+
 En lo que sigue, vamos a ir, región por región, generar la sub-tabla de PMR por los pares de individuos de esta región, verificar que hay suficientes pares (digamos por lo menos 5) y proceder de nuevo a las inferencias de parentesco desde valor medio esperado del PMR para cada relación de grado según estos pares únicamente.<br>
 Para esto, vamos a generar una lista que contienen la tabla de inferencia de parentesco por región.
 
