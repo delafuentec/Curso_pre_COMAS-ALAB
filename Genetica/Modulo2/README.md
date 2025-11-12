@@ -67,7 +67,7 @@ En *EIGENSTRAT*, el archivo de genotipos contiene **una línea por variante** y 
 El genotipo de un individuo para una variante se codifica como el **número de copias del alelo 1** (según el archivo `.snp.txt`).  
 El valor `9` indica un **dato faltante**.  
 
-> ℹ️ *Por ejemplo, si el alelo 1 es `A`, el genotipo `0` corresponde a “no tiene A”, `1` a “heterocigota”, `2` a “homocigota A/A” y `9` a dato faltante.*
+> *Por ejemplo, si el alelo 1 es `A`, el genotipo `0` corresponde a “no tiene A”, `1` a “heterocigota”, `2` a “homocigota A/A” y `9` a dato faltante.*
 
 ---
 
@@ -107,8 +107,12 @@ Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1
 
 
 
-## Leer los datos
-Existen varios paquetes de R que permiten leer y procesar estos formatos, pero vamos a usar <em>dartR.base</em> que permite leer el formato plink con la función `gl.read.PLINK`, a la cual le damos también como input un fichero de metadato para individuo llamado `finalSet.metadataPerind.txt`
+## Lectura de los datos
+
+Existen varios paquetes de **R** que permiten leer y procesar estos formatos de genotipos.  
+En este curso utilizaremos el paquete *dartR.base*, que incluye la función `gl.read.PLINK()`, la cual permite importar directamente archivos en formato **PLINK** en un objeto [`genlight`](https://rdrr.io/cran/adegenet/man/genlight.html).  
+
+Además, esta función admite incorporar un archivo de metadatos por individuo (por ejemplo, `finalSet.metadataPerind.txt`), que contiene información complementaria como la población, la región o el estudio de origen.
 
 ```
 require(dartRverse)
@@ -120,10 +124,13 @@ setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pr
 datosGeno<-gl.read.PLINK("PatagoniaDataSetWithOutgroups_ALAB2025/test.plink")
 ```
 
-Al leer los datos, en <em>verbose</em>, vemos algunos mensajes (si hay monomorfismos, si hay loci sin datos, etc.).
-En algunas versiones de dartR.base, puede aparecer el mensaje:<br>
-<em>The slot loc.all, which stores allele name for each locus, is empty. Creating a dummy variable (A/C) to insert in this slot.</em>.<br>
-En este caso, se puede solucionar corriendo lo siguiente.
+Al leer los datos con la opción `verbose = TRUE`, se muestran varios mensajes informativos (por ejemplo, sobre loci monomórficos o con datos faltantes).  
+
+En algunas versiones de *dartR.base*, puede aparecer el siguiente mensaje:  
+*“The slot loc.all, which stores allele name for each locus, is empty. Creating a dummy variable (A/C) to insert in this slot.”*  
+
+Este mensaje indica que la información sobre los alelos de cada locus está vacía, y el programa crea una variable ficticia (“A/C”) para completarla.  
+Para corregirlo de forma manual, puede ejecutarse el siguiente comando:
 
 ```
 ### fix allele names
@@ -132,25 +139,30 @@ bim <- read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.plink.bim", he
 datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
 ```
 
-Vamos a asignar los nombres de las poblaciones que por ahora están guardadas como "Family" en `ind.metrics`
+A continuación, vamos a asignar los nombres de las poblaciones a los individuos.   Esta información se encuentra almacenada en la columna **"Family"** del elemento `ind.metrics` de `datosGeno`. Vamos a transferir esos nombres para que queden correctamente asociados a la variable `pop`.
 ``` 
 datosGeno$pop<-as.factor(datosGeno$other$ind.metrics$Family)
 ```
 
 
-## Explorar los datos
-Podemos ver la tasa de individuos con datos por locus, y la frecuencia alélica haciendo lo siguiente:
- ```
+## Exploración de los datos
+
+Podemos examinar la calidad general del conjunto de datos observando, por ejemplo:  
+- la **proporción de individuos con datos disponibles por locus**, y  
+- la **frecuencia alélica** de cada variante.  
+
+Para ello, podemos ejecutar las siguientes funciones:
+```
 hist(datosGeno@other$loc.metrics$CallRate,main="Call Rate per Locus")
 hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequency per Locus",n=100)
 ```
-Vemos que hay locis con un call rate bajo (<0.2) y que son monomórficos (MAF=0).
+Observamos que existen loci con una **tasa de llamado** (*call rate*) baja (< 0.2) y posiciones **monomórficas** (MAF = 0).  
 
-Podemos ver la tasa de loci con datos por individuo.
+También podemos explorar la **proporción de loci con datos disponibles por individuo**, para identificar muestras con una alta proporción de datos faltantes.
  ```
 hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=10)
 ```
-En cuanto a la tasa de Heterosigosidad, vemos que son todos los individuos homocigotos:
+En cuanto a la **tasa de heterocigosidad**, observamos que todos los individuos presentan genotipos **homocigotos**.
 ```
 table(datosGeno@other$ind.metrics$Heterozygosity)
 ```
