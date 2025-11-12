@@ -57,9 +57,7 @@ Los ficheros de *PLINK* son algo más completos, ya que están diseñados origin
 5. **Sexo biológico** (`1` = hombre, `2` = mujer, `0` = desconocido),  
 6. **Valor fenotípico** (en estudios de antropología molecular también suele utilizarse para indicar el grupo poblacional).  
 
-::: tip
-En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 de los ficheros `.fam` suelen utilizarse para almacenar información de grupo o contexto arqueológico.
-:::
+> 💡 *En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 de los ficheros `.fam` suelen utilizarse para almacenar información de grupo o contexto arqueológico.*
 
 ---
 
@@ -69,9 +67,7 @@ En *EIGENSTRAT*, el archivo de genotipos contiene **una línea por variante** y 
 El genotipo de un individuo para una variante se codifica como el **número de copias del alelo 1** (según el archivo `.snp.txt`).  
 El valor `9` indica un **dato faltante**.  
 
-::: info
-Por ejemplo, si el alelo 1 es `A`, el genotipo `0` corresponde a `no tiene A`, `1` a `heterocigota`, `2` a `homocigota A/A` y `9` a dato faltante.
-:::
+> ℹ️ *Por ejemplo, si el alelo 1 es `A`, el genotipo `0` corresponde a “no tiene A”, `1` a “heterocigota”, `2` a “homocigota A/A” y `9` a dato faltante.*
 
 ---
 
@@ -79,7 +75,6 @@ Por ejemplo, si el alelo 1 es `A`, el genotipo `0` corresponde a `no tiene A`, `
 
 Supongamos que tenemos tres individuos (`IndA`, `IndB` y `IndC`) genotipificados en cuatro variantes (`snp1`, `snp2`, `snp3`, `snp4`).
 
-::: code-block
 **Archivo `.snp.txt`:**
 
 snp1 1 0.1001 100000 A C
@@ -87,9 +82,7 @@ snp2 1 0.6162 600000 T G
 snp3 2 0.5125 513341 C G
 snp4 4 0.1512 251334 G A
 
-:::
 
-::: code-block
 **Archivo `.ind.txt`:**
 
 IndA M Pop1
@@ -97,9 +90,7 @@ IndB M Pop1
 IndC F Pop2
 IndD M Pop3
 
-:::
 
-::: code-block
 **Archivo `.geno.txt`:**
 
 0192
@@ -107,15 +98,13 @@ IndD M Pop3
 2222
 0211
 
-:::
 
-::: example
 Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1**, presenta los siguientes genotipos:
 - `snp1`: C/C  
 - `snp2`: A/C  
 - `snp3`: faltante  
-- `snp4`: A/A  
-:::
+- `snp4`: A/A
+
 
 
 ## Leer los datos
