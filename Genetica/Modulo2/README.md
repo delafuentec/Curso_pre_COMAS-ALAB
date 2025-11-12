@@ -399,7 +399,9 @@ Primero, generamos una tabla que contiene estos pares, concatenando los resultad
 Pairs<-c()
 for(region in names(listRelatednessPerRegion)){
   tmp<-listRelatednessPerRegion[[region]]
-  tmp<-tmp[ tmp$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
+  tmp<-tmp[ tmp$relationship == "First_Degree",]
+  #### next command would be f you want to remove up to 2nd-degree
+  ##tmp<-tmp[ tmp$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
   Pairs<-rbind(Pairs,tmp)
 }
 
@@ -409,14 +411,12 @@ names(sumUpPairs)<-c("id","NumKin","ListKin","Call.Rate")
 for(line in c(1:nrow(Pairs))){
   Ind1=Pairs$Ind1[line];
   Ind2=Pairs$Ind2[line];
-
-  
   if(Ind1 %in% sumUpPairs$id){
-    ###case that Ind1 already found in a pair --> Update
+    ###case that Ind1 already found in a pair --> Update related line 
     sumUpPairs$NumKin[sumUpPairs$id==Ind1]=as.numeric(sumUpPairs$NumKin[sumUpPairs$id==Ind1]) + 1
     sumUpPairs$ListKin[sumUpPairs$id==Ind1]=paste(sumUpPairs$ListKin[sumUpPairs$id==Ind1],Ind2,sep="|")
   }else{
-    ###case that Ind1 first find found in a pair --> add line
+    ###case that Ind1 first find found in a pair --> add line for this individual
     sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind1,
                                       "NumKin"=1,
                                       "ListKin"=Ind2,
@@ -424,11 +424,11 @@ for(line in c(1:nrow(Pairs))){
   }
   
   if(Ind2 %in% sumUpPairs$id){
-    ###case that Ind2 already found in a pair --> Update
+    ###case that Ind2 already found in a pair --> Update related line 
     sumUpPairs$NumKin[sumUpPairs$id==Ind2]=as.numeric(sumUpPairs$NumKin[sumUpPairs$id==Ind2]) + 1
     sumUpPairs$ListKin[sumUpPairs$id==Ind2]=paste(sumUpPairs$ListKin[sumUpPairs$id==Ind2],Ind1,sep="|")
   }else{
-    ###case that Ind2 first find found in a pair --> add line
+    ###case that Ind2 first find found in a pair --> add line for this individual
     sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind2,
                                       "NumKin"=1,
                                       "ListKin"=Ind1,
@@ -446,16 +446,29 @@ Esta tabla permitirá luego eliminar el número mínimo de  individuos para evit
 listToRemove<-data.frame(matrix(NA,0,3))
 names(listToRemove)<-c("id","NumKin","Call.rate")
 sumUpPairs_BU<-sumUpPairs
+
+###until we have related pairs 
 while(nrow(sumUpPairs)>0){
+    ##get pairs with maximum number of remaining kinship relation
 	  tmp<-sumUpPairs[ sumUpPairs$NumKin  == max(sumUpPairs$NumKin),]
+	  ##order those pairs according to call.rate
 	  tmp<-tmp[order(tmp$Call.rate),]
+	  
+	  ##we will remove the individual with lowest call.rate
 	  id<-tmp$id[1]
+	  
+	  ##we keep variables that will be saved into the listToRemove table
 	  Call.rate<-tmp$Call.rate[1]
 	  NumKin<-sumUpPairs_BU$NumKin[sumUpPairs_BU$id==id]
-	  listAssoc<-strsplit(tmp$ListKin[1],split="\\|")[[1]]
 	  listToRemove<-rbind(listToRemove,cbind(id,NumKin,Call.rate))
+	  
+	  ##we get the loist of individuals related to that removed individual (to update the sumUp table)
+	  listAssoc<-strsplit(tmp$ListKin[1],split="\\|")[[1]]
+	  
+	  ###update the sumUp table:1st remove the line for the removed individual
 	  sumUpPairs<-sumUpPairs[ sumUpPairs$id != id,]
 	  
+	  ###then update the lines for related individuals (deleting the id of the removed individual in the list and uodating the number of kinship relation)
 	  for(i in which(sumUpPairs$id %in% listAssoc)){
 	    tmp<-strsplit(sumUpPairs$List[i],split="\\|")[[1]]
 	    tmp<-tmp[ tmp!=id]
