@@ -1,32 +1,46 @@
 # Datos de genotipos: Control de Calidad y Parentesco
 
 ## Objetivos
-En esta sesión, vamos a:
-- repasar la organización de datos de genotipos.
-- realizar unos pasos de control de calidad.
-- estimar el grado de parentesco entre individuos.
-- generar datos listos para llevar a cabo análisis de genética de poblaciones.
+En esta sesión vamos a:  
+- repasar la organización de los datos de genotipos,  
+- realizar algunos pasos de control de calidad,  
+- estimar el grado de parentesco entre individuos, y  
+- generar datos listos para realizar análisis de genética de poblaciones.  
 
-## Intrudcción a los datos
-Vamos a analizar los datos de genotipos de individuos antiguos y modernos del Cono Sur de Ámerica, y particularmente del Sur de Patagonia.
-Existen muchos formatos para este tipo de dato. Vamos a enfocarnos en dos de los más comunes: [</em>plink binary</em>](https://www.cog-genomics.org/plink2/input) y [<em>eigenstrat</em>](https://reich.hms.harvard.edu/software/InputFileFormats).<br>
-Ambos formatos, se constituyen de 3 ficheros: 
-- uno con la matriz de `genotipos` que puede ser binario, es decir no lisible como texto (`.bed` para <em>plink</em> o `.geno` para <em>packed eigenstrat</em>). 
-- uno con la información de las `variantes` analizadas (`.bim` para <em>plink</em> y `.snp` para <em>eigenstrat</em> ).
-- uno con la información de los `individuos` analizados (`.fam` para <em>plink</em> y `.ind` para <em>eigenstrat</em>).
+---
 
-Para <em>eigenstrat</em>, se suele añadir el sufijo `.txt` a los 3 ficheros asociados al formato no binario (es decir `<preffile>.geno.txt`, `<preffile>.snp.txt`, `<preffile>.ind.txt`).
+## Introducción a los datos
+Analizaremos datos de genotipos de individuos antiguos y modernos del Cono Sur de América, en particular del sur de la Patagonia.  
+Existen muchos formatos para este tipo de datos, pero nos enfocaremos en dos de los más comunes: [**PLINK binary**](https://www.cog-genomics.org/plink2/input) y [**EIGENSTRAT**](https://reich.hms.harvard.edu/software/InputFileFormats).  
+
+Ambos formatos se componen de tres ficheros principales:
+- un archivo con la matriz de **genotipos**, que puede ser binario (no legible como texto): `.bed` para *PLINK* o `.geno` para *packed EIGENSTRAT*,  
+- un archivo con la información de las **variantes** analizadas (`.bim` para *PLINK* y `.snp` para *EIGENSTRAT*),  
+- y un archivo con la información de los **individuos** analizados (`.fam` para *PLINK* y `.ind` para *EIGENSTRAT*).  
+
+En el caso de *EIGENSTRAT*, es común añadir el sufijo `.txt` a los tres ficheros cuando se utilizan en formato no binario (por ejemplo: `<prefijo>.geno.txt`, `<prefijo>.snp.txt`, `<prefijo>.ind.txt`).
+
+---
 
 ### Fichero de anotación de las variantes
-Los ficheros `.bim` y `.snp` contienen una linea por variante y 6 columnas con la misma información. La única diferencia es el orden de las 2 primeras columnas:
-- ID de la variante: columna 1 para .snp y 2 para .bim
-- cromosoma: columna 2 para .snp y 1 para.bim
-- posición genética: columna 3. Se trata de la posición de la variante en función de los eventos de recombinación pasados. Para este curso, no es relevante.
-- posición física: columna 4. Se trata del par de base en cual se encuentra la variante en la secuencia del cromosoma.
-- Alelo 1: columna 5. Suele ser el alelo de menor frecuencia en la muestra analizada
-- Alelo 2: columna 6. Ser ser el alelo de mayor frecuencia en la muestra analizada.
+Los archivos `.bim` y `.snp` contienen una línea por variante y seis columnas con información equivalente.  
+La única diferencia entre ellos es el orden de las dos primeras columnas:
 
-Noten entonces que ambos formatos son compatibles solamente para variantes bialélicas.
+| Información         | `.snp`     | `.bim`     |
+|---------------------|------------|-------------|
+| ID de la variante   | Columna 1  | Columna 2   |
+| Cromosoma           | Columna 2  | Columna 1   |
+| Posición genética   | Columna 3  | Columna 3   |
+| Posición física     | Columna 4  | Columna 4   |
+| Alelo 1             | Columna 5  | Columna 5   |
+| Alelo 2             | Columna 6  | Columna 6   |
+
+- **Posición genética:** indica la ubicación de la variante según los eventos históricos de recombinación (no será relevante para este curso).  
+- **Posición física:** corresponde al par de bases donde se encuentra la variante en la secuencia del cromosoma.  
+- **Alelo 1:** suele ser el alelo de menor frecuencia en la muestra.  
+- **Alelo 2:** suele ser el alelo de mayor frecuencia.  
+
+Atención: Ambos formatos solo son compatibles con variantes **bialélicas**.
 
 ### Fichero de anotación de las individuos
 Los ficheros `.ind` (<em>eigenstrat</em>) contienen 3 columnas, en este orden:
