@@ -75,28 +75,28 @@ El valor `9` indica un **dato faltante**.
 
 Supongamos que tenemos tres individuos (`IndA`, `IndB` y `IndC`) genotipificados en cuatro variantes (`snp1`, `snp2`, `snp3`, `snp4`).
 
-**Archivo `.snp.txt`:**<br?:
+**Archivo `.snp.txt`:**<br>:
 
-snp1 1 0.1001 100000 A C<br?
-snp2 1 0.6162 600000 T G<br?
-snp3 2 0.5125 513341 C G<br?
-snp4 4 0.1512 251334 G A<br?
-
-
-**Archivo `.ind.txt`:**<br?
-
-IndA M Pop1<br?
-IndB M Pop1<br?
-IndC F Pop2<br?
-IndD M Pop3<br?
+snp1 1 0.1001 100000 A C<br>
+snp2 1 0.6162 600000 T G<br>
+snp3 2 0.5125 513341 C G<br>
+snp4 4 0.1512 251334 G A<br>
 
 
-**Archivo `.geno.txt`:**<br?
+**Archivo `.ind.txt`:**<br>
 
-0192<br?
-1122<br?
-2222<br?
-0211<br?
+IndA M Pop1<br>
+IndB M Pop1<br>
+IndC F Pop2<br>
+IndD M Pop3<br>
+
+
+**Archivo `.geno.txt`:**<br>
+
+0192<br>
+1122<br>
+2222<br>
+0211<br>
 
 
 Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1**, presenta los siguientes genotipos:
@@ -162,17 +162,27 @@ También podemos explorar la **proporción de loci con datos disponibles por ind
  ```
 hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=10)
 ```
-En cuanto a la **tasa de heterocigosidad**, observamos que todos los individuos presentan genotipos **homocigotos**.
+Ahora podemos miramos la **tasa de heterocigosidad** por cada individuo.
 ```
 table(datosGeno@other$ind.metrics$Heterozygosity)
 ```
+> Observamos que todos los individuos presentan genotipos **homocigotos**.
+> Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar a generar datos seudo-haploides. En la práctica, esto significa que para cada posición genómica y cada individuo se selecciona al azar una de las lecturas disponibles, y el nucleótido observado en ella se asigna como un genotipo homocigota para ese individuo.
 
-Esto se debe a que, en el caso del ADN antiguo, la baja cobertura suele obligar a generar datos seudo-haploides. En la práctica, esto significa que para cada posición genómica y cada individuo se selecciona al azar una de las lecturas disponibles, y el nucleótido observado en ella se asigna como un genotipo homocigota para ese individuo.
+## Filtrado
 
-## Filtrar
-Algunos análisis pueden requerir filtrar variantes e individuos por valores faltantes. 
-De momento vamos solamente guardar en dos vectores las posiciones monomórficas y las que tienen datos para solo 1 individuo (Call Rate inferior a 2/64 = 0.03125), y luego los individuos con datos para más de 5000 variantes restantes.<br>
-Noten que los siguientes comandos, por razón de memoria, no guardan los datos filtrados, y solo generar las listas de SNPs e Individuos que tendríamos que sacar (volveremos alas mismas luego).
+Algunos análisis requieren aplicar filtros a las variantes o a los individuos en función de la proporción de **datos faltantes**.  
+
+Por ahora, vamos a crear dos vectores que almacenen:  
+- las posiciones **monomórficas**, y  
+- aquellas con datos disponibles para **solo un individuo** (es decir, con una tasa de llamado inferior a 2/64 = 0.03125).  
+
+Luego, identificaremos los individuos que conservan **más de 5.000 variantes** tras este filtrado inicial.  
+
+> Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  
+> En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  
+> Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
+
 ```
 ###filtro de SNPs
 SNPs_to_exclude=datosGeno$other$loc.metrics$AlleleID[ datosGeno$other$loc.metrics$CallRate<0.03125 |
