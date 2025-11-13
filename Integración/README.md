@@ -144,7 +144,7 @@ wrap_plots(plots, ncol = 3)
 ```
 
 Make legend
-```
+```r
 metadata$groupId<-as.factor(metadata$groupId)
 metadata$Point[ order(metadata$groupId)]<-c(1:14)
 metadata$region<-as.factor(metadata$region)
@@ -205,7 +205,7 @@ plot(GenNJ_noOut,use.edge.length = F,show.tip.label=T,align.tip.label=T)#,tip.co
 ## Analísis morfólogicos
 
 ### Formateo distancias morfólogicas y calculo MDS
-```
+```r
 
 distMorf<-read.csv("AmericaByGroups/MorphologicalDistances.tsv",stringsAsFactors=F,header=T)
 row.names(distMorf)<-distMorf$X
@@ -344,7 +344,7 @@ wrap_plots(plots, ncol = 3)
 ```
 ### if we want to make sure you reorder the 
 
-```
+```r
 library(clue)
 
 # Compute correlation matrix between dimensions

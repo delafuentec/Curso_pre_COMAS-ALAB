@@ -7,7 +7,7 @@ En este modulo, vamos a realizar 2 analisis tipicos de genetica de poblaciones h
 > Estos analisis se suelen hacer con <em>smartpca</em> del software [<em>EIGENSOFT</em>](https://github.com/DReichLab/EIG) y <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], pero su implementación en el paquete <em>LEA</em> de **R** son muy similares.
 Vamos a leer los datos filtrados que generamos en el modulo anterior.
 
-```
+```r
 require(LEA)
 ### you maybe need to change the directory below
 setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB/Genetica/")
@@ -17,18 +17,18 @@ pref="Modulo3/filteredDataSet"
 
 ## ACP
 En este analísis, reduce el número de dimensiones en grandes conjuntos de datos a componentes principales que conservan la mayor parte de la información original.
-```
+```r
 pc = pca(paste(pref,".geno",sep=""), scale = TRUE)
 ```
 Los resultados se crean en una carpeta <pref>.pca. 
-```
+```r
 ### we can read the eigenvalues file
 eigenvalues<-read.table(paste(pref,".pca/filteredDataSet.eigenvalues",sep=""),stringsAsFactors=F,header=F)
 ### let see the porcentage of variance explained per principal components
 plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
 ```
 
-```
+```r
 ### we can read the projections of the individuals: one line per individual.
 ### the individuals are ordered as in the input file (thus reading <pref>.ind.txt we know which column corresponds to which individual)
 projections<-read.table(paste(pref,".pca/",strsplit(pref,split="/")[[1]][2],".projections",sep=""),stringsAsFactors=F,header=F)

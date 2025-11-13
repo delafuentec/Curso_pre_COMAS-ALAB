@@ -133,7 +133,7 @@ En este curso utilizaremos el paquete *dartR.base*, que incluye la función `gl.
 
 Además, esta función admite incorporar un archivo de metadatos por individuo (por ejemplo, `finalSet.metadataPerind.txt`), que contiene información complementaria como la población, la región o el estudio de origen.
 
-```
+```r
 require(dartRverse)
 require(dartR.base)
 require(ade4)
@@ -152,7 +152,7 @@ En algunas versiones de *dartR.base*, puede aparecer el siguiente mensaje:
 Este mensaje indica que la información sobre los alelos de cada locus está vacía, y el programa crea una variable ficticia (“A/C”) para completarla.  
 Para corregirlo de forma manual, puede ejecutarse el siguiente comando:
 
-```
+```r
 ### fix allele names
 bim <- read.table(paste(pref,".bim",sep=""), header = FALSE)
 # Columns: CHR SNP CM POS A1 A2
@@ -160,7 +160,7 @@ datosGeno@loc.all <- paste(bim$V5, bim$V6, sep="/")
 ```
 
 A continuación, vamos a asignar los nombres de las poblaciones a los individuos.   Esta información se encuentra almacenada en la columna **"Family"** del elemento `ind.metrics` de `datosGeno`. Vamos a transferir esos nombres para que queden correctamente asociados a la variable `pop`.
-``` 
+```r 
 datosGeno$pop<-as.factor(datosGeno$other$ind.metrics$Family)
 ```
 
@@ -172,7 +172,7 @@ Podemos examinar la calidad general del conjunto de datos observando, por ejempl
 - la **frecuencia alélica** de cada variante.  
 
 Para ello, podemos ejecutar las siguientes funciones:
-```
+```r
 hist(datosGeno@other$loc.metrics$CallRate,main="Call Rate per Locus")
 hist(datosGeno@other$loc.metrics$maf,main="Minor Allele Frequency per Locus",n=100)
 ```
@@ -180,11 +180,11 @@ Observamos que existen loci con una **tasa de llamado** (*call rate*) baja (< 0.
 > Usamos el panel 1240K que se basa en posiciones encontradas por ser polimorficas en una muestra mundial. Sin embargo, por el hecho que hubo mucha deriva génica durante la historia evolutiva de las poblaciones de Sudamerica (p.ej. con varios efectos fundadores), la diversidad genética en el sub-continente es reducida, particularmente en el Sur de Patagonia. Lo cual llevó a muchas variantesobservadas en el mundo siendo fijadas en las poblaciones que nos interesan. [de la Fuente et al. (2024)](https://pivotscipub.com/hpgg/4/1/0003) lo describieron en detalle.
 
 También podemos explorar la **proporción de loci con datos disponibles por individuo**, para identificar muestras con una alta proporción de datos faltantes.
- ```
+ ```r
 hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual")
 ```
 Ahora podemos miramos la **tasa de heterocigosidad** por cada individuo.
-```
+```r
 table(datosGeno@other$ind.metrics$Heterozygosity)
 ```
 > Observamos que todos los individuos presentan genotipos **homocigotos**.
@@ -224,7 +224,7 @@ El primer paso consiste en calcular las **métricas PMR** (*Pairwise Mismatch Ra
 Este proceso es **computacionalmente intensivo**, ya que implica comparar los genotipos entre todos los pares posibles del conjunto de datos.  
 Por esta razón, en este ejercicio **leeremos directamente la tabla de resultados previamente generada**, en lugar de recalcular las métricas desde cero.
 
-```
+```r
 require(BREADR)
 require(tibble)
 
@@ -257,7 +257,7 @@ Una vez definidos este valor medio esperado del PMR para cada relación de grado
 
 Vamos ahora calcular el parentesco entre todos los pares de individuos de la muestra, analizados en su conjunto.
 
-```
+```r
 ##estimate relatedness
 relatedness_allAncientTogether <- callRelatedness(countsPMR)
 
@@ -288,7 +288,7 @@ relatedness_allAncientTogether<-addPops(tableRel=relatedness_allAncientTogether,
 ```
 Veamos cuantos pares de individuos aparentados, en qué región y población.
 
-```
+```r
 ###Number of related pairs indivuduals:
 related_allAncientTogether<-relatedness_allAncientTogether[ relatedness_allAncientTogether$relationship!="Unrelated",]
 nrow(related_allAncientTogether)
@@ -314,7 +314,7 @@ Vemos entonces que detectamos muchos pares de aparentados en el Sur de Patagonia
 En lo que sigue, vamos a ir, región por región, generar la sub-tabla de PMR por los pares de individuos de esta región, verificar que hay suficientes pares (digamos por lo menos 5) y proceder de nuevo a las inferencias de parentesco desde valor medio esperado del PMR para cada relación de grado según estos pares únicamente.<br>
 Para esto, vamos a generar una lista que contienen la tabla de inferencia de parentesco por región.
 
-```
+```r
 print(unique(meta$Region))
 ### regions were actually divided temporaly, we will not do so... 
 listRelatednessPerRegion<-list()
@@ -338,7 +338,7 @@ for(region in c("SouthPatagonia","CentralChile","Beringia","SouthernNorthAmerica
 ```
 Vemos que reducimos drastícamente el número de pares de aparentados encontrados. Por ejemplo, ahora encontramos 20 en el Sur de Patagonia, contra 321 en el analísis con todos los individuos a la vez.
 Podemos verificar de nuevo si los resultados de parentesco (hasta el 1er grado) son concordantes con la distribución temporal y geografíca.
-```
+```r
 for(region in names(listRelatednessPerRegion)){
   print(region)
   ###Let's see in which groups we have pairs of 1st-degree or Twins/Duplicated for this region
@@ -349,7 +349,7 @@ for(region in names(listRelatednessPerRegion)){
 ```  
 Ahora vemos que los parentescos al 1er grado son coherentes.
 Podemos verificar también si los resultados de parentesco (hasta el 2ndo grado) son concordantes con la distribución temporal y geografíca.
-```
+```r
 for(region in names(listRelatednessPerRegion)){
   print(region)
   ###Let's see in which groups we have pairs of 1st-degree or Twins/Duplicated for this region
@@ -369,7 +369,7 @@ El paquete <em>BREADR</em> provee diferentes funciones para esto:
 
 Veamos entonces si hay pares que pueden ser potencialmente falso positivos. Primero veamos los PMR para los pares con PMR más bajo (los 20 pares de aprentados no son necesariamente los con PMR más bajo como veremos).
 
-```
+```r
 ### generate table from the result list per  region (and remove  columns 13 to 18 that we added with pop labels)
 relatednessPatagonia=listRelatednessPerRegion[["SouthPatagonia"]][,c(1:12)]
 ###sort the table according to pmr
@@ -382,7 +382,7 @@ plotLOAF(relatednessPatagonia,N=22)
 
 Vemos entonces que el par AM66 - AM71 tiene un error estandar asociado al PMR muy grande, y de hecho no es significativamente diferente del nivel esperado para el 1er grado ni el 2o grado.
 Sin embargo, <BREADR> da como resultado "1er grado". Esto se debe al número de SNPs limitado en esta comparación. Veamos más en detalle este par.
- ```
+ ```r
  ### call rate para ambos:
  datosGeno$other$ind.metrics[datosGeno$other$ind.metrics$id %in% c("AM66","AM71"),]
  ### plotSlice
@@ -404,7 +404,7 @@ Primero, generamos una tabla que contiene estos pares, concatenando los resultad
 
 > En general es preferible sacar los aparentados al 2o-grado, pero en este ejercicio vimos que muchos parentescos pueden ser falsos positivos, entonces nos concentramos solo en el 1er grado. En un estudio real, sería necesario (in)validar todos los pares hasta el 2o-grado para generar una lista carentes de potenciales falsos positivos.
 
-```
+```r
 ###keep all pairs
 Pairs<-c()
 for(region in names(listRelatednessPerRegion)){
@@ -453,7 +453,7 @@ sumUpPairs$Call.rate<-as.numeric(sumUpPairs$Call.rate)
 ```  
 
 Esta tabla permitirá luego eliminar el número mínimo de  individuos para evitar cualquier relación hasta el 1er-grado, dando prioridad a la eliminación de los primeros individuos involucrados en el mayor número de relaciones por pares y, en caso de empates, a los individuos con menos datos (`Call.rate`).
-```
+```r
 listToRemove<-data.frame(matrix(NA,0,3))
 names(listToRemove)<-c("id","NumKin","Call.rate")
 sumUpPairs_BU<-sumUpPairs
@@ -506,7 +506,7 @@ Vamos a eliminar primero los SNPs con datos disponibles para **solo un individuo
 Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
 
 
-```
+```r
 ###filter  SNPs for call.rate (we force to recalculate the metrics and remove monomorhisms)
 nLoc_init=datosGeno$n.loc
 nInd_init=length(datosGeno$ind.names)
@@ -517,7 +517,7 @@ print(paste("N SNPs before call.rate:",nLoc_init,"; N SNPs after call.rate and m
 Pueden aparecer uno <em>warnings meassge</em> pero verán que solo se tratan de mensajes asociados a los histogramas que se generan.
 
 Luego, vamos a eliminar los individuos que conservan **más de 10,000 variantes** tras este filtrado inicial y los que identificamos para evitar parentesco en la muestra.
-```
+```r
 metricsInds_forKeptSNPs <- datosGeno_filter$other$ind.metrics
 ###add a column of the number of called snps (Call.rate*nLoc_callrate)
 metricsInds_forKeptSNPs$CalledSNPs=metricsInds_forKeptSNPs$Call.rate*nLoc_callRate
@@ -540,7 +540,7 @@ print(paste("filtered dataset contains:",nInd_final,"inds and",nLoc_final,"snps"
 Ahora podemos escribir los datos en la carpeta del Modulo3, ya que los usaremos para esto.
 En los paquetes que ocupamos no hay una función que permita escribir al formato <em>EIGENSTRAT</em> directamente, pero desde el objeto `genLight` que creamos es sencillo.
 
-```
+```r
 prefOUT="Modulo3/filteredDataSet"
 ### Convert genlight genotype data to a numeric matrix
 geno_mat <- as.matrix(datosGeno_filter)
