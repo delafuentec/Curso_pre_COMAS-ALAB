@@ -194,21 +194,35 @@ table(datosGeno@other$ind.metrics$Heterozygosity)
 
 
 ## Parentesco
-Para el análisis de parentesco que sigue, no hace falta filtrar los datos por valores faltantes o frecuencia del alelo menor, por lo cual haremos el análisis sobre 
-### Introducción al análisis de parentesco
-Existen varios métodos para detectar individuos aparentados. Vamos a usar [<em>BREADR</em>](https://joss.theoj.org/papers/10.21105/joss.07916). 
-Este método es una extensión del método quizás más usado en el campo ([<em>READv2</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03350-3)), ya que se base en el escore PMR.
-Este escore es la proporción de sitios superpuestos con genotipos no coincidentes, es decir la fracción de posiciones del genoma en las que dos individuos tienen datos genotípicos válidos (no faltantes) y sus llamadas de genotipo difieren. En otras palabras, mide qué porcentaje de los sitios comparables entre ambos individuos presentan genotipos distintos, reflejando el grado de discrepancia genética entre ellos.
-Las diferencias más importantes con READv2 son:
-1. el uso de sitios independientes (separados por recombinación durante la meiosis). Por defecto, el programa usa un locus cada 10,000 par de bases (paramétro ` filter_length`).
-2. su implementación en R.
 
-Noten que estos métodos implementan aproximaciones que tomen en cuenta las limitaciones de los datos en ADN antiguo (pseudo-haploides y con baja cobertura). Para analizar datos modernos que no padecen de estas limitaciones, se recomienda usar otros métodos, por ejemplo [<em>KING</em>](https://www.kingrelatedness.com/).
-<em>BREADR</em>  usa el formato <em>eigenstrat</em>. Vamos a analizar solamente los individuos antiguos.
+### Introducción al análisis de parentesco
+
+Para el análisis de parentesco que realizaremos a continuación, **no es necesario filtrar los datos por valores faltantes ni por frecuencia del alelo menor**, por lo que trabajaremos directamente con el conjunto completo de variantes.
+
+Existen diversos métodos para detectar **individuos emparentados**. En este caso, utilizaremos [*BREADR*](https://joss.theoj.org/papers/10.21105/joss.07916), un método desarrollado específicamente para el análisis de parentesco en contextos de ADN antiguo.
+
+*BREADR* extiende el enfoque del método ampliamente utilizado [*READv2*](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03350-3), basado en el **escore PMR** (*Pairwise Mismatch Rate*).  
+El PMR representa la **proporción de sitios compartidos entre dos individuos en los que los genotipos no coinciden**. Es decir, mide la fracción de posiciones del genoma en las que ambos individuos tienen datos válidos (no faltantes) pero presentan genotipos distintos. En otras palabras, cuantifica el **grado de discrepancia genética** entre dos individuos.
+
+Las principales diferencias entre *BREADR* y *READv2* son:
+
+1. El uso de **sitios independientes** (separados por recombinación durante la meiosis).  
+   Por defecto, el programa utiliza un locus cada 10 000 pares de bases (parámetro `filter_length`).
+
+2. Su **implementación en R**, lo que facilita la integración con otros flujos de análisis.
+
+Estos métodos incorporan **aproximaciones diseñadas para datos de ADN antiguo**, que suelen ser **pseudo-haploides y de baja cobertura**.  
+En cambio, para analizar **datos genómicos modernos**, donde estas limitaciones no aplican, se recomienda emplear métodos alternativos como [*KING*](https://www.kingrelatedness.com/).
+
+Finalmente, *BREADR* utiliza el formato de datos **EIGENSTRAT**. En este análisis consideraremos únicamente los **individuos antiguos**.
 
 ### Inferencia de los grados de parentesco
+
 #### Generación de la métrica necesaria (PMR)
-Primero se calculan las métricas PMR para cada par de individuo, es la parte más demandante computacionalmente, por lo cual, vamos a leer directamente la tabla de resultado.
+
+El primer paso consiste en calcular las **métricas PMR** (*Pairwise Mismatch Rate*) para cada par de individuos.  
+Este proceso es **computacionalmente intensivo**, ya que implica comparar los genotipos entre todos los pares posibles del conjunto de datos.  
+Por esta razón, en este ejercicio **leeremos directamente la tabla de resultados previamente generada**, en lugar de recalcular las métricas desde cero.
 
 ```
 require(BREADR)
@@ -231,7 +245,7 @@ if(! file.exists("Modulo2/PMR_allAncientTogether.txt")){
 print(head(countsPMR))
 
 ```
-Se genera entonces una tabla, con 4 columnas: par analizado | número de variantes | numero de variantes disconcordantes | PMR
+Se genera entonces una tabla con 4 columnas: par analizado | número de variantes | numero de variantes disconcordantes | PMR
 
 #### Definir el grado de parentesco
 Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grado de parentesco. Para definir el parentesco entre 2 individuos, se calcula los niveles de PMR esperados en la población, según la distribución de los PMR en todos los pares de individuos analizados.
@@ -523,10 +537,11 @@ print(paste("filtered dataset contains:",nInd_final,"inds and",nLoc_final,"snps"
 
 ```
 
-Ahora podemos escribir los datos. En los paquetes que ocupamos no hay una función que permita escribir al formato <em>EIGENSTRAT</em> directamente, pero desde el objeto `genLight` que creamos es sencillo.
+Ahora podemos escribir los datos en la carpeta del Modulo3, ya que los usaremos para esto.
+En los paquetes que ocupamos no hay una función que permita escribir al formato <em>EIGENSTRAT</em> directamente, pero desde el objeto `genLight` que creamos es sencillo.
 
 ```
-prefOUT="Modulo2/filteredDataSet"
+prefOUT="Modulo3/filteredDataSet"
 ### Convert genlight genotype data to a numeric matrix
 geno_mat <- as.matrix(datosGeno_filter)
 # Replace missing data with 9 (per convention)
@@ -534,11 +549,12 @@ geno_mat[is.na(geno_mat)] <- 9
 ###check size
 dim(geno_mat)
 ##write the genotype data. Watchout you have to transpose the matrix
-write.table(t(geno_mat), paste(prefOUT,".geno.txt",sep=""),col.names=F,row.names=F,quote=F,sep="")
+write.table(t(geno_mat), paste(prefOUT,".geno",sep=""),col.names=F,row.names=F,quote=F,sep="")
 ##write the individual annotation file
 indData<-datosGeno_filter$other$ind.metrics[,c("id","Sex","Family")]
 indData$Sex[is.na(indData$Sex)]<-"U"
-write.table(indData, paste(prefOUT,".ind.txt",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+write.table(indData, paste(prefOUT,".ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ##write the snp annotation file
 snpData<-datosGeno_filter$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
-write.table(snpData, paste(prefOUT,".snp.txt",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+write.table(snpData, paste(prefOUT,".snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+```
