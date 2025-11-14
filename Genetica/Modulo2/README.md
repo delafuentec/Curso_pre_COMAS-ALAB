@@ -57,7 +57,7 @@ Los ficheros de *PLINK* son algo más completos, ya que están diseñados origin
 5. **Sexo biológico** (`1` = hombre, `2` = mujer, `0` = desconocido),  
 6. **Valor fenotípico** (en estudios de antropología molecular también suele utilizarse para indicar el grupo poblacional).  
 
->  *En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 de los ficheros `.fam` suelen utilizarse para almacenar información de grupo o contexto arqueológico.*
+>  *En estudios poblacionales o arqueogenéticos, las columnas 1 y 6 del fichero `.fam` (columna 3 del fichero .ind.txt) suelen utilizarse para almacenar información de grupo o contexto arqueológico.*
 
 ---
 
