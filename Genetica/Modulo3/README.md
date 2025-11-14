@@ -16,7 +16,17 @@ pref="Modulo3/filteredDataSet"
 ```
 
 ## ACP
-En este analísis, reduce el número de dimensiones en grandes conjuntos de datos a componentes principales que conservan la mayor parte de la información original.
+En este analísis, se reduce el número de dimensiones en grandes conjuntos de datos a componentes principales que conservan la mayor parte de la información original.
+### Primer ACP a escala continental
+Vamos a realizar un primer analisis incorporando todos los individuos antiguos que conforman nuestra conjunto de datos filtrado.
+Podemos explorar los individuos analizados leyendo el fichero **ind** y cruzandolo con los metadatos
+```r
+ind<-read.table(paste(pref,".ind",sep=""),stringsAsFactors=F,header=F)
+names(ind)<-c("id","sex","pop")
+meta=read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.metadataPerind.txt",stringsAsFactors = F,header=T)
+### generate table of the number of individual per region
+table(meta$Region[ meta$id %in% ind$id])
+#### Correr el ACP
 ```r
 pc = pca(paste(pref,".geno",sep=""), scale = TRUE)
 ```
@@ -33,15 +43,13 @@ plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab=
 ### the individuals are ordered as in the input file (thus reading <pref>.ind.txt we know which column corresponds to which individual)
 projections<-read.table(paste(pref,".pca/",strsplit(pref,split="/")[[1]][2],".projections",sep=""),stringsAsFactors=F,header=F)
 ## add info per ind
-ind<-read.table(paste(pref,".ind",sep=""),stringsAsFactors=F,header=F)
-projections$id=ind$V1
-projections$pop=ind$V3
+projections$id=ind$id
+projections$pop=ind$pop
 ###get metafile for plotting
-meta=read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.metadataPerind.txt",stringsAsFactors = F,header=T)
 projections<-merge(projections,meta,by=c("id","pop"))
 
-###let;s plot
-pdf(paste(pref,".PCAWithAll.pdf",sep=""),height=10)
+###let's plot the first 10 PCs
+#pdf(paste(pref,".PCAWithAll.pdf",sep=""),height=10)
 par(mfrow=c(3,2))
 forLeg<-unique(projections[,c("Region","pop","Color","Point")])
 forLeg<-forLeg[ order(forLeg$Region,forLeg$pop),]
@@ -56,15 +64,71 @@ for(i in seq(1,9,2)){
           xlab=paste("PC",i),
           ylab=paste("PC",i+1))
 }
-dev.off()
-### the
-### let see the porcentage of variance explained per principal components
-plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
+#dev.off()
 ```
 
+#### Interpretación de los resultados del primer ACP
 
+El análisis de componentes principales (ACP) nos permite visualizar cómo se relacionan genéticamente los individuos antiguos entre sí. En este caso, los primeros componentes capturan patrones muy coherentes con lo que se conoce sobre el poblamiento de América.
 
+En primer lugar, el ACP separa de manera marcada al individuo Upward Sun River 1 (ASR1), procedente de Beringia. Esto es esperable, ya que este individuo representa un linaje muy basal, es decir, cercano a las poblaciones ancestrales que dieron origen a todos los grupos americanos. Por lo tanto, es lógico que aparezca como el más diferente en el espacio genético.
 
+En segundo lugar, los componentes siguientes distinguen a varios individuos muy tempranos —como Los Rieles, Spirit Cave, Anzick y uno de Lagoa Santa— del resto de Sudamérica. Estos genomas pertenecen a momentos iniciales del poblamiento y conservan señales genéticas que se perdieron o se transformaron en las poblaciones sudamericanas posteriores. La separación que vemos en el ACP refleja justamente esa diversidad temprana: distintos grupos que fueron llegando a América y que aún no habían convergido en la estructura genética que predomina más tarde.
+
+Además, algunos componentes capturan diferencias más sutiles dentro de estos mismos linajes tempranos. Por ejemplo, Anzick y Spirit Cave aparecen separados entre sí, lo que indica que ya existía variación estructurada en Norteamérica desde el inicio del Holoceno. Algo similar ocurre con Los Rieles y el individuo temprano de Lagoa Santa, que muestran distancias genéticas entre sí pese a ser comparables en edad.
+
+Finalmente, uno de los componentes diferencia claramente al individuo Ayayema, del extremo sur de Patagonia. Su posición única en el ACP sugiere que este individuo representa una variación genética específica de esa región austral, probablemente resultado de aislamiento geográfico y dinámicas demográficas propias de Patagonia.
+
+En conjunto, estos patrones nos muestran que la diversidad genética temprana en América fue más compleja de lo que suele imaginarse: no existió un único “grupo fundador”, sino varios linajes tempranos que se diferenciaron entre sí y que dejaron huellas distintas en las poblaciones tardías. El ACP resume esta historia en un espacio bidimensional, permitiendo visualizar cómo se distribuye esa diversidad a través del tiempo y del continente.
+
+Vimos que en varios componentes un individuo de Lagoa Santa es diferente de los demas del mismo sitio.
+Primero podemos verificar que se trate siempre del mismo
+```r
+### get projections for sumidouro individuals on PCs 2,4,5 and 7
+sumi<-projections[grepl("Brazil_Sumidouro_",projections$pop),c("id","pop",paste("V",c(2,4,5,7),sep=""))]
+print(sumi)
+```
+
+Vemos entonces que es Sumidouro5 (~10400BP) que se diferencia de los otros. Sumidouro 5, un individuo del Holoceno temprano proveniente de la cueva de Sumidouro (Lagoa Santa, Brasil), destaca por varias razones biológicas y arqueológicas. En primer lugar, su morfología craneal fue reconocida desde mucho tiempo como particularmente distintiva: comparaciones multivariantes indicaron afinidades con poblaciones africanas y austro-melanesias, en lugar de con los indigenas  americanos tardíos o asiáticos [(Neves et al. 2007)](bpb-us-w2.wpmucdn.com). <br>
+Más recientemente, datos genómicos han revelado en Sumidouro 5 una señal de ascendencia mitocondrial D4h3a y un perfil autosómico que no se corresponde completamente con otros individuos tempranos de Lagoa Santa, lo que sugiere conexiones genéticas más amplias (incluso con poblaciones amazónicas ancestrales), ([Moreno-Mayar et al. 2018](https://www.science.org/doi/10.1126/science.aav2621),[Ferraz et al. 2023](https://doi.org/10.1038/s41559-023-02114-9)). <br>
+Esta combinación de rasgos morfológicos arcaicos y una ascendencia genética poco común indica que Sumidouro 5 pudo pertenecer a un linaje parcialmente distinto a otros pobladores tempranos de Lagoa Santa, aportando evidencia de una mayor diversidad biológica en los primeros habitantes del este de Sudamérica y de posibles rutas de migración complejas durante el Holoceno temprano.
+
+### ACP enfocandose en procesos mas tardios de Sudmerica
+Ahora vamos a rehacer el analisis pero sacando los individuos de Norte America, y los grupos tempranos de Chile (Los Rieles ~12000BP) y de Lagoa Santa (Brazil).
+Para eso vamos aleer los datos al formato *eigenstrat* para generar un sub-conjunto sin estos individuos
+
+#### Generar sub-conjunto
+```r
+require(dartR.base)
+### read file
+geno <- read.geno(paste(pref,".geno",sep="")) 
+# Read .ind file
+ind <- read.table(paste(pref,".ind",sep=""), stringsAsFactors = FALSE,header=F)
+
+# get list of inds to remove 
+toRemoveID<-meta$id [ meta$Region %in% c("Beringia_EH","CentralChile_EH","SouthernNorthAmerica_EH") | 
+		      grepl("Brazil_Sumidouro",meta$pop)]
+# make list of remaining individuals
+toKeepID<-ind$id[ ! ind$id %in% toRemoveID]
+# check from which regions come from the remaining individuals
+table(meta$Region[ meta$id %in% toKeepID])
+# check the remaining groups from Brazil_EH
+table(meta$pop[ meta$Region == "Brazil_EH" & meta$id %in% toKeepID])
+
+##looks ok --> generate subdataset
+geno_sub<-geno[,which(ind$id %in% toKeepID)]
+ind_sub<-ind[ ind$id %in% toKeepID,]
+## write .geno
+write.geno(geno_sub, paste(pref,"_subset.geno",sep=""))
+
+### Write .ind file (name, sex, pop)
+write.table(ind_sub,
+            file = paste(pref,"_subset.ind",sep=""),
+            quote = FALSE,
+            row.names = FALSE,
+            col.names = FALSE)
+## we can jusst copy the snp file
+system(paste("cp ",pref,".snp ",pref,"_subset.snp",sep=""))
 
 
 ## Admixture
