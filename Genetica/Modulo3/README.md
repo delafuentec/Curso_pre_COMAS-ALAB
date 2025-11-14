@@ -61,3 +61,25 @@ dev.off()
 ### let see the porcentage of variance explained per principal components
 plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
 ```
+
+
+
+
+
+
+## Admixture
+
+
+Vamos a realizar el analisis por un numero de **poblaciones ancestral** (o cluster) **K** variando de 2 a 10. Para cada **K** haremos 4 repeticiones independientes.
+> Se suelen hacer en los estudios entre 10 y 30 repeticiones por **K**.
+
+
+
+K```r
+admProj = snmf(paste(pref,".geno",sep=""),
+                K = 2:10, 
+                entropy = TRUE, 
+                repetitions = 4,
+                project = "new")
+
+```

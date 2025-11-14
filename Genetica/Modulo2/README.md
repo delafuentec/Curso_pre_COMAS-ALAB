@@ -530,9 +530,10 @@ datosGeno_filter<-gl.filter.callrate(datosGeno, threshold=2/66,recalc=TRUE,mono.
 nLoc_callRate=datosGeno_filter$n.loc
 print(paste("N SNPs before call.rate:",nLoc_init,"; N SNPs after call.rate and monomorphism filtering:",nLoc_callRate))
 ```
-Pueden aparecer uno <em>warnings meassge</em> pero verán que solo se tratan de mensajes asociados a los histogramas que se generan.
+Pueden aparecer algunos *warnings messages*, pero verán que solo corresponden a mensajes asociados a los histogramas que se generan.
 
-Luego, vamos a eliminar los individuos que conservan **más de 10,000 variantes** tras este filtrado inicial y los que identificamos para evitar parentesco en la muestra.
+Luego, vamos a eliminar los individuos que conservan **más de 10,000 variantes** tras este filtrado inicial, así como aquellos que identificamos previamente para evitar parentescos en la muestra.
+
 ```r
 metricsInds_forKeptSNPs <- datosGeno_filter$other$ind.metrics
 ###add a column of the number of called snps (Call.rate*nLoc_callrate)
@@ -553,8 +554,8 @@ print(paste("filtered dataset contains:",nInd_final,"inds and",nLoc_final,"snps"
 
 ```
 
-Ahora podemos escribir los datos en la carpeta del Modulo3, ya que los usaremos para esto.
-En los paquetes que ocupamos no hay una función que permita escribir al formato <em>EIGENSTRAT</em> directamente, pero desde el objeto `genLight` que creamos es sencillo.
+Ahora podemos escribir los datos en la carpeta del Módulo 3, ya que los utilizaremos allí.
+Los paquetes que estamos usando no incluyen una función para exportar directamente al formato *EIGENSTRAT*, pero a partir del objeto `genLight` que generamos esto resulta sencillo de hacer.
 
 ```r
 prefOUT="Modulo3/filteredDataSet"
@@ -574,3 +575,6 @@ write.table(indData, paste(prefOUT,".ind",sep=""),col.names=F,row.names=F,quote=
 snpData<-datosGeno_filter$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
 write.table(snpData, paste(prefOUT,".snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ```
+
+¡Listo! Ya contamos con un conjunto de datos filtrados y preparados para realizar los análisis de estructura y diversidad genética, que exploraremos en el Módulo 3.
+
