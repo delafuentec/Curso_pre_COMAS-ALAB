@@ -245,17 +245,26 @@ if(! file.exists("Modulo2/PMR_allAncientTogether.txt")){
 print(head(countsPMR))
 
 ```
-Se genera entonces una tabla con 4 columnas: par analizado | número de variantes | numero de variantes disconcordantes | PMR
+Se genera entonces una tabla con cuatro columnas: el par de individuos analizado, el número total de variantes comparadas, el número de variantes discordantes y el valor de PMR.
 
 #### Definir el grado de parentesco
-Ahora vamos a ver cuales son los individuos supuestamente aparentados, y el grado de parentesco. Para definir el parentesco entre 2 individuos, se calcula los niveles de PMR esperados en la población, según la distribución de los PMR en todos los pares de individuos analizados.
-Para esto se asume que el conjunto de datos muestreados está compuesto principalmente por pares no emparentados (hasta segundo grado), entonces la mediana del PMR,  denotado $\bar{p}$, será una estimación confiable.
-Tomando como referencia los planteamientos de <em>READv2</em>, definimos ahora el valor medio esperado del PMR para una relación de grado <em>k</em> = 0, 1, 2 como: <br>
-$p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right)$.<br>
-Una vez definidos este valor medio esperado del PMR para cada relación de grado, podemos poner a prueba si el PMR para un par de individuos dados es significativamente más pequeño que cada nivel esperado <em>k</em>. El parentesco será entonces el <em>k</em> más bajo que no da significativo, tal como se observa en la figura abajo. <br>
+
+Ahora vamos a identificar qué pares de individuos presentan parentesco y cuál es su grado. Para ello, se utilizan los valores de PMR esperados en la población, estimados a partir de la distribución de PMR de todos los pares analizados.
+
+Se asume que la mayoría de los pares en el conjunto de datos no están emparentados (hasta segundo grado). Bajo esta suposición, la **mediana del PMR**, denotada como $\bar{p}$, constituye una estimación robusta del nivel de discrepancia genética esperado entre individuos no relacionados.
+
+Siguiendo los planteamientos de *READv2*, se define el **valor medio esperado del PMR** para una relación de grado *k* = 0, 1 o 2 como:
+
+\[
+p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right).
+\]
+
+Una vez definidos estos valores esperados, evaluamos si el PMR observado para un par de individuos es **significativamente menor** que cada uno de los valores esperados para los distintos grados de relación.  
+El parentesco asignado será entonces el **menor valor de *k*** para el cual la diferencia **no resulta significativa**, tal como se ilustra en la figura siguiente.
+
 <img width="729" height="344" alt="image" src="https://github.com/user-attachments/assets/d11688e8-3d94-48aa-bb11-d3e9cbef8cb9" />
 
-Vamos ahora calcular el parentesco entre todos los pares de individuos de la muestra, analizados en su conjunto.
+A continuación, calcularemos el grado de parentesco para todos los pares de individuos incluidos en la muestra.
 
 ```r
 ##estimate relatedness
@@ -286,7 +295,7 @@ relatedness_allAncientTogether<-addPops(tableRel=relatedness_allAncientTogether,
                                         )
 
 ```
-Veamos cuantos pares de individuos aparentados, en qué región y población.
+Veamos cuántos pares de individuos aparecen como aparentados y a qué región y población pertenecen.
 
 ```r
 ###Number of related pairs indivuduals:
@@ -304,15 +313,16 @@ table(second_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
 ### We can already see some temporal/spatial inconsistencies 
 ```
 
-Vemos entonces que detectamos muchos pares de aparentados en el Sur de Patagonia. Además mirando la temporalidad y la geografía de cada individuo en un par de individuos aprentados, vemos incosnistencias ya que con esta separación temporal y espacial imposible que sean aparentados.<br>
+Vemos entonces que se detectan muchos pares de individuos aparentados en el sur de Patagonia. Sin embargo, al examinar la temporalidad y la ubicación geográfica de los individuos en cada par, aparecen inconsistencias: dadas las distancias temporales y espaciales entre ellos, es imposible que estén realmente emparentados.
 
-> La mayor dificulta en un análisis de parentesco es definir si el escore usado para medir la distancia genética (PMR en el caso de <em>BREADR</em>) se puede interpretar como parentesco. De hecho, la distribución del PMRdepende de la diversidad genética esperada en la población. <br>
->Lo que acabmos de hacer es decir a <em>BREADR</em> de usar la mediana de los PMR observados para todos los pares de individuos analizados. Sin embargo, en poblaciones con tamaño poblacional reducido, como es el caso de las patagónicas, se espera un escore PMR entre individuos mucho menor que en poblaciones de tamaño más grande, como las de Centro Andes. <br>
-> Si comparamos todas las poblaciones a la vez, es probable que se detecte muchos pares de individuos aparentados en poblaciones de Patagonia, que son poblaciones que evolucionaron con más deriva génica, por ende que tienen menor diversidad genética.
-> Para evitar estos falsos positivos podemos pasar al método solo la tabla de escore PMR para el subconjunto de individuos para los cuales esperamos niveles de diversidad genética similares por pertenecer a la misma (meta)población.<br>
+> La mayor dificultad en un análisis de parentesco es determinar si el puntaje utilizado para medir la distancia genética —el PMR en el caso de *BREADR*— puede interpretarse efectivamente como evidencia de parentesco o no. La distribución del PMR depende directamente de la diversidad genética esperada en la población.
+> En el análisis anterior, indicamos a *BREADR* que utilizara la **mediana de todos los PMR observados** como referencia. Sin embargo, en poblaciones de tamaño reducido, como las patagónicas, se espera que los valores de PMR entre individuos sean naturalmente más bajos que en poblaciones de mayor tamaño, como las de los Andes Centrales.
+> Al combinar todas las poblaciones en un único análisis, es probable que *BREADR* identifique un número exagerado de pares como “aparentados” dentro de Patagonia, simplemente porque estas poblaciones experimentaron más deriva génica y presentan menor diversidad genética.
+> Para evitar estos falsos positivos, debemos calcular el parentesco utilizando únicamente la tabla de PMR del subconjunto de individuos que comparten un nivel similar de diversidad genética, es decir, aquellos pertenecientes a la misma (meta)población.
 
-En lo que sigue, vamos a ir, región por región, generar la sub-tabla de PMR por los pares de individuos de esta región, verificar que hay suficientes pares (digamos por lo menos 5) y proceder de nuevo a las inferencias de parentesco desde valor medio esperado del PMR para cada relación de grado según estos pares únicamente.<br>
-Para esto, vamos a generar una lista que contienen la tabla de inferencia de parentesco por región.
+En lo que sigue, analizaremos región por región. Para cada región, generaremos la subtabla de PMR considerando únicamente los pares de individuos pertenecientes a ella, verificaremos que haya un número suficiente de pares (al menos 5) y volveremos a inferir el parentesco basándonos en el valor medio esperado del PMR estimado exclusivamente a partir de ese subconjunto.
+
+Para ello, construiremos una lista que contendrá, para cada región, la tabla de inferencias de parentesco correspondiente.
 
 ```r
 print(unique(meta$Region))
@@ -336,8 +346,9 @@ for(region in c("SouthPatagonia","CentralChile","Beringia","SouthernNorthAmerica
   
 }
 ```
-Vemos que reducimos drastícamente el número de pares de aparentados encontrados. Por ejemplo, ahora encontramos 20 en el Sur de Patagonia, contra 321 en el analísis con todos los individuos a la vez.
-Podemos verificar de nuevo si los resultados de parentesco (hasta el 1er grado) son concordantes con la distribución temporal y geografíca.
+Vemos que el número de pares aparentados disminuye drásticamente. Por ejemplo, en el sur de Patagonia ahora identificamos 20 pares, frente a los más de 300 detectados cuando analizamos a todos los individuos de manera conjunta.
+
+Podemos volver a comprobar si los parentescos inferidos (hasta primer grado) son coherentes con la distribución temporal y geográfica de los individuos.
 ```r
 for(region in names(listRelatednessPerRegion)){
   print(region)
@@ -347,8 +358,8 @@ for(region in names(listRelatednessPerRegion)){
   print(table(tmpFirst$Pop1,tmpFirst$Pop2))
 }
 ```  
-Ahora vemos que los parentescos al 1er grado son coherentes.
-Podemos verificar también si los resultados de parentesco (hasta el 2ndo grado) son concordantes con la distribución temporal y geografíca.
+Ahora vemos que los parentescos de primer grado son coherentes.  
+También podemos comprobar si los parentescos inferidos hasta segundo grado son compatibles con la distribución temporal y geográfica de los individuos.
 ```r
 for(region in names(listRelatednessPerRegion)){
   print(region)
@@ -358,16 +369,18 @@ for(region in names(listRelatednessPerRegion)){
   print(table(tmpSecond$Pop1,tmpSecond$Pop2))
 }
 ```  
-Vemos que es bastante coherente también, sin embargo quedan algunas inconsistencias temporales y muchos pares de parentesco que encontramos acá no fueron reportados en los trabajos originales. 
-> Usamos otro método que los usados en los trabajos originales, y se generamos los datos pseudo-haploides nuevamente (es decir rehaciendo un muestreo aleatorio de las lecturas).<br>
-Es primordial no confiar en nuestros resultados ciegamente. Se recomienda, visualizar los resultados de <em>BREADR</em>, para apreciar los margenes de error asociados a los PMR.<br>
+Vemos que los resultados son en general bastante coherentes; sin embargo, persisten algunas inconsistencias temporales y varios de los pares de parentesco identificados aquí no fueron reportados en los trabajos originales.  
+> Esto puede deberse a que utilizamos un método distinto al de los estudios previos y a que generamos nuevamente los datos pseudo-haploides (es decir, realizando un nuevo muestreo aleatorio de las lecturas).
+Es fundamental no interpretar estos resultados de manera estrictamente literal.  
+Se recomienda visualizar las salidas de *BREADR* para evaluar los márgenes de error asociados a los valores de PMR.
 
 #### Inspección de los resultados de parentesco
-El paquete <em>BREADR</em> provee diferentes funciones para esto:
-1. plotLOAF: Grafica todos los valores observados de PMR (ordenados de menor a mayor), con las clasificaciones de máxima probabilidad posterior representadas mediante color y forma.
-2. plotSLICE: Una función para graficar la información diagnóstica al clasificar un par específico de individuos (definido por el número de fila o el nombre del par).
+El paquete *BREADR* ofrece distintas funciones para visualizar y evaluar los resultados:
 
-Veamos entonces si hay pares que pueden ser potencialmente falso positivos. Primero veamos los PMR para los pares con PMR más bajo (los 20 pares de aprentados no son necesariamente los con PMR más bajo como veremos).
+1. **plotLOAF**: Grafica todos los valores observados de PMR (ordenados de menor a mayor) y muestra las clasificaciones de máxima probabilidad posterior mediante colores y formas.
+2. **plotSLICE**: Permite representar la información diagnóstica utilizada para clasificar un par específico de individuos (definido por el número de fila o por el nombre del par).
+
+A continuación, examinaremos si existen pares que podrían ser falsos positivos. Para ello, empezamos revisando los valores de PMR más bajos. Veremos que los 20 pares identificados como aparentados no corresponden necesariamente a los pares con PMR más bajo.
 
 ```r
 ### generate table from the result list per  region (and remove  columns 13 to 18 that we added with pop labels)
@@ -380,29 +393,36 @@ which(relatednessPatagonia$relationship!="Unrelated")
 plotLOAF(relatednessPatagonia,N=22)
 ```
 
-Vemos entonces que el par AM66 - AM71 tiene un error estandar asociado al PMR muy grande, y de hecho no es significativamente diferente del nivel esperado para el 1er grado ni el 2o grado.
-Sin embargo, <BREADR> da como resultado "1er grado". Esto se debe al número de SNPs limitado en esta comparación. Veamos más en detalle este par.
+Observamos que el par **AM66 – AM71** presenta un error estándar del PMR muy elevado y, de hecho, su PMR no es significativamente diferente de los niveles esperados para parentesco de **1er grado** ni de **2º grado**.  
+Aun así, *BREADR* clasifica este par como de **1er grado**.  
+Esta asignación se debe al número limitado de SNPs disponibles en esta comparación.
+
+Analicemos este par con mayor detalle.
  ```r
  ### call rate para ambos:
  datosGeno$other$ind.metrics[datosGeno$other$ind.metrics$id %in% c("AM66","AM71"),]
  ### plotSlice
  plotSLICE(relatednessPatagonia,"AM66 - AM71")
  ```
-Vemos que las distribuciones de los valors PMR esperados para distinguir entre diferentes grados de parentesco se solapan bastante, dificultando discriminir corretamente el grado de parentesco para este par de individuos. <br> 
-Lo mismo, cuando miramos los resultados de PMR para pares de aparentados al 2o grado (gráfico obtenido con `plotLOAF`), vemos que varios pares están por encima del valor esperado para 2o grado, y que la significancia de 2o grado o No aparentados son similares. Entonces podrían ser falsos positivos.
-> Todo esto, para insistir con la idea de no usar un resultado que retorna un método sin inspeccionar las métricas subyacentes.<br>
-> Se recomienda también explorar la consistencia de las conclusiones con diferentes métodos y paneles de SNPs. Personalmente, me gusta usar para Ámerica los métodos <em>BREADR</em> (o <em>READv2</em>, muy similar a <em>BREADR</em> pero incorpora grado hasta el 3er grado, usar con mucha precaución hasta este grado) y [<em>KIN</em>](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7) (que requiere mayor cobertura pero permite distinguir entre relación al primer gardo entre hermanos/as y padres/hijos).
+Para estos dos individuos, observamos que las distribuciones de los valores de PMR esperados para distinguir entre distintos grados de parentesco se solapan de manera considerable, lo que dificulta discriminar correctamente el grado de parentesco para este par de individuos.  
+Del mismo modo, al examinar los resultados de PMR para pares clasificados como de **2º grado** (gráfico generado con `plotLOAF`), vemos que varios pares presentan valores por encima del nivel esperado para este grado, y que la significancia estadística entre “2º grado” y “no aparentados” es muy similar. Esto sugiere la posibilidad de **falsos positivos**.
 
-### Identificar que individuos sacar para evitar pares de aparentados
+> Todo esto refuerza la importancia de no aceptar ciegamente el resultado de un método sin examinar las métricas subyacentes.  
+> También es recomendable evaluar la consistencia de las conclusiones utilizando diferentes métodos y distintos paneles de SNPs.  
+> En el caso de poblaciones americanas, una combinación útil es emplear **BREADR** (o **READv2**, muy similar pero incorporando el 3er grado, que debe interpretarse con mucha cautela) junto con **KIN** (https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02847-7), que requiere mayor cobertura pero permite distinguir entre hermanos/as y padres-hijos en relaciones de 1er grado.
 
-En lo que sigue, vamos a sacar individuos para evitar los pares de individuos aparentados hasta el 1er-grado. Por tema de tiempo, vamos a considerar que los pares identificados por **BREADR** son correctas sin validarlas como sería necesario, tal como vimos justo antes. 
-Primero, generamos una tabla que contiene estos pares, concatenando los resultados por región, y lo resumimos en una tabla de una linea por individuo y 4 columnas:<br>
-1. id: id del individuo
-2. NumKin: Número de individuos aparentados a este individuo
-3. ListKin: Lista de dicho individuos (separados por |)
-4. Call.Rate (que vamos a recuperar de  `datosGeno$other$ind.metrics` que generamos antes )
+### Identificar qué individuos remover para evitar pares de aparentados
 
-> En general es preferible sacar los aparentados al 2o-grado, pero en este ejercicio vimos que muchos parentescos pueden ser falsos positivos, entonces nos concentramos solo en el 1er grado. En un estudio real, sería necesario (in)validar todos los pares hasta el 2o-grado para generar una lista carentes de potenciales falsos positivos.
+En lo que sigue, vamos a identificar qué individuos conviene sacar para eliminar los pares de individuos aparentados hasta el **primer grado**. Por cuestiones de tiempo, consideraremos que los pares identificados por **BREADR** son correctos, sin realizar el proceso completo de validación que mostramos anteriormente.
+
+Primero, generamos una tabla que contenga todos estos pares, concatenando los resultados por región. Luego resumimos esta información en una tabla con **una fila por individuo** y cuatro columnas:
+
+1. **id**: identificador del individuo  
+2. **NumKin**: número de individuos con parentesco detectado  
+3. **ListKin**: lista de dichos individuos (separados por “|”)  
+4. **Call.Rate**: tasa de llamado (que recuperamos de `datosGeno$other$ind.metrics`)
+
+> En general es preferible remover también los aparentados de **segundo grado**. Sin embargo, en este ejercicio observamos que muchos parentescos pueden ser falsos positivos, por lo que aquí nos limitamos únicamente a los parentescos de primer grado. En un estudio real, sería necesario validar o invalidar exhaustivamente todos los pares hasta segundo grado antes de generar una lista final libre de aparentados, evitando los falsos positivos.
 
 ```r
 ###keep all pairs
@@ -452,7 +472,7 @@ sumUpPairs$NumKin<-as.numeric(sumUpPairs$NumKin)
 sumUpPairs$Call.rate<-as.numeric(sumUpPairs$Call.rate)
 ```  
 
-Esta tabla permitirá luego eliminar el número mínimo de  individuos para evitar cualquier relación hasta el 1er-grado, dando prioridad a la eliminación de los primeros individuos involucrados en el mayor número de relaciones por pares y, en caso de empates, a los individuos con menos datos (`Call.rate`).
+Esta tabla permitirá luego eliminar el número mínimo de individuos para evitar cualquier relación hasta el 1er grado, dando prioridad a la eliminación de los individuos involucrados en el mayor número de relaciones por pares y, en caso de empates, a aquellos con menor cantidad de datos (`Call.rate`).
 ```r
 listToRemove<-data.frame(matrix(NA,0,3))
 names(listToRemove)<-c("id","NumKin","Call.rate")
@@ -492,18 +512,14 @@ while(nrow(sumUpPairs)>0){
 ```
 
 ## Generar conjunto de datos filtrado
-Ahora que tenemos: las variantes que queremos filtrar (con muchos datos faltantes y/o monomorficas) y los individuos con muchos datos faltantes, asi como también la lista de individuos para sacar para evitar aparentados, podemos generar los ficheros plink filtrados.
 
-
+Ahora que ya identificamos las variantes a filtrar (por altos niveles de datos faltantes y/o por ser monomórficas), los individuos con muchos datos faltantes, y la lista de individuos que debemos remover para evitar pares aparentados, podemos generar los ficheros filtrados de **PLINK**.
 
 ## Filtrado
 
-Vamos a filtros los datos para las variantes o a los individuos en función de la proporción de **datos faltantes**.  Vamos también a eliminar las posiciones con una frecuencia del Alelo Menor inferior al 1%.
+Vamos a filtrar los datos eliminando variantes e individuos según su proporción de **datos faltantes**. También eliminaremos las posiciones cuya **frecuencia del alelo menor (MAF)** sea inferior al 1%.
 
-Vamos a eliminar primero los SNPs con datos disponibles para **solo un individuo** (es decir, con una tasa de llamado inferior a 2/66).  
-
-
-Nota: los siguientes comandos, por razones de memoria, **no generan un nuevo conjunto de datos filtrado**.  En su lugar, crean **listas de SNPs e individuos** que deberían eliminarse.  Más adelante, volveremos sobre este proceso para aplicar el filtrado definitivo.
+Como primer paso, eliminaremos los SNPs con datos disponibles para **solo un individuo** (es decir, con una tasa de llamado inferior a 2/66).
 
 
 ```r
