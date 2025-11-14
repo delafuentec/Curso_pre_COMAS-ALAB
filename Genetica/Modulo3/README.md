@@ -66,7 +66,12 @@ for(i in seq(1,9,2)){
 }
 #dev.off()
 ```
-
+> Atencion: En smartpca de EIGENSOFT: El archivo llamado eigenvectors (*.evec) no contiene los eigenvectores de los SNPs, sino las proyecciones de los individuos sobre los componentes principales.<br>
+> Cada fila = un individuo<br>
+> Cada columna = PC1, PC2, …<br>
+> Las varianzas de los PCs están en el archivo eigenvalues (*.eval).<br>
+> Si quieres conocer la contribución de cada SNP (loadings), smartpca no lo entrega por defecto; se requieren métodos adicionales (lsqproject u otros).<br>
+> **Consejo práctico**: para graficar la estructura poblacional, usar el archivo eigenvectors de smartpca como proyecciones de individuos, no como cargas de SNPs.
 #### Interpretación de los resultados del primer ACP
 
 El análisis de componentes principales (ACP) nos permite visualizar cómo se relacionan genéticamente los individuos antiguos entre sí. En este caso, los primeros componentes capturan patrones muy coherentes con lo que se conoce sobre el poblamiento de América.
