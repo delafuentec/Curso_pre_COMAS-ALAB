@@ -66,6 +66,9 @@ for(i in seq(1,9,2)){
 }
 #dev.off()
 ```
+Se generaron los graficos de PC2 vs PC1, PC4 vs PC3, ..., P10 vs PC9.
+
+
 > Atencion: En smartpca de EIGENSOFT: El archivo llamado eigenvectors (*.evec) no contiene los eigenvectores de los SNPs, sino las proyecciones de los individuos sobre los componentes principales.<br>
 > Cada fila = un individuo<br>
 > Cada columna = PC1, PC2, …<br>
