@@ -258,9 +258,9 @@ for(i in seq(1,9,2)){
 dev.off()
 ```
 
-<HUGE>Add some interpreation</HUGE>
+<h6>Add some interpreation
 
-> <HUGE>speak of mssing data and PCA </HUGE>
+> speak of mssing data and PCA </h6>
 
 
 ## <em>f<sub>3</sub></em>-outgroup
