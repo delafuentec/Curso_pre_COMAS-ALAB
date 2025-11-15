@@ -103,42 +103,143 @@ Esta combinación de rasgos morfológicos arcaicos y una ascendencia genética p
 
 ### ACP enfocandose en procesos mas tardios de Sudmerica
 Ahora vamos a rehacer el analisis pero sacando los individuos de Norte America, y los grupos tempranos de Chile (Los Rieles ~12000BP) y de Lagoa Santa (Brazil).
-Para eso vamos aleer los datos al formato *eigenstrat* para generar un sub-conjunto sin estos individuos
+Para eso vamos a leer los datos al formato *eigenstrat* para generar un sub-conjunto sin estos individuos
 
 #### Generar sub-conjunto
+Primero vamos a convertir los datos en un objeto `genLight`.
 ```r
 require(dartR.base)
 ### read file
 geno <- read.geno(paste(pref,".geno",sep="")) 
 # Read .ind file
 ind <- read.table(paste(pref,".ind",sep=""), stringsAsFactors = FALSE,header=F)
+names(ind)<-c("id","sex","pop")
+# Read .snp file
+snp <- read.table(paste(pref,".snp",sep=""), stringsAsFactors = FALSE,header=F)
 
+# Build the genlight object
+# need to say that 9 are NAs
+geno[geno == 9] <- NA
+gl <- new("genlight", geno)
+#Add individual metadata
+indNames(gl) <- ind[,1]                  # individual names
+pop(gl) <- as.factor(ind[,3])           # population column
+gl@other$sex <- ind[,2]                 #sex
+
+#Add SNP metadata
+locNames(gl) <- snp[,1]                  # SNP IDs
+chromosome(gl) <- snp[,2]                # chromosome
+position(gl) <- snp[,4]  
+
+#Add metrics to the gl object
+gl@other$loc.metrics.flags <- list(
+    monomorphs = TRUE,
+    oneallele = TRUE,
+    nosnp = TRUE
+)
+gl@other$loc.metrics <- data.frame(
+    loc.id = locNames(gl),
+    stringsAsFactors = FALSE
+)
+gl@other$ind.metrics.flags <- list(
+    loc.freq = TRUE,
+    het = TRUE,
+    callrate = TRUE
+)
+gl@other$ind.metrics <- data.frame(
+    id = indNames(gl),
+    Sex = ind$sex,
+    Family = ind$pop,
+    stringsAsFactors = FALSE
+)
+
+gl <- gl.recalc.metrics(gl)
+```
+
+Ahora, vamos a generar la lista de individuos que queremos dejar en el subconjunto de datos. 
+
+```r
 # get list of inds to remove 
 toRemoveID<-meta$id [ meta$Region %in% c("Beringia_EH","CentralChile_EH","SouthernNorthAmerica_EH") | 
 		      grepl("Brazil_Sumidouro",meta$pop)]
 # make list of remaining individuals
 toKeepID<-ind$id[ ! ind$id %in% toRemoveID]
 # check from which regions come from the remaining individuals
-table(meta$Region[ meta$id %in% toKeepID])
+print(table(meta$Region[ meta$id %in% toKeepID]))
 # check the remaining groups from Brazil_EH
-table(meta$pop[ meta$Region == "Brazil_EH" & meta$id %in% toKeepID])
+print(table(meta$pop[ meta$Region == "Brazil_EH" & meta$id %in% toKeepID]))
 
-##looks ok --> generate subdataset
-geno_sub<-geno[,which(ind$id %in% toKeepID)]
-ind_sub<-ind[ ind$id %in% toKeepID,]
-## write .geno
-write.geno(geno_sub, paste(pref,"_subset.geno",sep=""))
+##looks ok --> generate subdataset, removing monorphisms (need to recalculate the metrics for further filtering)
+```
 
-### Write .ind file (name, sex, pop)
-write.table(ind_sub,
-            file = paste(pref,"_subset.ind",sep=""),
-            quote = FALSE,
-            row.names = FALSE,
-            col.names = FALSE)
-## we can jusst copy the snp file
-system(paste("cp ",pref,".snp ",pref,"_subset.snp",sep=""))
+Ahora podemos generar el subconjunto de datos. Por las dudas hay que volver a filtrar las variantes monomorficas y con alta tasa de valores faltantes.
+```r
 
+gl<-gl.keep.ind(gl,ind.list =toKeepID,recalc = T,mono.rm = T)
+gl<-gl.filter.callrate(gl, threshold=2/nInd(gl))
 
+###check numbers
+print(paste("from",nrow(ind),"individuals, we wanted to keep",length(toKeepID),", and the sub-dataset has ",nInd(gl)))
+print(paste("from",nrow(snp),"snps, we remain with ",nLoc(gl),"in the sub-dataset"))
+
+```
+Ahora podemos escribir los datos del sub-conjunto , tal como lo hicimos en el Modulo2. Los vamos a escribir en ficheros llamados `<pref>_subset.{geno,snp,ind}`.
+
+```r
+geno_mat <- as.matrix(gl)
+# Replace missing data with 9 (per convention)
+geno_mat[is.na(geno_mat)] <- 9
+###check size
+dim(geno_mat)
+##write the genotype data. Watchout you have to transpose the matrix
+write.table(t(geno_mat), paste(pref,"_subset.geno",sep=""),col.names=F,row.names=F,quote=F,sep="")
+##write the individual annotation file
+indData<-gl$other$ind.metrics[,c("id","Sex","Family")]
+indData$Sex[is.na(indData$Sex)]<-"U"
+write.table(indData, paste(prefOUT,".ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+##write the snp annotation file
+snpData<-datosGeno_filter$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
+write.table(snpData, paste(prefOUT,".snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+```
+
+#### ACP con el sub-conjunto
+
+```r
+pc = pca(paste(pref,"_subset.geno",sep=""), scale = TRUE)
+Los resultados se crean en una carpeta <pref>.pca. 
+```r
+### we can read the eigenvalues file
+eigenvalues<-read.table(paste(pref,".pca/filteredDataSet.eigenvalues",sep=""),stringsAsFactors=F,header=F)
+### let see the porcentage of variance explained per principal components
+plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
+```
+
+```r
+### we can read the projections of the individuals: one line per individual.
+### the individuals are ordered as in the input file (thus reading <pref>.ind.txt we know which column corresponds to which individual)
+projections<-read.table(paste(pref,".pca/",strsplit(pref,split="/")[[1]][2],".projections",sep=""),stringsAsFactors=F,header=F)
+## add info per ind
+projections$id=ind$id
+projections$pop=ind$pop
+###get metafile for plotting
+projections<-merge(projections,meta,by=c("id","pop"))
+
+###let's plot the first 10 PCs
+#pdf(paste(pref,".PCAWithAll.pdf",sep=""),height=10)
+par(mfrow=c(3,2))
+forLeg<-unique(projections[,c("Region","pop","Color","Point")])
+forLeg<-forLeg[ order(forLeg$Region,forLeg$pop),]
+plot(0,0,"n",axes=F,ann=F)
+legend("center",pch=forLeg$Point,pt.bg=forLeg$Color,col=ifelse(forLeg$Point<21,forLeg$Color,"black"),
+        legend=paste(forLeg$Region,forLeg$pop),ncol=1,cex=0.4,pt.lwd=0.5)
+for(i in seq(1,9,2)){
+  plot(projections[,paste("V",i,sep="")],projections[,paste("V",i+1,sep="")],
+          pch=projections$Point,
+          bg=projections$Color,
+          col=ifelse(projections$Point<21,projections$Color,"black"),
+          xlab=paste("PC",i),
+          ylab=paste("PC",i+1))
+}
 ## Admixture
 
 
