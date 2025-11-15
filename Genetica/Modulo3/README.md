@@ -116,7 +116,7 @@ ind <- read.table(paste(pref,".ind",sep=""), stringsAsFactors = FALSE,header=F)
 names(ind)<-c("id","sex","pop")
 # Read .snp file
 snp <- read.table(paste(pref,".snp",sep=""), stringsAsFactors = FALSE,header=F)
-
+names(snp)<-c("id","chromosome","cM","position","allele.1","allele.2")
 # Build the genlight object
 # need to say that 9 are NAs
 geno[geno == 9] <- NA
@@ -139,6 +139,11 @@ gl@other$loc.metrics.flags <- list(
 )
 gl@other$loc.metrics <- data.frame(
     loc.id = locNames(gl),
+    chromosome = snp$chromosome,
+    cM = snp$cM,
+    position = snp$position,
+    allele.1 = snp$allele.1,
+    allele.2 = snp$allele.2,
     stringsAsFactors = FALSE
 )
 gl@other$ind.metrics.flags <- list(
@@ -174,13 +179,12 @@ print(table(meta$pop[ meta$Region == "Brazil_EH" & meta$id %in% toKeepID]))
 
 Ahora podemos generar el subconjunto de datos. Por las dudas hay que volver a filtrar las variantes monomorficas y con alta tasa de valores faltantes.
 ```r
-
 gl<-gl.keep.ind(gl,ind.list =toKeepID,recalc = T,mono.rm = T)
-gl<-gl.filter.callrate(gl, threshold=2/nInd(gl))
+gl<-gl.filter.callrate(gl, threshold=2/nInd(gl),rec)
 
 ###check numbers
 print(paste("from",nrow(ind),"individuals, we wanted to keep",length(toKeepID),", and the sub-dataset has ",nInd(gl)))
-print(paste("from",nrow(snp),"snps, we remain with ",nLoc(gl),"in the sub-dataset"))
+print(paste("from",nrow(snp),"snps",nLoc(gl)," remain in the sub-dataset"))
 
 ```
 Ahora podemos escribir los datos del sub-conjunto , tal como lo hicimos en el Modulo2. Los vamos a escribir en ficheros llamados `<pref>_subset.{geno,snp,ind}`.
@@ -196,16 +200,18 @@ write.table(t(geno_mat), paste(pref,"_subset.geno",sep=""),col.names=F,row.names
 ##write the individual annotation file
 indData<-gl$other$ind.metrics[,c("id","Sex","Family")]
 indData$Sex[is.na(indData$Sex)]<-"U"
-write.table(indData, paste(prefOUT,".ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+write.table(indData, paste(pref,"_subset.ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ##write the snp annotation file
-snpData<-datosGeno_filter$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
-write.table(snpData, paste(prefOUT,".snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+snpData<-gl$other$loc.metrics[,c("loc.id","chromosome","cM","position","allele.1","allele.2")]
+write.table(snpData, paste(pref,"_subset.snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ```
 
 #### ACP con el sub-conjunto
 
+Ahora podemos hacer el ACP en este sub-conjunto
 ```r
-pc = pca(paste(pref,"_subset.geno",sep=""), scale = TRUE)
+
+pc_sub = pca(paste(pref,"_subset.geno",sep=""), scale = TRUE)
 Los resultados se crean en una carpeta <pref>.pca. 
 ```r
 ### we can read the eigenvalues file
