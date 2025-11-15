@@ -258,8 +258,14 @@ for(i in seq(1,9,2)){
 dev.off()
 ```
 
+<HUGE>Add some interpreation</HUGE>
 
-## f<sub>3</sub>~-outgroup
+> <HUGE>speak of mssing data and PCA </HUGE>
+
+
+## <em>f<sub>3</sub></em>-outgroup
+
+
 
 ## Admixture
 
