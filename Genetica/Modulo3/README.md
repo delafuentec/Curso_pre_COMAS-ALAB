@@ -258,13 +258,15 @@ for(i in seq(1,9,2)){
 dev.off()
 ```
 
-<h6>Add some interpreation
+<large>Add some interpreation
 
-> speak of mssing data and PCA </h6>
+> speak of mssing data and PCA </large>
 
 
 ## <em>f<sub>3</sub></em>-outgroup
 
+```r
+require(admixtools)
 
 
 ## Admixture
