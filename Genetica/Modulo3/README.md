@@ -144,6 +144,7 @@ gl@other$loc.metrics <- data.frame(
     position = snp$position,
     allele.1 = snp$allele.1,
     allele.2 = snp$allele.2,
+    CallRate= NA,
     stringsAsFactors = FALSE
 )
 gl@other$ind.metrics.flags <- list(
@@ -155,6 +156,7 @@ gl@other$ind.metrics <- data.frame(
     id = indNames(gl),
     Sex = ind$sex,
     Family = ind$pop,
+    Call.rate=NA,
     stringsAsFactors = FALSE
 )
 
@@ -178,13 +180,18 @@ print(table(meta$pop[ meta$Region == "Brazil_EH" & meta$id %in% toKeepID]))
 ```
 
 Ahora podemos generar el subconjunto de datos. Por las dudas hay que volver a filtrar las variantes monomorficas y con alta tasa de valores faltantes.
+Y sacaremos los individuos con menos de 10000 SNPs
 ```r
 gl<-gl.keep.ind(gl,ind.list =toKeepID,recalc = T,mono.rm = T)
-gl<-gl.filter.callrate(gl, threshold=2/nInd(gl),rec)
+gl<-gl.filter.callrate(gl, threshold=2/nInd(gl),recalc=T)
+
+### 
+
 
 ###check numbers
 print(paste("from",nrow(ind),"individuals, we wanted to keep",length(toKeepID),", and the sub-dataset has ",nInd(gl)))
 print(paste("from",nrow(snp),"snps",nLoc(gl)," remain in the sub-dataset"))
+
 
 ```
 Ahora podemos escribir los datos del sub-conjunto , tal como lo hicimos en el Modulo2. Los vamos a escribir en ficheros llamados `<pref>_subset.{geno,snp,ind}`.
@@ -198,12 +205,13 @@ dim(geno_mat)
 ##write the genotype data. Watchout you have to transpose the matrix
 write.table(t(geno_mat), paste(pref,"_subset.geno",sep=""),col.names=F,row.names=F,quote=F,sep="")
 ##write the individual annotation file
-indData<-gl$other$ind.metrics[,c("id","Sex","Family")]
-indData$Sex[is.na(indData$Sex)]<-"U"
-write.table(indData, paste(pref,"_subset.ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+ind_sub<-gl$other$ind.metrics[,c("id","Sex","Family")]
+names(ind_sub)<-c("id","Sex","pop")
+ind_sub$Sex[is.na(ind_sub$Sex)]<-"U"
+write.table(ind_sub, paste(pref,"_subset.ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ##write the snp annotation file
-snpData<-gl$other$loc.metrics[,c("loc.id","chromosome","cM","position","allele.1","allele.2")]
-write.table(snpData, paste(pref,"_subset.snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
+snp_sub<-gl$other$loc.metrics[,c("loc.id","chromosome","cM","position","allele.1","allele.2")]
+write.table(snp_sub, paste(pref,"_subset.snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ```
 
 #### ACP con el sub-conjunto
@@ -215,37 +223,44 @@ pc_sub = pca(paste(pref,"_subset.geno",sep=""), scale = TRUE)
 Los resultados se crean en una carpeta <pref>.pca. 
 ```r
 ### we can read the eigenvalues file
-eigenvalues<-read.table(paste(pref,".pca/filteredDataSet.eigenvalues",sep=""),stringsAsFactors=F,header=F)
+eigenvalues_sub<-read.table(paste(pref,"_subset.pca/filteredDataSet_subset.eigenvalues",sep=""),stringsAsFactors=F,header=F)
 ### let see the porcentage of variance explained per principal components
-plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
+plot(eigenvalues_sub$V1/sum(eigenvalues_sub$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
 ```
 
 ```r
+
 ### we can read the projections of the individuals: one line per individual.
 ### the individuals are ordered as in the input file (thus reading <pref>.ind.txt we know which column corresponds to which individual)
-projections<-read.table(paste(pref,".pca/",strsplit(pref,split="/")[[1]][2],".projections",sep=""),stringsAsFactors=F,header=F)
+projections_sub<-read.table(paste(pref,"_subset.pca/",strsplit(pref,split="/")[[1]][2],"_subset.projections",sep=""),stringsAsFactors=F,header=F)
 ## add info per ind
-projections$id=ind$id
-projections$pop=ind$pop
+projections_sub$id=ind_sub$id
+projections_sub$pop=ind_sub$pop
 ###get metafile for plotting
-projections<-merge(projections,meta,by=c("id","pop"))
+projections_sub<-merge(projections_sub,meta,by=c("id","pop"))
 
 ###let's plot the first 10 PCs
-#pdf(paste(pref,".PCAWithAll.pdf",sep=""),height=10)
+pdf(paste(pref,".PCAWithSubSet.pdf",sep=""),height=10)
 par(mfrow=c(3,2))
-forLeg<-unique(projections[,c("Region","pop","Color","Point")])
-forLeg<-forLeg[ order(forLeg$Region,forLeg$pop),]
+forLeg_sub<-unique(projections_sub[,c("Region","pop","Color","Point")])
+forLeg_sub<-forLeg_sub[ order(forLeg_sub$Region,forLeg_sub$pop),]
 plot(0,0,"n",axes=F,ann=F)
-legend("center",pch=forLeg$Point,pt.bg=forLeg$Color,col=ifelse(forLeg$Point<21,forLeg$Color,"black"),
-        legend=paste(forLeg$Region,forLeg$pop),ncol=1,cex=0.4,pt.lwd=0.5)
+legend("center",pch=forLeg_sub$Point,pt.bg=forLeg_sub$Color,col=ifelse(forLeg_sub$Point<21,forLeg_sub$Color,"black"),
+        legend=paste(forLeg_sub$Region,forLeg_sub$pop),ncol=1,cex=0.4,pt.lwd=0.5)
 for(i in seq(1,9,2)){
-  plot(projections[,paste("V",i,sep="")],projections[,paste("V",i+1,sep="")],
-          pch=projections$Point,
-          bg=projections$Color,
-          col=ifelse(projections$Point<21,projections$Color,"black"),
+  plot(projections_sub[,paste("V",i,sep="")],projections_sub[,paste("V",i+1,sep="")],
+          pch=projections_sub$Point,
+          bg=projections_sub$Color,
+          col=ifelse(projections_sub$Point<21,projections_sub$Color,"black"),
           xlab=paste("PC",i),
           ylab=paste("PC",i+1))
 }
+dev.off()
+```
+
+
+## f_3-outgroup
+
 ## Admixture
 
 
