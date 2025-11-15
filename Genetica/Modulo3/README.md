@@ -259,7 +259,7 @@ dev.off()
 ```
 
 
-## f_3-outgroup
+## {f}_{3}-outgroup
 
 ## Admixture
 
