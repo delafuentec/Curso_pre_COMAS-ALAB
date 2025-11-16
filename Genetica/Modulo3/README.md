@@ -377,6 +377,7 @@ remove(metaTMP)
 
 Ahora vamos a leer los datos para cada <em>K</em> y reordenar la matriz Q para que los individuos estén en el orden deseado
 
+```r
 par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
 
 posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
