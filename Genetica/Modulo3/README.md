@@ -298,7 +298,7 @@ admProj = snmf(paste(pref,".geno",sep=""),
 ```
 Los resultados se escriben en una carpeta `<pref>.snmf/` y el objeto creado (`admProj` permite acceder facilmente a los mismos).
 
-### Selección del <em>K</em> y de la iteración por <em>K</em>
+### Selección del mejor <em>K</em> y de la mejor iteración por <em>K</em>
 
 Para cada número de poblacionaes ancestrales (clusters), <em>K</em>, vamos a ver cómo las diferentes iteraciones explican los datos (tiene menor entropía crzuada).
 > Cada corrida del algoritmo produce un valor llamado cross-entropy o entropy score. <br>
@@ -322,9 +322,9 @@ for(k in c(2:Kmax)){
 }
 boxplot(listEntro,main="Cross-Entropopy per K across diferent iteracions")
 ```
-Vemos entonces que el modelo con, K=2 es el que mejor se ajusta a los datos, independetemiente de las iteraciones. En general, es un patrón que se obsera cuando se analizan solo datos de ADN antiguo, por el tema de valores faltantes. Volveremos sobre este problema más adelante.
+Vemos entonces que el modelo con, *K* = 2 es el que mejor se ajusta a los datos, independetemiente de las iteraciones. En general, es un patrón que se obsera cuando se analizan solo datos de ADN antiguo, por el tema de valores faltantes. Volveremos sobre este problema más adelante.
 
-Podemos también seleccionar la iteración para cada <em>K</em>> que explica mejor los datos según la entropía. 
+Podemos también seleccionar la iteración para cada <em>K</em> que explica mejor los datos según la entropía. 
 
 ```r
 listBest<-list()
@@ -338,8 +338,8 @@ print(unlist(listBest))
 ### Visualización de los resultados
 Vamos a graficar los resultados. 
 > Es siempre engoroso generar manualmente gráficos lindos de estimaciones de coeficientes de estructura genética: 
-1. hay que ordenar los individuos según el sentido biologíco esperado para poder visualizar mejor lo que puede explicar la estructura genética capturada
-2. hay que hacer corresponder los colores de cada componente a diferentes <em>K</em>.
+> 1. hay que ordenar los individuos según el sentido biologíco esperado para poder visualizar mejor lo que puede explicar la estructura genética capturada
+> 2. hay que hacer corresponder los colores de cada componente a diferentes <em>K</em>.
 
 Vamos a reorganizar primero los individuos por región tal como guardado en el objeto `meta`.
 
@@ -378,6 +378,8 @@ change<-function(string){
     return(tmp[length(tmp)])
 }
 metaPlot$Label<-sapply(metaPlot$pop,change,USE.NAMES=F)
+
+## keep track of individuals sequenced with shotgun 
 metaPlot$SG<-grepl(".SG",metaPlot$pop)
 ```
 
@@ -418,14 +420,12 @@ points(x=posX,y=rep(1,nrow(metaPlot)),
 
 ```
 
-Los gráficos de *sNMF* (o *Admixture*) NO usan colores coherentes entre diferentes valores de *K*. Para obtener colores consistentes, debemos alinear los clusters entre *Ks* y usar una misma paleta fija. <br>
-Brevemente, vamos a seguir la siguiente estrategia
-- Elegimos un *K* de referencia (mejor que sea Kmax), y asignamos un color a cada componente en base a lo que observamos previamente.
-- Para cada otro *K), alineamos sus columnas con las del K de referencia usando el algoritmo Húngaro (maximize correlation).
+> Los gráficos de *sNMF* (o *Admixture*) NO usan colores coherentes entre diferentes valores de *K*. Para obtener colores consistentes, debemos alinear los clusters entre *Ks* y usar una misma paleta fija. <br>
+> Brevemente, vamos a seguir la siguiente estrategia
+> - Elegimos un *K* de referencia (mejor que sea Kmax), y asignamos un color a cada componente en base a lo que observamos previamente.
+> - Para cada otro *K), alineamos sus columnas con las del K de referencia usando el algoritmo Húngaro (maximize correlation).
 
-> Ojo, es un intento de automización, pero es posible que el código aabjo requiera ediciones porque los resultados que se obtienen en cada corrida pueden diferir.
-
-Empezamos con la signación de un color a cada componente.
+Empezamos con la asignación de un color a cada componente para el *Kmax* . Es un intento de automización, pero es posible que el código aabjo requiera ediciones porque los resultados que se obtienen en cada corrida pueden diferir.
 ```r
 library(clue)
 
