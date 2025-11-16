@@ -265,7 +265,7 @@ Add some interpreation
 > speak of mssing data and PCA
 
 
-## Estimaciones de coeficientes de ancestría
+## Estimaciones de coeficientes de estructura genética
 ### Introducción al método
 Vamos a usar el algoritmo  sNMF (Sparse Non-negative Matrix Factorization) descrito en [Frichot & François, 2015](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12382).
 Similar a <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], <em>sNMF</em> es un método que toma una  matriz de genotipos y trata de resumir la variación genética en un conjunto pequeño de componentes.
@@ -282,11 +282,6 @@ No asume poblaciones discretas ni grupos biológicos "reales", simplemente resum
 > En resumen:
 Tanto <em>sNMF</em> como <em>ADMIXTURE</em>  descomponen los datos genéticos en K patrones de variación y estima cuánto contribuye cada patrón a cada individuo.
 Es una forma de representar estructuras complejas de variación sin asumir poblaciones discretas.
-
-> Nota:
-En la literatura se suele hablar de “ancestrías” para describir estos componentes (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
-
-Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
 
 ### Correr el algoritmo
 Vamos a realizar el analisis por un numero de **poblaciones ancestral** (o cluster) **K** variando de 2 a 6. Para cada **K** haremos 4 repeticiones independientes.
@@ -341,7 +336,82 @@ print(unlist(listBest))
 ```
 
 ### Visualización de los resultados
-Vamos a graficar los resultados
+Vamos a graficar los resultados. 
+Una ventaja de los resultados con sNMF es que existen funciones para hacer corresponder los dif
+
+
+> Es siempre algo complicado generar manualmente gráficos lindos de estimaciones de coeficientes de estructura genética: 
+1. hay que ordenar los individuos según el sentido biologíco esperado para poder visualizar mejor lo que puede explicar la estructura genética capturada
+2. hay que hacer corresponder los colores de cada componente a diferentes <em>K</em>.
+
+
+```r
+my.colors <- c("brown1", "lightblue", "palegreen1", "blue1","rosybrown","darkorange4")
+
+### preparamos el orden de los individuos en el gráfico
+ind<-read.table(paste(pref,".ind",sep=""),stringsAsFactors=F,header=F)
+names(ind)<-c("id","sex","pop")
+metaPlot<-meta
+row.names(metaPlot)<-metaPlot$id
+metaPlot<-metaPlot[ind$id,]
+metaPlot$orderInInd<-c(1:nrow(metaPlot))
+metaPlot$orderPlot<-NA
+metaTMP<-metaPlot[0,]
+order=0
+for(region in c("Beringia_EH","SouthernNorthAmerica_EH",
+                 "Brazil_EH","Pampa_MH",
+                 "CentralAndes_EH","CentralAndes_MH",
+                 "CentralChile_EH","CentralChile_MH","CentralChile_LH",
+                 "SouthPatagonia_MH","SouthPatagoniaM_LH","SouthPatagoniaB_LH","SouthPatagoniaT_LH")){
+      
+      tmp<-metaPlot[metaPlot$Region==region,]
+      tmp<-tmp[ order(tmp$pop),]
+      tmp$orderPlot<-c(1:nrow(tmp))+order
+      metaTMP<-rbind(metaTMP,tmp)
+      order=order+nrow(tmp)
+      
+}
+metaPlot<-metaTMP
+remove(metaTMP)
+```
+
+Ahora vamos a leer los datos para cada <em>K</em> y reordenar la matriz Q para que los individuos estén en el orden deseado
+
+par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
+
+posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
+plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
+text(x=posX,y=rep(-1,nrow(metaPlot)),
+        srt=90,adj=c(0,0.5),col=metaPlot$Color,
+        labels=metaPlot$pop,cex=0.7)
+
+
+for(k in c(Kmax:2)){
+  best = listBest[[paste("K=",k,sep="")]]
+  # display the Q-matrix
+  Q.matrix <- t(as.matrix(Q(admProj, K = k, run = best)))
+  Q.matrix<-Q.matrix[,metaPlot$orderInInd]
+  bp<-barplot(Q.matrix, 
+        border = NA, 
+        ylab=paste("K =",k),
+        line=-1,
+        axes=F,
+        space = 0, 
+        col = my.colors[c(1:k)], 
+        )
+        
+}
+
+plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
+text(x=posX,y=rep(-1,nrow(metaPlot)),
+        srt=90,adj=c(0,0.5),col=metaPlot$Color,
+        labels=metaPlot$id,cex=0.7)
+
+```
+
+
+
+
 
 ### Visualización de los diferentes modos por K
 
@@ -349,8 +419,8 @@ Vamos a graficar los resultados
 > Aunque todas las corridas usan el mismo <em>K</em>, el algoritmo puede llegar a soluciones ligeramente distintas porque:
 > - empieza con diferentes condiciones iniciales,
 > - la función que optimiza puede tener mínimos locales,
-> - los datos pueden sostener más de una partición válida.
-> Estas diferentes soluciones estables se llaman “modos”. Un modo es un patrón consistente de agrupamiento que aparece de forma repetida en varias corridas, es decir una solución que el algoritmo encuentra varias veces porque los datos permiten interpretarse de más de una manera.
+> - los datos pueden sostener más de una partición válida. <br>
+> Estas diferentes soluciones estables se llaman **“modos”**. Un **modo** es un patrón consistente de agrupamiento que aparece de forma repetida en varias corridas, es decir una solución que el algoritmo encuentra varias veces porque los datos permiten interpretarse de más de una manera.
 
 > Cada modo representa una interpretación alternativa de la estructura genética/variación estadística en la muestra.
 > Visualizar los modos permite:
@@ -361,42 +431,26 @@ Vamos a graficar los resultados
 
 La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong), sin embargo es bastante facíl realizar lo mismo en R con los resuldatos de <em>sNMF</em>.
 
-```
+```r
+####################
+## PONG-like clustering of snmf replicates for all K. 
+####################
+## Vamos a usar la distancia euclidiana entre diferentes iteraciones pero se pueden usar otras métricas.
+
 if(! require(proxy)){install.packages("proxy");require(proxy)}
-############################################################
-## PONG-like clustering of snmf replicates for all K
-## Author: ChatGPT
-############################################################
 
-library(LEA)
-library(proxy)
-library(ggplot2)
 
-# --------------------------
-# SETTINGS
-# --------------------------
+# vamos a guardar los ficheros creados en <pref>.snmf_modes
+dir.create(paste(pref,".snmf_modes",sep=""))
 
-project_prefix <- "myproject"   # prefix of your .snmfProject file
-Kmin <- 2
-Kmax <- 12
-distance_method <- "euclidean"  # "euclidean", "manhattan", or "correlation"
+##################
+# Definición de la función de detección de modo para un K
+##################
 
-# Folder to save results
-dir.create("snmf_modes", showWarnings = FALSE)
+process_K <- function(k,proj) {
+    message("Processing K = ", k)
 
-# --------------------------
-# FUNCTION: process one K
-# --------------------------
-
-process_K <- function(K) {
-
-    message("\n===============================")
-    message("Processing K = ", K)
-    message("===============================")
-
-    proj <- load.snmfProject(paste0(project_prefix, ".snmfProject"))
-
-    nruns <- proj$Kproject[[as.character(K)]]$nrun
+    nruns <- proj$Kproject[[as.character(k)]]$nrun
     message("Number of runs detected: ", nruns)
 
     # ----------------------------------------------------
@@ -505,6 +559,17 @@ message("\nDONE! Results stored in snmf_modes/\n")
 
 
 ```
+
+
+> Nota:
+> En la literatura se suele hablar de “ancestrías” para describir estos componentes (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
+> Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
+
+
+
+
+
+
 
 ## <em>f<sub>3</sub></em>-outgroup
 
