@@ -37,7 +37,7 @@ Los resultados se crean en una carpeta <pref>.pca.
 ### we can read the eigenvalues file
 eigenvalues<-read.table(paste(pref,".pca/filteredDataSet.eigenvalues",sep=""),stringsAsFactors=F,header=F)
 ### let see the porcentage of variance explained per principal components
-plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
+plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="mediumseagreen",xlab=("PCs"),ylab="% variance explained")
 ```
 
 ```r
@@ -220,8 +220,8 @@ write.table(snp_sub, paste(pref,"_subset.snp",sep=""),col.names=F,row.names=F,qu
 
 Ahora podemos hacer el ACP en este sub-conjunto
 ```r
-
 pc_sub = pca(paste(pref,"_subset.geno",sep=""), scale = TRUE)
+```
 Los resultados se crean en una carpeta <pref>.pca. 
 ```r
 ### we can read the eigenvalues file
@@ -242,7 +242,7 @@ projections_sub$pop=ind_sub$pop
 projections_sub<-merge(projections_sub,meta,by=c("id","pop"))
 
 ###let's plot the first 10 PCs
-pdf(paste(pref,".PCAWithSubSet.pdf",sep=""),height=10)
+#pdf(paste(pref,".PCAWithSubSet.pdf",sep=""),height=10)
 par(mfrow=c(3,2))
 forLeg_sub<-unique(projections_sub[,c("Region","pop","Color","Point")])
 forLeg_sub<-forLeg_sub[ order(forLeg_sub$Region,forLeg_sub$pop),]
@@ -257,7 +257,7 @@ for(i in seq(1,9,2)){
           xlab=paste("PC",i),
           ylab=paste("PC",i+1))
 }
-dev.off()
+#dev.off()
 ```
 
 Add some interpreation
@@ -383,10 +383,10 @@ metaPlot$Label<-sapply(metaPlot$pop,change,USE.NAMES=F)
 metaPlot$SG<-grepl(".SG",metaPlot$pop)
 ```
 
-Ahora vamos a leer los datos para cada <em>K</em> y reordenar la matriz Q para que los individuos estén en el orden deseado (tal como guardado en la columna `orderPlot` de la tabla que acabamos de generar), y graficar.
+Ahora vamos a leer los resultados para cada <em>K</em> y reordenar la matriz Q para que los individuos estén en el orden deseado (tal como guardado en la columna `orderPlot` de la tabla que acabamos de generar), y graficar.
 Añadimos un punto negro (rótulo abajo) para los individuos secuenciados con shotgun.
 ```r
-my.colors <- c("gold","indianred","mediumseagreen","darkgrey","blue1","violet")
+listColors<-c("darkgreen","cadetblue","darkorange4","red3","blue1","rosybrown")
 par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
 
 posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
@@ -406,7 +406,7 @@ for(k in c(Kmax:2)){
         line=-1,
         axes=F,
         space = 0, 
-        col = my.colors[c(1:k)], 
+        col = listColors[c(1:k)], 
         )
         
 }
@@ -451,22 +451,19 @@ listColors[colChil]<-"red3"
 ##assign "darkorange4" for the component maxized in CentralAndes (e.g. I0038)
 colAnd<-which(Q.Kmax[,"I0038"]==max(Q.Kmax[,"I0038"]))
 listColors[colAnd]<-"darkorange4"
-##assign "palegreen1" for the component maxized in Brazil (e.g. Sumidouro7)
+##assign "darkgreen" for the component maxized in Brazil (e.g. Sumidouro7)
 colBra<-which(Q.Kmax[,"Sumidouro7"]==max(Q.Kmax[,"Sumidouro7"]))
-listColors[colBra]<-"palegreen1"
+listColors[colBra]<-"darkgreen"
 ```
 
-Ahora vamos a tratar de alinear los clusters (por ejemplo hacer corresponder el componente "indianred" de K=2 al componente "gold a K=3")
-Para esto, escribí una función `align_Q_down()` guardada en el ficher `Modulo3/Align_Q_down.R` que hace lo siguiente:
-Yendo de K a K−1:
+Ahora vamos a tratar de alinear los clusteres. Para esto, escribí una función `align_Q_down()` guardada en el ficher `Modulo3/Align_Q_down.R` que hace lo siguiente:
+Yendo de *K* a *K−1*:
 1. Calcula el promedio de las distancias euclidianas entre las proporciones estimadas para el componente i del modelo con K in el componente j del modelo con K-1.
 2. Esto genera  una matriz de confusión para buscar los clusteres del modelo con K-1 grupos correspondientes a clusteres con modelo con K grupos.
 3. Aplica un algoritmo hungaro para asiñar las mejores corerspondencias en base a esta matriz de confusión
 4. Retorna las correspondencias
 
 ```r
-
-library(clue)
 
 ## in the file Modulo3/Align_Q_down.R, I defined a function trying to fit the best colors for K-1 to the ones used for K
 source("Modulo3/Align_Q_down.R")
@@ -679,20 +676,23 @@ message("\nDONE! Results stored in snmf_modes/\n")
 
 ```
 
-
-> Nota:
+### Discusión
+#### Sobre concepto de "Amcestría"
 > En la literatura se suele hablar de “ancestrías” para describir estos componentes (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
 > Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
 
+### Sobre la interpretación de los resultados de estimaciones de XXX
+> [Lawson et al. 2018](https://www.nature.com/articles/s41467-018-05257-7) advierieron sobre el riesgo de sobre interpretar los resultados de métodos como *ADMIXTURE* o *sNMF*.
+> Brevemente, diferentes escenarios pueden llevar a observar resultados similares, como lo muestran en su figura 2.
 
 
 
-
-
-
-## <em>f<sub>3</sub></em>-outgroup
+## BONUS: <em>f<sub>3</sub></em>-outgroup
 
 Let's see 
 ```r
 require(admixtools)
 ```
+
+
+
