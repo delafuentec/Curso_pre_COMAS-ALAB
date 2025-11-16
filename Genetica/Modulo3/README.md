@@ -337,17 +337,13 @@ print(unlist(listBest))
 
 ### Visualización de los resultados
 Vamos a graficar los resultados. 
-Una ventaja de los resultados con sNMF es que existen funciones para hacer corresponder los dif
-
-
-> Es siempre algo complicado generar manualmente gráficos lindos de estimaciones de coeficientes de estructura genética: 
+> Es siempre engoroso generar manualmente gráficos lindos de estimaciones de coeficientes de estructura genética: 
 1. hay que ordenar los individuos según el sentido biologíco esperado para poder visualizar mejor lo que puede explicar la estructura genética capturada
 2. hay que hacer corresponder los colores de cada componente a diferentes <em>K</em>.
 
+Vamos a reorganizar primero los individuos por región tal como guardado en el objeto `meta`.
 
 ```r
-my.colors <- c("brown1", "lightblue", "palegreen1", "blue1","rosybrown","darkorange4")
-
 ### preparamos el orden de los individuos en el gráfico
 ind<-read.table(paste(pref,".ind",sep=""),stringsAsFactors=F,header=F)
 names(ind)<-c("id","sex","pop")
@@ -373,19 +369,29 @@ for(region in c("Beringia_EH","SouthernNorthAmerica_EH",
 }
 metaPlot<-metaTMP
 remove(metaTMP)
+
+## rearrange labels (remove country and date)
+change<-function(string){
+    tmp<-strsplit(string,split="_")[[1]]
+    tmp<-tmp[!grepl("BP",tmp)]
+    #return(paste(tmp[c(2:length(tmp))],collapse="\n"))
+    return(tmp[length(tmp)])
+}
+metaPlot$Label<-sapply(metaPlot$pop,change,USE.NAMES=F)
+metaPlot$SG<-grepl(".SG",metaPlot$pop)
 ```
 
-Ahora vamos a leer los datos para cada <em>K</em> y reordenar la matriz Q para que los individuos estén en el orden deseado
-
+Ahora vamos a leer los datos para cada <em>K</em> y reordenar la matriz Q para que los individuos estén en el orden deseado (tal como guardado en la columna `orderPlot` de la tabla que acabamos de generar), y graficar.
+Añadimos un punto negro (rótulo abajo) para los individuos secuenciados con shotgun.
 ```r
+my.colors <- c("gold","indianred","mediumseagreen","darkgrey","blue1","violet")
 par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
 
 posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
 plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
 text(x=posX,y=rep(-1,nrow(metaPlot)),
         srt=90,adj=c(0,0.5),col=metaPlot$Color,
-        labels=metaPlot$pop,cex=0.7)
-
+        labels=metaPlot$Label,cex=0.7)
 
 for(k in c(Kmax:2)){
   best = listBest[[paste("K=",k,sep="")]]
@@ -407,8 +413,120 @@ plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
 text(x=posX,y=rep(-1,nrow(metaPlot)),
         srt=90,adj=c(0,0.5),col=metaPlot$Color,
         labels=metaPlot$id,cex=0.7)
+points(x=posX,y=rep(1,nrow(metaPlot)),
+        pch=ifelse(metaPlot$SG,16,NA))
 
 ```
+
+Los gráficos de *sNMF* (o *Admixture*) NO usan colores coherentes entre diferentes valores de *K*. Para obtener colores consistentes, debemos alinear los clusters entre *Ks* y usar una misma paleta fija. <br>
+Brevemente, vamos a seguir la siguiente estrategia
+- Elegimos un *K* de referencia (mejor que sea Kmax), y asignamos un color a cada componente en base a lo que observamos previamente.
+- Para cada otro *K), alineamos sus columnas con las del K de referencia usando el algoritmo Húngaro (maximize correlation).
+
+> Ojo, es un intento de automización, pero es posible que el código aabjo requiera ediciones porque los resultados que se obtienen en cada corrida pueden diferir.
+
+Empezamos con la signación de un color a cada componente.
+```r
+library(clue)
+
+listColors<-c()
+###read Q for Kmax
+best = listBest[[paste("K=",Kmax,sep="")]]
+# display the Q-matrix
+Q.Kmax <- t(as.matrix(Q(admProj, K = Kmax, run = best)))
+Q.Kmax<-data.frame(Q.Kmax[,metaPlot$orderInInd],stringsAsFactors=F)
+names(Q.Kmax)<-metaPlot$id  
+##assign "rosybrown" for the component maxized in Beringia
+colBer<-which(Q.Kmax[,"USR1"]==max(Q.Kmax[,"USR1"]))
+listColors[colBer]<-"rosybrown"
+##assign "cadetblue" for the component maxized in SouthPatagonia Terrestre (e.g. I12364)
+colTer<-which(Q.Kmax[,"I12364"]==max(Q.Kmax[,"I12364"]))
+listColors[colTer]<-"cadetblue"
+##assign "blue1" for the component maxized in SouthPatagonia Martime(e.g. I12942)
+colMar<-which(Q.Kmax[,"I12942"]==max(Q.Kmax[,"I12942"]))
+listColors[colMar]<-"blue1"
+##assign "red3" for the component maxized in Central Chile (e.g. I1754)
+colChil<-which(Q.Kmax[,"I1754"]==max(Q.Kmax[,"I1754"]))
+listColors[colChil]<-"red3"
+##assign "darkorange4" for the component maxized in CentralAndes (e.g. I0038)
+colAnd<-which(Q.Kmax[,"I0038"]==max(Q.Kmax[,"I0038"]))
+listColors[colAnd]<-"darkorange4"
+##assign "palegreen1" for the component maxized in Brazil (e.g. Sumidouro7)
+colBra<-which(Q.Kmax[,"Sumidouro7"]==max(Q.Kmax[,"Sumidouro7"]))
+listColors[colBra]<-"palegreen1"
+```
+
+Ahora vamos a tratar de alinear los clusters (por ejemplo hacer corresponder el componente "indianred" de K=2 al componente "gold a K=3")
+Para esto, escribí una función `align_Q_down()` guardada en el ficher `Modulo3/Align_Q_down.R` que hace lo siguiente:
+Yendo de K a K−1:
+1. Calcula el promedio de las distancias euclidianas entre las proporciones estimadas para el componente i del modelo con K in el componente j del modelo con K-1.
+2. Esto genera  una matriz de confusión para buscar los clusteres del modelo con K-1 grupos correspondientes a clusteres con modelo con K grupos.
+3. Aplica un algoritmo hungaro para asiñar las mejores corerspondencias en base a esta matriz de confusión
+4. Retorna las correspondencias
+
+```r
+
+library(clue)
+
+## in the file Modulo3/Align_Q_down.R, I defined a function trying to fit the best colors for K-1 to the ones used for K
+source("Modulo3/Align_Q_down.R")
+### now apply
+Qref <- t(as.matrix(Q(admProj, K = Kmax, run = best)))
+Qref<- Qref[,metaPlot$orderInInd]
+par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
+
+posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
+plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
+text(x=posX,y=rep(-1,nrow(metaPlot)),
+        srt=90,adj=c(0,0.5),col=metaPlot$Color,
+        labels=metaPlot$Label,cex=0.7)
+bp<-barplot(Qref, 
+        border = NA, 
+        ylab=paste("K =",Kmax),
+        line=-1,
+        axes=F,
+        space = 0, 
+        col = listColors, 
+        )
+
+listColorsSub<-listColors
+for(k in c((Kmax-1):2)){
+
+    Qk <- t(as.matrix(Q(admProj, K = k, run = best)))
+    Qk<-Qk[,metaPlot$orderInInd]
+    returnAlign<-align_Q_down(Qref,Qk)
+    ColAligned<-returnAlign[[2]]
+    Qk<-returnAlign[[1]]
+    listColorsSub<-listColorsSub[ sort(ColAligned) ]
+    bp<-barplot(Qk, 
+        border = NA, 
+        ylab=paste("K =",k),
+        line=-1,
+        axes=F,
+        space = 0, 
+        col = listColorsSub, 
+        )
+      
+    Qref<-Qk
+    print(listColorsSub)
+
+}
+
+plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
+text(x=posX,y=rep(-1,nrow(metaPlot)),
+        srt=90,adj=c(0,0.5),col=metaPlot$Color,
+        labels=metaPlot$id,cex=0.7)
+points(x=posX,y=rep(1,nrow(metaPlot)),
+        pch=ifelse(metaPlot$SG,16,NA))
+
+
+```
+
+Vemos entonces que es más facíl interpretar!
+Sin embargo, a veces los colores no corresponden del todo, porque a un un K dado, unos individuos tienen proporciones cerca del 1 para un componente, y ya no para K superiores. Esto demuestra que cada K puede capturar diferentes estructuras. Ver por ejemplo el caso de los Arquipelagos occidentales con K = 5 y 4 vs con otros K.
+
+AÑADIR INTERPRETACION
+
 
 
 
