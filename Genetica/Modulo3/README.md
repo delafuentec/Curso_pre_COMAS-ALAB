@@ -1,11 +1,11 @@
 # Analisis de diversidad y estructura genetica
 
 En este modulo, vamos a realizar 2 analisis tipicos de genetica de poblaciones humanas:
-1. Un Analisis en Componentes Principales (ACP)
-2. Una estimación de coeficientes de estructura genética
+1. Un analisis en Componentes Principales (ACP)
+2. Un análisis de estimación de proporciones de componentes genéticos
 
 > Estos analisis se suelen hacer con <em>smartpca</em> del software [<em>EIGENSOFT</em>](https://github.com/DReichLab/EIG) y <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], pero su implementación en el paquete <em>LEA</em> de **R** son muy similares.
-Además el algoritmo para las estimaciones de coeficientes de estructura genética es más robusto y rápido que <em>ADMIXTURE</em>.
+Además el algoritmo para las estimaciones de proporciones de componentes genéticos es más robusto y rápido que <em>ADMIXTURE</em>.
 
 Vamos a leer los datos filtrados que generamos en el modulo anterior.
 
@@ -265,7 +265,7 @@ Add some interpreation
 > speak of mssing data and PCA
 
 
-## Estimaciones de coeficientes de estructura genética
+## Análisis de estimación de proporciones de componentes genéticos
 ### Introducción al método
 Vamos a usar el algoritmo  sNMF (Sparse Non-negative Matrix Factorization) descrito en [Frichot & François, 2015](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12382).
 Similar a <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], <em>sNMF</em> es un método que toma una  matriz de genotipos y trata de resumir la variación genética en un conjunto pequeño de componentes.
@@ -337,7 +337,7 @@ print(unlist(listBest))
 
 ### Visualización de los resultados
 Vamos a graficar los resultados. 
-> Es siempre engoroso generar manualmente gráficos lindos de estimaciones de coeficientes de estructura genética: 
+> Es siempre engoroso generar manualmente gráficos lindos para los análisis de estimación de proporciones de componentes genéticos: 
 > 1. hay que ordenar los individuos según el sentido biologíco esperado para poder visualizar mejor lo que puede explicar la estructura genética capturada
 > 2. hay que hacer corresponder los colores de cada componente a diferentes <em>K</em>.
 
@@ -677,11 +677,11 @@ message("\nDONE! Results stored in snmf_modes/\n")
 ```
 
 ### Discusión
-#### Sobre concepto de "Amcestría"
-En la literatura se suele hablar de “ancestrías” para describir estos componentes (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
+#### Sobre concepto de "Ancestría"
+En la literatura se suele hablar de “ancestrías” para describir los componentes identificados con *ADMIXTURE* o *sNMF* (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
 Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
 
-### Sobre la interpretación de los resultados de estimaciones de XXX
+### Sobre la interpretación de los resultados de estimación de proporciones de componentes genéticos
 [Lawson et al. 2018](https://www.nature.com/articles/s41467-018-05257-7) advierieron sobre el riesgo de sobre interpretar los resultados de métodos como *ADMIXTURE* o *sNMF*.
 Brevemente, advierten que diferentes hábitos para interpretar los resultados de este tipo de análisis pueden llevar a una mal interpretación de la historia evolutiva que se pretende explicar.
 <img width="926" height="576" alt="image" src="https://github.com/user-attachments/assets/68c684df-96f6-476e-b196-5690404b05e6" />
