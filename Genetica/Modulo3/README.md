@@ -5,7 +5,7 @@ En este modulo, vamos a realizar 2 analisis tipicos de genetica de poblaciones h
 2. Una estimación de coeficientes de estructura genética
 
 > Estos analisis se suelen hacer con <em>smartpca</em> del software [<em>EIGENSOFT</em>](https://github.com/DReichLab/EIG) y <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], pero su implementación en el paquete <em>LEA</em> de **R** son muy similares.
-Además el algoritmo para la ancestría es más robusto y rápido que <em>ADMIXTURE</em>.
+Además el algoritmo para las estimaciones de coeficientes de estructura genética es más robusto y rápido que <em>ADMIXTURE</em>.
 
 Vamos a leer los datos filtrados que generamos en el modulo anterior.
 
@@ -284,7 +284,7 @@ Tanto <em>sNMF</em> como <em>ADMIXTURE</em>  descomponen los datos genéticos en
 Es una forma de representar estructuras complejas de variación sin asumir poblaciones discretas.
 
 > Nota:
-En la literatura se suele hablar de “ancestrías” para describir estos componentes (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza.
+En la literatura se suele hablar de “ancestrías” para describir estos componentes (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
 
 Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
 
@@ -292,29 +292,75 @@ Si bien en publicaciones especializadas se continúa utilizando este término po
 Vamos a realizar el analisis por un numero de **poblaciones ancestral** (o cluster) **K** variando de 2 a 6. Para cada **K** haremos 4 repeticiones independientes.
 > Se suelen hacer en los estudios entre 10 y 30 repeticiones por **K**.
 
+
 ```r
+Kmax=6
 admProj = snmf(paste(pref,".geno",sep=""),
-                K = 2:6, 
+                K = 2:Kmax, 
                 entropy = TRUE, 
                 repetitions = 4,
                 project = "new")
 ```
+Los resultados se escriben en una carpeta `<pref>.snmf/` y el objeto creado (`admProj` permite acceder facilmente a los mismos).
 
+### Selección del <em>K</em> y de la iteración por <em>K</em>
+
+Para cada número de poblacionaes ancestrales (clusters), <em>K</em>, vamos a ver cómo las diferentes iteraciones explican los datos (tiene menor entropía crzuada).
 > Cada corrida del algoritmo produce un valor llamado cross-entropy o entropy score. <br>
-Este valor mide qué tan bien el modelo con un número dado de clusters (K) explica los datos genéticos observados.<br>
-Cuanto más baja sea, mejor ajusta el modelo a los datos.<br>
-**¿Qué significa exactamente?**  El algoritmo snmf intenta factorizar la matriz de genotipos **G ≈ Q × F***, con :
-- una matriz ***Q***, que representa proporciones de ancestría por individuo; y
-- una matriz ***F***, que representa frecuencias alélicas por población ancestral. <br>
-Durante el cálculo, snmf evalúa qué tan bien estas matrices reconstruyen los genotipos observados.
-Esa diferencia entre lo observado y lo esperado se resume en un único valor: la entropía cruzada.
-Si la entropía es alta, significa que el modelo no puede explicar bien la variación genética con ese número de clusters (K), o esa corrida del algoritmo se quedó atrapada en un óptimo local.
-Si la entropía es baja, significa que el modelo explica mejor la estructura genética.
-Por eso, la mejor corrida para un K dado es la que tiene el menor valor de entropía.
+> Este valor mide qué tan bien el modelo con un número dado de clusters (K) explica los datos genéticos observados.<br>
+> Cuanto más baja sea, mejor ajusta el modelo a los datos.<br>
+> **¿Qué significa exactamente?**  El algoritmo snmf intenta factorizar la matriz de genotipos **G ≈ Q × F***, con :
+> - una matriz ***Q***, que representa proporciones de ancestría por individuo; y
+> - una matriz ***F***, que representa frecuencias alélicas por población ancestral. <br>
+> Durante el cálculo, <em>sNMF</em> evalúa qué tan bien estas matrices reconstruyen los genotipos observados.
+> Esa diferencia entre lo observado y lo esperado se resume en un único valor: la entropía cruzada.
+> Si la entropía es alta, significa que el modelo no puede explicar bien la variación genética con ese número de clusters (K), o esa corrida del algoritmo se quedó atrapada en un óptimo local.
+> Si la entropía es baja, significa que el modelo explica mejor la estructura genética.
+> Por eso, la mejor corrida para un K dado es la que tiene el menor valor de entropía.
 > **La entropía cruzada es equivalente al escore de Cross-Validation en Admixture**
 
-### Selección de la mejor iteración por cada K
-### Mode definicion!
+```r
+### for each K get bet score
+listEntro<-list()
+for(k in c(2:Kmax)){
+  listEntro[[paste("K=",k,sep="")]]<-cross.entropy(admProj, K = k)
+}
+boxplot(listEntro,main="Cross-Entropopy per K across diferent iteracions")
+```
+Vemos entonces que el modelo con, K=2 es el que mejor se ajusta a los datos, independetemiente de las iteraciones. En general, es un patrón que se obsera cuando se analizan solo datos de ADN antiguo, por el tema de valores faltantes. Volveremos sobre este problema más adelante.
+
+Podemos también seleccionar la iteración para cada <em>K</em>> que explica mejor los datos según la entropía. 
+
+```r
+listBest<-list()
+for(k in c(2:Kmax)){
+  listBest[[paste("K=",k,sep="")]]<-which(listEntro[[paste("K=",k,sep="")]] == min(listEntro[[paste("K=",k,sep="")]]))
+}
+print(unlist(listBest))
+
+```
+
+### Visualización de los resultados
+Vamos a graficar los resultados
+
+### Visualización de los diferentes modos por K
+
+> Cuando usamos algoritmos como <em>sNMF</em>, para un mismo número de clusters (K), solemos realizar varias corridas independientes.
+> Aunque todas las corridas usan el mismo <em>K</em>, el algoritmo puede llegar a soluciones ligeramente distintas porque:
+> - empieza con diferentes condiciones iniciales,
+> - la función que optimiza puede tener mínimos locales,
+> - los datos pueden sostener más de una partición válida.
+> Estas diferentes soluciones estables se llaman “modos”. Un modo es un patrón consistente de agrupamiento que aparece de forma repetida en varias corridas, es decir una solución que el algoritmo encuentra varias veces porque los datos permiten interpretarse de más de una manera.
+
+> Cada modo representa una interpretación alternativa de la estructura genética/variación estadística en la muestra.
+> Visualizar los modos permite:
+> - Detectar soluciones mayoritarias: el modo que aparece en la mayoría de corridas refleja la partición más estable o más apoyada por los datos.
+> - Identificar soluciones minoritarias pero biológicamente interesantes: modos menos frecuentes pueden capturar patrones sutiles u homogéneos en subgrupos.
+> - Distinguir variación real de ruido técnico: si hay muchos modos muy distintos y ninguno predominante, puede indicar que el <em>K</em> es demasiado grande, ya que los datos no soportan una partición clara, o que falta información.
+> - Evitar seleccionar al azar una corrida “bonita”: cada corrida individual es solo una realización y los modos integran información sobre todas las corridas.
+
+La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong), sin embargo es bastante facíl realizar lo mismo en R con los resuldatos de <em>sNMF</em>.
+
 ```
 if(! require(proxy)){install.packages("proxy");require(proxy)}
 ############################################################
