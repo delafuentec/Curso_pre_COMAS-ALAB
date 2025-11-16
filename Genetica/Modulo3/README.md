@@ -1,10 +1,12 @@
 # Analisis de diversidad y estructura genetica
 
 En este modulo, vamos a realizar 2 analisis tipicos de genetica de poblaciones humanas:
-1. un Analisis en Componentes Principales (ACP)
-2. Un analisis de Admixture 
+1. Un Analisis en Componentes Principales (ACP)
+2. Una estimación de coeficientes de estructura genética
 
 > Estos analisis se suelen hacer con <em>smartpca</em> del software [<em>EIGENSOFT</em>](https://github.com/DReichLab/EIG) y <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], pero su implementación en el paquete <em>LEA</em> de **R** son muy similares.
+Además el algoritmo para la ancestría es más robusto y rápido que <em>ADMIXTURE</em>.
+
 Vamos a leer los datos filtrados que generamos en el modulo anterior.
 
 ```r
@@ -258,30 +260,209 @@ for(i in seq(1,9,2)){
 dev.off()
 ```
 
-<large>Add some interpreation
+Add some interpreation
 
-> speak of mssing data and PCA </large>
-
-
-## <em>f<sub>3</sub></em>-outgroup
-
-```r
-require(admixtools)
+> speak of mssing data and PCA
 
 
-## Admixture
+## Estimaciones de coeficientes de ancestría
+### Introducción al método
+Vamos a usar el algoritmo  sNMF (Sparse Non-negative Matrix Factorization) descrito en [Frichot & François, 2015](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12382).
+Similar a <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], <em>sNMF</em> es un método que toma una  matriz de genotipos y trata de resumir la variación genética en un conjunto pequeño de componentes.
+En términos prácticos, sNMF:
+1. Identifica K componentes genéticos:
+    patrones de variación que aparecen repetidamente en el conjunto de individuos.)
+2. Calcula para cada individuo cuánto contribuye cada componente:
+    Genera una matriz que indica, por ejemplo, si un individuo puede describirse como 40% del componente 1, 30% del componente 2, etc.
+3. Estima las frecuencias alélicas típicas de cada componente:
+    Es decir, cómo se ve genéticamente cada uno de esos patrones.
 
+No asume poblaciones discretas ni grupos biológicos "reales", simplemente resume los datos genéticos en un número K de patrones que ayudan a describir la estructura multidimensional.
 
-Vamos a realizar el analisis por un numero de **poblaciones ancestral** (o cluster) **K** variando de 2 a 10. Para cada **K** haremos 4 repeticiones independientes.
+> En resumen:
+Tanto <em>sNMF</em> como <em>ADMIXTURE</em>  descomponen los datos genéticos en K patrones de variación y estima cuánto contribuye cada patrón a cada individuo.
+Es una forma de representar estructuras complejas de variación sin asumir poblaciones discretas.
+
+> Nota:
+En la literatura se suele hablar de “ancestrías” para describir estos componentes (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza.
+
+Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
+
+### Correr el algoritmo
+Vamos a realizar el analisis por un numero de **poblaciones ancestral** (o cluster) **K** variando de 2 a 6. Para cada **K** haremos 4 repeticiones independientes.
 > Se suelen hacer en los estudios entre 10 y 30 repeticiones por **K**.
 
-
-
-K```r
+```r
 admProj = snmf(paste(pref,".geno",sep=""),
-                K = 2:10, 
+                K = 2:6, 
                 entropy = TRUE, 
                 repetitions = 4,
                 project = "new")
+```
 
+> Cada corrida del algoritmo produce un valor llamado cross-entropy o entropy score. <br>
+Este valor mide qué tan bien el modelo con un número dado de clusters (K) explica los datos genéticos observados.<br>
+Cuanto más baja sea, mejor ajusta el modelo a los datos.<br>
+**¿Qué significa exactamente?**  El algoritmo snmf intenta factorizar la matriz de genotipos **G ≈ Q × F***, con :
+- una matriz ***Q***, que representa proporciones de ancestría por individuo; y
+- una matriz ***F***, que representa frecuencias alélicas por población ancestral. <br>
+Durante el cálculo, snmf evalúa qué tan bien estas matrices reconstruyen los genotipos observados.
+Esa diferencia entre lo observado y lo esperado se resume en un único valor: la entropía cruzada.
+Si la entropía es alta, significa que el modelo no puede explicar bien la variación genética con ese número de clusters (K), o esa corrida del algoritmo se quedó atrapada en un óptimo local.
+Si la entropía es baja, significa que el modelo explica mejor la estructura genética.
+Por eso, la mejor corrida para un K dado es la que tiene el menor valor de entropía.
+> **La entropía cruzada es equivalente al escore de Cross-Validation en Admixture**
+
+### Selección de la mejor iteración por cada K
+### Mode definicion!
+```
+if(! require(proxy)){install.packages("proxy");require(proxy)}
+############################################################
+## PONG-like clustering of snmf replicates for all K
+## Author: ChatGPT
+############################################################
+
+library(LEA)
+library(proxy)
+library(ggplot2)
+
+# --------------------------
+# SETTINGS
+# --------------------------
+
+project_prefix <- "myproject"   # prefix of your .snmfProject file
+Kmin <- 2
+Kmax <- 12
+distance_method <- "euclidean"  # "euclidean", "manhattan", or "correlation"
+
+# Folder to save results
+dir.create("snmf_modes", showWarnings = FALSE)
+
+# --------------------------
+# FUNCTION: process one K
+# --------------------------
+
+process_K <- function(K) {
+
+    message("\n===============================")
+    message("Processing K = ", K)
+    message("===============================")
+
+    proj <- load.snmfProject(paste0(project_prefix, ".snmfProject"))
+
+    nruns <- proj$Kproject[[as.character(K)]]$nrun
+    message("Number of runs detected: ", nruns)
+
+    # ----------------------------------------------------
+    # Extract Q matrices from all runs
+    # ----------------------------------------------------
+    Qlist <- lapply(1:nruns, function(r) Q(proj, K = K, run = r))
+
+    # ----------------------------------------------------
+    # Align Q matrices (fix label switching)
+    # ----------------------------------------------------
+    aligned <- LEA::align_Q_matrices(Qlist)
+
+    # Convert the aligned list into a single matrix
+    # Each row = run, flattened Q-matrix
+    flat <- lapply(aligned, function(Q) as.vector(t(Q)))
+    flat <- do.call(rbind, flat)
+
+    # ----------------------------------------------------
+    # Compute distances among runs
+    # ----------------------------------------------------
+    D <- proxy::dist(flat, method = distance_method)
+
+    # ----------------------------------------------------
+    # Cluster runs into modes (hierarchical clustering)
+    # ----------------------------------------------------
+    hc <- hclust(D, method = "average")
+
+    # Automatic mode detection:
+    # rule: cut at 10% of maximum height (adjust if needed)
+    threshold <- 0.10 * max(hc$height)
+    modes <- cutree(hc, h = threshold)
+
+    nmodes <- length(unique(modes))
+    message("Identified modes for K=", K, ": ", nmodes)
+
+    # ----------------------------------------------------
+    # Compute average Q matrix for each mode
+    # ----------------------------------------------------
+    mode_Q <- lapply(unique(modes), function(m) {
+        selected <- aligned[modes == m]
+        Reduce("+", selected) / length(selected)
+    })
+
+    # ----------------------------------------------------
+    # Save results
+    # ----------------------------------------------------
+    outdir <- paste0("snmf_modes/K", K)
+    dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+
+    # Save clustering of runs
+    write.table(
+        data.frame(Run = 1:nruns, Mode = modes),
+        file = file.path(outdir, "run_modes.txt"),
+        row.names = FALSE, quote = FALSE
+    )
+
+    # Save mode-average Q matrices
+    for (i in seq_along(mode_Q)) {
+        write.table(
+            mode_Q[[i]],
+            file = file.path(outdir, paste0("mode_", i, "_Qmatrix.txt")),
+            row.names = FALSE, col.names = FALSE, quote = FALSE
+        )
+    }
+
+    # ----------------------------------------------------
+    # Plot modes (simple barplot for each mode)
+    # ----------------------------------------------------
+    for (i in seq_along(mode_Q)) {
+
+        df <- data.frame(
+            Individual = 1:nrow(mode_Q[[i]]),
+            mode_Q[[i]]
+        )
+        df_long <- reshape2::melt(df, id.vars = "Individual")
+
+        p <- ggplot(df_long, aes(x = Individual, y = value, fill = variable)) +
+            geom_bar(stat = "identity", width = 1) +
+            theme_minimal() +
+            ggtitle(paste("K =", K, " | Mode", i)) +
+            ylab("Ancestry proportion")
+
+        ggsave(file.path(outdir, paste0("mode_", i, "_plot.png")),
+               p, width = 10, height = 4)
+    }
+
+    # Return summary
+    list(K = K, nruns = nruns, nmodes = nmodes)
+}
+
+
+# --------------------------
+# PROCESS ALL K VALUES
+# --------------------------
+
+summary_list <- lapply(Kmin:Kmax, process_K)
+summary_table <- do.call(rbind, lapply(summary_list, as.data.frame))
+
+write.table(summary_table,
+            file = "snmf_modes/summary_modes_all_K.txt",
+            row.names = FALSE, quote = FALSE)
+
+message("\nDONE! Results stored in snmf_modes/\n")
+
+
+
+
+```
+
+## <em>f<sub>3</sub></em>-outgroup
+
+Let's see 
+```r
+require(admixtools)
 ```
