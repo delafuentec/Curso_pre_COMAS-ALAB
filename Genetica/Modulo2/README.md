@@ -181,7 +181,7 @@ Observamos que existen loci con una **tasa de llamado** (*call rate*) baja (< 0.
 
 También podemos explorar la **proporción de loci con datos disponibles por individuo**, para identificar muestras con una alta proporción de datos faltantes.
  ```r
-hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual")
+hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=20)
 ```
 Ahora podemos miramos la **tasa de heterocigosidad** por cada individuo.
 ```r
@@ -255,9 +255,9 @@ Se asume que la mayoría de los pares en el conjunto de datos no están emparent
 
 Siguiendo los planteamientos de *READv2*, se define el **valor medio esperado del PMR** para una relación de grado *k* = 0, 1 o 2 como:
 
-\[
+\
 p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right).
-\]
+\
 
 Una vez definidos estos valores esperados, evaluamos si el PMR observado para un par de individuos es **significativamente menor** que cada uno de los valores esperados para los distintos grados de relación.  
 El parentesco asignado será entonces el **menor valor de *k*** para el cual la diferencia **no resulta significativa**, tal como se ilustra en la figura siguiente.
