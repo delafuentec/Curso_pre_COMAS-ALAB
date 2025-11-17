@@ -107,7 +107,7 @@ for(i in seq(1,9,2)){
 }
 dev.off()
 ```
-Los gráficos están en un pdf: `<pref>".PCAWithAll.pdf`
+Los gráficos están en un pdf: `<pref>.PCAWithAll.pdf`
 > Atencion: En smartpca de EIGENSOFT: El archivo llamado eigenvectors (*.evec) no contiene los eigenvectores de los SNPs, sino las proyecciones de los individuos sobre los componentes principales.<br>
 > Cada fila = un individuo<br>
 > Cada columna = PC1, PC2, …<br>
@@ -136,8 +136,8 @@ sumi<-projections[grepl("Brazil_Sumidouro_",projections$pop),c("id","pop",paste(
 print(sumi)
 ```
 
-Vemos entonces que es Sumidouro5 (~10400BP) que se diferencia de los otros. Sumidouro 5, un individuo del Holoceno temprano proveniente de la cueva de Sumidouro (Lagoa Santa, Brasil), destaca por varias razones biológicas y arqueológicas. En primer lugar, su morfología craneal fue reconocida desde mucho tiempo como particularmente distintiva: comparaciones multivariantes indicaron afinidades con poblaciones africanas y austro-melanesias, en lugar de con los indigenas  americanos tardíos o asiáticos [(Neves et al. 2007)](bpb-us-w2.wpmucdn.com). <br>
-Más recientemente, datos genómicos han revelado en Sumidouro 5 una señal de ascendencia mitocondrial D4h3a y un perfil autosómico que no se corresponde completamente con otros individuos tempranos de Lagoa Santa, lo que sugiere conexiones genéticas más amplias (incluso con poblaciones amazónicas ancestrales), ([Moreno-Mayar et al. 2018](https://www.science.org/doi/10.1126/science.aav2621),[Ferraz et al. 2023](https://doi.org/10.1038/s41559-023-02114-9)). <br>
+Vemos entonces que es Sumidouro5 (~10400 AP) que se diferencia de los otros. Sumidouro 5, un individuo del Holoceno temprano proveniente de la cueva de Sumidouro (Lagoa Santa, Brasil), destaca por varias razones biológicas y arqueológicas. En primer lugar, su morfología craneal fue reconocida desde mucho tiempo como particularmente distintiva: comparaciones multivariantes indicaron afinidades con poblaciones africanas y austro-melanesias, en lugar de con los indigenas  americanos tardíos o asiáticos [(Neves et al. 2007)](bpb-us-w2.wpmucdn.com). <br>
+Más recientemente, datos genómicos han revelado en Sumidouro 5 una señal de ascendencia mitocondrial D4h3a y un perfil autosómico que no se corresponde completamente con otros individuos tempranos de Lagoa Santa, lo que sugiere conexiones genéticas más amplias (incluso con poblaciones amazónicas ancestrales), ([Moreno-Mayar et al. 2018](https://www.science.org/doi/10.1126/science.aav2621), [Ferraz et al. 2023](https://doi.org/10.1038/s41559-023-02114-9)). <br>
 Esta combinación de rasgos morfológicos arcaicos y una ascendencia genética poco común indica que Sumidouro 5 pudo pertenecer a un linaje parcialmente distinto a otros pobladores tempranos de Lagoa Santa, aportando evidencia de una mayor diversidad biológica en los primeros habitantes del este de Sudamérica y de posibles rutas de migración complejas durante el Holoceno temprano.
 
 ### ACP enfocado en procesos más tardíos de Sudamérica
@@ -231,8 +231,10 @@ print(table(meta$pop[ meta$Region == "Brazil_EH" & meta$id %in% toKeepID]))
 ##looks ok --> generate subdataset, removing monorphisms (need to recalculate the metrics for further filtering)
 ```
 
-Ahora podemos generar el subconjunto de datos. Por las dudas hay que volver a filtrar las variantes monomorficas y con alta tasa de valores faltantes.
-Y sacaremos los individuos con menos de 10000 SNPs
+Ahora podemos generar el subconjunto de datos.  
+Como paso adicional de control de calidad, volveremos a filtrar las variantes monomórficas y aquellas con menos de 2 individuos con valores.  
+Además, eliminaremos los individuos que tengan menos de **10.000 SNPs** disponibles, para asegurar que el análisis de ACP tenga suficiente información genética por individuo.
+
 ```r
 gl<-gl.keep.ind(gl,ind.list =toKeepID,recalc = T,mono.rm = T)
 gl<-gl.filter.callrate(gl, threshold=2/nInd(gl),recalc=T)
@@ -246,10 +248,8 @@ print(paste("from",nrow(snp),"snps",nLoc(gl)," remain in the sub-dataset"))
 
 
 ```
-Ahora podemos generar el subconjunto de datos.  
-Como paso adicional de control de calidad, volveremos a filtrar las variantes monomórficas y aquellas con menos de 2 individuos con valores.  
-Además, eliminaremos los individuos que tengan menos de **10.000 SNPs** disponibles, para asegurar que el análisis de ACP tenga suficiente información genética por individuo.
 
+Ahora podemos escribir los ficheros, de la misma forma que vimos en el Módulo 2.
 ```r
 geno_mat <- as.matrix(gl)
 # Replace missing data with 9 (per convention)
@@ -267,8 +267,6 @@ write.table(ind_sub, paste(pref,"_subset.ind",sep=""),col.names=F,row.names=F,qu
 snp_sub<-gl$other$loc.metrics[,c("loc.id","chromosome","cM","position","allele.1","allele.2")]
 write.table(snp_sub, paste(pref,"_subset.snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ```
-
-#### ACP con el sub-conjunto
 
 #### ACP con el sub-conjunto
 
@@ -314,7 +312,7 @@ for(i in seq(1,9,2)){
 }
 dev.off()
 ```
-Los gráficos están en un pdf: `<pref>".PCAWithSubSet.pdf`
+Los gráficos están en un pdf: `<pref>.PCAWithSubSet.pdf`
 Add some interpreation
 
 ### Limitaciones del ACP con datos de ADN antiguo
@@ -331,16 +329,16 @@ Aun así, incluso con estas estrategias, el ACP puede seguir siendo sensible al 
 ## Análisis de estimación de proporciones de componentes genéticos
 ### Introducción al método
 Vamos a usar el algoritmo  sNMF (Sparse Non-negative Matrix Factorization) descrito en [Frichot & François, 2015](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12382).
-Similar a <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], <em>sNMF</em> es un método que toma una  matriz de genotipos y trata de resumir la variación genética en un conjunto pequeño de componentes.
+Similar a <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], <em>sNMF</em> es un método que toma una  matriz de genotipos y trata de resumir la variación genética en un conjunto de componentes.
 En términos prácticos, sNMF:
-1. Identifica K componentes genéticos:
-    patrones de variación que aparecen repetidamente en el conjunto de individuos.)
-2. Calcula para cada individuo cuánto contribuye cada componente:
-    Genera una matriz que indica, por ejemplo, si un individuo puede describirse como 40% del componente 1, 30% del componente 2, etc.
-3. Estima las frecuencias alélicas típicas de cada componente:
-    Es decir, cómo se ve genéticamente cada uno de esos patrones.
+1. Identifica *K* componentes genéticos:
+    discrimina los patrones de estructura poblacional a cada variante en *K* grupos de individuos.
+2.Estima las frecuencias alélicas típicas de cada componente:
+    según la contribución de cada variantes a los *K* componentes (matriz `.P`) para discriminar entre esto *K* componentes.
+3. Calcula para cada individuo cuánto contribuye cada componente:
+    Genera una matriz (`.Q`) que indica, por ejemplo, si un individuo puede describirse como 40% del componente 1, 30% del componente 2, etc.
 
-No asume poblaciones discretas ni grupos biológicos "reales", simplemente resume los datos genéticos en un número K de patrones que ayudan a describir la estructura multidimensional.
+No asume poblaciones discretas ni grupos biológicos "reales", simplemente resume los datos genéticos en un número *K* de patrones que ayudan a describir la estructura multidimensional.
 
 > En resumen:
 Tanto <em>sNMF</em> como <em>ADMIXTURE</em>  descomponen los datos genéticos en K patrones de variación y estima cuánto contribuye cada patrón a cada individuo.
@@ -740,7 +738,7 @@ message("\nDONE! Results stored in snmf_modes/\n")
 ```
 
 ### Discusión
-#### Sobre concepto de "Ancestría"
+#### Sobre el concepto de "Ancestría"
 En la literatura se suele hablar de “ancestrías” para describir los componentes identificados con *ADMIXTURE* o *sNMF* (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
 Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
 
