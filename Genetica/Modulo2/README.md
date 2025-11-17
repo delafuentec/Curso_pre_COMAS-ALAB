@@ -181,7 +181,7 @@ Observamos que existen loci con una **tasa de llamado** (*call rate*) baja (< 0.
 
 También podemos explorar la **proporción de loci con datos disponibles por individuo**, para identificar muestras con una alta proporción de datos faltantes.
  ```r
-hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual")
+hist(datosGeno@other$ind.metric$Call.rate,main="Call Rate per individual",n=20)
 ```
 Ahora podemos miramos la **tasa de heterocigosidad** por cada individuo.
 ```r
@@ -255,9 +255,7 @@ Se asume que la mayoría de los pares en el conjunto de datos no están emparent
 
 Siguiendo los planteamientos de *READv2*, se define el **valor medio esperado del PMR** para una relación de grado *k* = 0, 1 o 2 como:
 
-\[
-p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right).
-\]
+$$ p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right). $$
 
 Una vez definidos estos valores esperados, evaluamos si el PMR observado para un par de individuos es **significativamente menor** que cada uno de los valores esperados para los distintos grados de relación.  
 El parentesco asignado será entonces el **menor valor de *k*** para el cual la diferencia **no resulta significativa**, tal como se ilustra en la figura siguiente.
@@ -295,20 +293,27 @@ relatedness_allAncientTogether<-addPops(tableRel=relatedness_allAncientTogether,
                                         )
 
 ```
-Veamos cuántos pares de individuos aparecen como aparentados y a qué región y población pertenecen.
+Veamos cuántos pares de individuos aparecen como aparentados y a qué región pertenecen.
 
 ```r
-###Number of related pairs indivuduals:
+
 related_allAncientTogether<-relatedness_allAncientTogether[ relatedness_allAncientTogether$relationship!="Unrelated",]
+print("Number of related pairs indivuduals")
 nrow(related_allAncientTogether)
+print("Number of related pairs indivuduals to each degree")
 table(related_allAncientTogether$relationship)
 
-### we see a lot of related pairs. Let's see in which region
+print("we see a lot of related pairs. Let's see in which region")
+
 table(related_allAncientTogether$Region1,related_allAncientTogether$Region2)
 
-###Let's see in which groups we have pairs of up to 2-degree
-second_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
-table(second_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
+###Let's see in which groups we have pairs of up to 2nd-degree
+#second_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
+#table(second_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
+
+print("Let's see in which groups we have pairs of up to 1st-degree")
+first_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree"),]
+table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
 
 ### We can already see some temporal/spatial inconsistencies 
 ```
@@ -397,12 +402,13 @@ Observamos que el par **AM66 – AM71** presenta un error estándar del PMR muy 
 Aun así, *BREADR* clasifica este par como de **1er grado**.  
 Esta asignación se debe al número limitado de SNPs disponibles en esta comparación.
 
-Analicemos este par con mayor detalle.
+Analicemos este par con mayor detalle (y para el par IPK12 - IPK13 de modo comparativo).
  ```r
  ### call rate para ambos:
  datosGeno$other$ind.metrics[datosGeno$other$ind.metrics$id %in% c("AM66","AM71"),]
  ### plotSlice
  plotSLICE(relatednessPatagonia,"AM66 - AM71")
+plotSLICE(relatednessPatagonia,"IPK12 - IPK13")
  ```
 Para estos dos individuos, observamos que las distribuciones de los valores de PMR esperados para distinguir entre distintos grados de parentesco se solapan de manera considerable, lo que dificulta discriminar correctamente el grado de parentesco para este par de individuos.  
 Del mismo modo, al examinar los resultados de PMR para pares clasificados como de **2º grado** (gráfico generado con `plotLOAF`), vemos que varios pares presentan valores por encima del nivel esperado para este grado, y que la significancia estadística entre “2º grado” y “no aparentados” es muy similar. Esto sugiere la posibilidad de **falsos positivos**.
@@ -451,7 +457,7 @@ for(line in c(1:nrow(Pairs))){
     sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind1,
                                       "NumKin"=1,
                                       "ListKin"=Ind2,
-                                      "Call.rate"=datosGeno$other$ind.metrics$Call.rate[metricsInds_forKeptSNPs$id==Ind1]))
+                                      "Call.rate"=datosGeno$other$ind.metrics$Call.rate[datosGeno$other$ind.metrics$id==Ind1]))
   }
   
   if(Ind2 %in% sumUpPairs$id){
@@ -463,7 +469,7 @@ for(line in c(1:nrow(Pairs))){
     sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind2,
                                       "NumKin"=1,
                                       "ListKin"=Ind1,
-                                      "Call.rate"=metricsInds_forKeptSNPs$Call.rate[metricsInds_forKeptSNPs$id==Ind2]))
+                                      "Call.rate"=datosGeno$other$ind.metrics$Call.rate[datosGeno$other$ind.metrics$id==Ind2]))
   }
 
 }
@@ -526,8 +532,8 @@ Como primer paso, eliminaremos los SNPs con datos disponibles para **solo un ind
 ###filter  SNPs for call.rate (we force to recalculate the metrics and remove monomorhisms)
 nLoc_init=datosGeno$n.loc
 nInd_init=length(datosGeno$ind.names)
-datosGeno_filter<-gl.filter.callrate(datosGeno, threshold=2/66,recalc=TRUE,mono.rm=TRUE) 
-nLoc_callRate=datosGeno_filter$n.loc
+datosGeno<-gl.filter.callrate(datosGeno, threshold=2/66,recalc=TRUE,mono.rm=TRUE) 
+nLoc_callRate=datosGeno$n.loc
 print(paste("N SNPs before call.rate:",nLoc_init,"; N SNPs after call.rate and monomorphism filtering:",nLoc_callRate))
 ```
 Pueden aparecer algunos *warnings messages*, pero verán que solo corresponden a mensajes asociados a los histogramas que se generan.
@@ -535,7 +541,7 @@ Pueden aparecer algunos *warnings messages*, pero verán que solo corresponden a
 Luego, vamos a eliminar los individuos que conservan **más de 10,000 variantes** tras este filtrado inicial, así como aquellos que identificamos previamente para evitar parentescos en la muestra.
 
 ```r
-metricsInds_forKeptSNPs <- datosGeno_filter$other$ind.metrics
+metricsInds_forKeptSNPs <- datosGeno$other$ind.metrics
 ###add a column of the number of called snps (Call.rate*nLoc_callrate)
 metricsInds_forKeptSNPs$CalledSNPs=metricsInds_forKeptSNPs$Call.rate*nLoc_callRate
 ###save in a vector individuals with less than 10000 SNPs
@@ -546,10 +552,10 @@ print(paste("of which  ",sum(INDs_to_exclude %in% listToRemove$id)," already fla
 ### update the list to exlude with list from kinship
 INDs_to_exclude<-unique(c(INDs_to_exclude,listToRemove$id))
 ### we can now remove those individuals (and we ask to recalculate)
-datosGeno_filter<-gl.drop.ind(x=datosGeno_filter,ind.list=INDs_to_exclude,recalc = TRUE,mono.rm=TRUE)
+datosGeno<-gl.drop.ind(x=datosGeno,ind.list=INDs_to_exclude,recalc = TRUE,mono.rm=TRUE)
 ##
-nInd_final=length(datosGeno_filter$ind.names)
-nLoc_final=datosGeno_filter$n.loc
+nInd_final=length(datosGeno$ind.names)
+nLoc_final=datosGeno$n.loc
 print(paste("filtered dataset contains:",nInd_final,"inds and",nLoc_final,"snps"))
 
 ```
@@ -560,7 +566,7 @@ Los paquetes que estamos usando no incluyen una función para exportar directame
 ```r
 prefOUT="Modulo3/filteredDataSet"
 ### Convert genlight genotype data to a numeric matrix
-geno_mat <- as.matrix(datosGeno_filter)
+geno_mat <- as.matrix(datosGeno)
 # Replace missing data with 9 (per convention)
 geno_mat[is.na(geno_mat)] <- 9
 ###check size
@@ -568,11 +574,11 @@ dim(geno_mat)
 ##write the genotype data. Watchout you have to transpose the matrix
 write.table(t(geno_mat), paste(prefOUT,".geno",sep=""),col.names=F,row.names=F,quote=F,sep="")
 ##write the individual annotation file
-indData<-datosGeno_filter$other$ind.metrics[,c("id","Sex","Family")]
+indData<-datosGeno$other$ind.metrics[,c("id","Sex","Family")]
 indData$Sex[is.na(indData$Sex)]<-"U"
 write.table(indData, paste(prefOUT,".ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ##write the snp annotation file
-snpData<-datosGeno_filter$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
+snpData<-datosGeno$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
 write.table(snpData, paste(prefOUT,".snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ```
 
