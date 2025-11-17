@@ -1,6 +1,7 @@
 #!/bin/Rscript
-library(clue)
-
+if(! require(clue)){install.packages("proxy");require(proxy)}
+if(! require(proxy)){install.packages("proxy");require(proxy)}
+if(! require(stringr)){install.packages("stringr");require(stringr)}
 # Función para alinear las columnas de diferentes iteraciones (runs) de sNMF
 # para un mismo valor de K usando correlación máxima entre componentes
 # Función para alinear las columnas de diferentes iteraciones (runs) de sNMF
@@ -21,7 +22,7 @@ align_Q_runs <- function(Qlist) {
     dist_mat <- matrix(NA,numK,numK)
     for(c1 in c(1:numK)){
       for(c2 in c(1:numK)){
-        dist_mat[c1,c2]<-dist_mat[c2,c1]<-mean(sqrt((Q_ref[,c1] - Q_ref[,c2])^2))
+        dist_mat[c1,c2]<-dist_mat[c2,c1]<-sqrt(mean((Q_ref[,c1] - Q_ref[,c2])^2))
       }
     }
     # Encontrar el mejor emparejamiento usando el algoritmo húngaro
@@ -50,13 +51,14 @@ dist_among_runs<-function(Qlist){
       Q2=Qlist[[r2]]
       tmpDist <- 0
       for(c1 in c(1:numK)){
-          tmpDist<-tmpDist+(Q1[,c1] - Q2[,c1])^2
+          tmpDist<-tmpDist+mean((Q1[,c1] - Q2[,c1])^2)
       }
       tmpDist<-sqrt(tmpDist)
       dist_mat[r1,r2]<-dist_mat[r2,r1]<-mean(tmpDist)
   
     }
   }
+  colnames(dist_mat)<-row.names(dist_mat)<-paste0("Run",c(1:numR))
   return(dist_mat)
 }
 
@@ -67,7 +69,7 @@ get_representative_run <- function(alignedList,listnames) {
   dist_pairruns <- dist_among_runs(alignedList)
   avg_dist_per_run<-c()
   for(i in c(1:nrow(dist_pairruns))){
-    avg_dist_per_run[i]<-mean(dist_pairruns[i,-i])
+    avg_dist_per_run[i]<-mean(dist_pairruns[i,-i,drop=FALSE])
   }
   rep_run <- listnames[which.min(avg_dist_per_run)]
   return(rep_run)
@@ -81,7 +83,7 @@ compute_mismatch <- function(alignedList) {
   # compute all pairwise mean absolute differences
   pairwise_dist <- dist_among_runs(alignedList)
   # mismatch index: average across all pairwise distances
-  mismatch <- sum(pairwise_dist)/(nRuns^2-3)
+  mismatch <- mean(dist(pairwise_dist))
   return(mismatch)
 }
 
@@ -96,104 +98,110 @@ compute_Qmean <- function(alignedList) {
 }
 
 
+##definition de grandes en un hclust
+groupsHC <- function(hc, alpha = 0.05) {
+  # root merge height
+
+  Hroot <- max(hc$height)-min(hc$height)
+  
+  # splits to keep must exceed threshold
+  
+  threshold <- alpha * Hroot
+  # find all internal nodes whose height ≥ threshold
+  good_nodes <- which(hc$height >= threshold)
+  
+  # No significant splits → only 1 mode
+  if (length(good_nodes) == 0)
+    return(list(modes = list(unlist(as.list(hc$labels))), n = 1))
+  
+  # Each such node defines a subtree → mode
+  extract_tips <- function(node, merge, labels) {
+    if (node < 0)
+      return(labels[-node])
+    children <- merge[node, ]
+    c(extract_tips(children[1], merge, labels),
+      extract_tips(children[2], merge, labels))
+  }
+  
+  modes <- c()
+  used_tips <- character()
+  
+  for (node in good_nodes) {
+    tips <- extract_tips(node, hc$merge, hc$labels)
+    # Avoid duplicates from nested nodes
+    if (!any(tips %in% used_tips)) {
+      modes[[length(modes)+1]] <- tips
+      used_tips <- c(used_tips, tips)
+    }#else{
+    #  modes[[length(modes)+1]] <- tips[ ! tips %in% used_tips]
+    #  used_tips <- unique(c(used_tips, tips))
+    #}
+  }
+  
+  
+  return(list(modes = modes, n = length(modes)))
+}
+
+
+
+
 ##################
 # Definición de la función de detección de modo para un K
 ##################
 
-process_K <- function(k,proj,dirRes) {
-  message("Processing K = ", k)
-  
+detectModes <- function(k,proj,alpha=0.25) {
+  ##get number of runs
   ce <- cross.entropy(proj,K=k)
   nruns<-nrow(ce)
-  message("Number of runs detected: ", nruns)
-  
-  # ----------------------------------------------------
-  # Extract Q matrices from all runs
-  # ----------------------------------------------------
-  Qs <- lapply(1:nruns, function(r) Q(proj, K = k, run = r))
-  
-  # ----------------------------------------------------
-  # Align Q matrices (fix label switching)
-  # ----------------------------------------------------
+
+  ## Extract Q matrices from all runs
+  Qs<-list()
+  for(run in c(1:nruns)){
+    Qs[[run]]<-Q(proj,K=k,run=run)
+  }
+  ## Align Q matrices (match components across runs)
   aligned <- align_Q_runs(Qs)
   
-  # Convert the aligned list into a single matrix
-  # ----------------------------------------------------
-  # Compute distances among runs
-  # ----------------------------------------------------
-  D <- computeDist(aligned)
+  ## Compute distances among runs
+  D <- dist_among_runs(aligned)
   
-  # ----------------------------------------------------
+  #print(D)
   # Cluster runs into modes (hierarchical clustering)
-  # ----------------------------------------------------
-  hc <- hclust(D, method = "average")
-  
+  hc <- hclust(dist(D), method = "average")
+  plot(hc,main=paste0("hclust from euclidian distance among runs\nK = ",k),hang=-1,ylim=c(4,0))
   # Automatic mode detection:
-  # rule: cut at 10% of maximum height (adjust if needed)
-  threshold <- 0.10 * max(hc$height)
-  modes <- cutree(hc, h = threshold)
+  # rule: cut at 10% of maximum height (can be adjusted if needed)
+  groupsF <- groupsHC(hc,alpha)
+  nmodes<-groupsF[[2]]
+  Listmodes<-groupsF[[1]]
   
-  nmodes <- length(unique(modes))
+  
   message("Identified modes for K=", k, ": ", nmodes)
   
-  # ----------------------------------------------------
-  # Compute average Q matrix for each mode
-  # ----------------------------------------------------
-  
+  # Keep results
   listOutput<-list()
+  for(mode in c(1:length(Listmodes))){
   
-  for(mode in unique(sort(modes))){
+    modes<-as.numeric(str_remove(Listmodes[[mode]],"Run"))
+    selected <- aligned[modes]
+    mismatch=compute_mismatch(selected)
+    representativeRun=get_representative_run(selected,paste0("Run",listRuns))
+    meanQ=compute_Qmean(selected)
     
-    selected <- aligned[modes == mode]
-    listRuns <- which(modes==mode)
-    
-    
-    listOutput[[paste("mode "),mode]]<-list(
-      listRuns=listRuns,
-      representativeRun=get_representative_run(selected,paste0("Run",listRuns)),
-      mismatch=compute_mismatch(selected),
-      meanQ=compute_Qmean(selected)
-    )
-    outdir <- paste0(dirRes,"/K", k,"Mode",mode)
-    dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
-  
-    # Save mode runs
-    write.table(
-      data.frame(Run = 1:nruns, Mode = modes),
-      file = file.path(outdir, "run_modes.txt"),
-      row.names = FALSE, quote = FALSE
-    )
-  
-  # Save mode-average Q matrices
-  for (i in seq_along(mode_Q)) {
-    write.table(
-      mode_Q[[i]],
-      file = file.path(outdir, paste0("mode_", i, "_Qmatrix.txt")),
-      row.names = FALSE, col.names = FALSE, quote = FALSE
-    )
-  }
-  
-  # ----------------------------------------------------
-  # Plot modes (simple barplot for each mode)
-  # ----------------------------------------------------
-  for (i in seq_along(mode_Q)) {
-    
-    df <- data.frame(
-      Individual = 1:nrow(mode_Q[[i]]),
-      mode_Q[[i]]
-    )
-    df_long <- reshape2::melt(df, id.vars = "Individual")
-    
-    p <- ggplot(df_long, aes(x = Individual, y = value, fill = variable)) +
-      geom_bar(stat = "identity", width = 1) +
-      theme_minimal() +
-      ggtitle(paste("K =", K, " | Mode", i)) +
-      ylab("Ancestry proportion")
-    
-    ggsave(file.path(outdir, paste0("mode_", i, "_plot.png")),
-           p, width = 10, height = 4)
-  }
-  
+    listOutput[[paste0("mode",mode)]]<-list(
+      listRuns=modes,
+      representativeRun=representativeRun,
+      mismatch=mismatch,
+      meanQ=meanQ
+      )
+    message(paste("K=", k, ", mode ",mode,
+                  ". listRuns:",paste(listOutput[[paste0("mode",mode)]][1],collapse=","),
+                  ", Most representative run: ",listOutput[[paste0("mode",mode)]][2],
+                  ", Mismatch: ",listOutput[[paste0("mode",mode)]][3],sep=""))
+                                                     
+                  
+            
+  }  
   # Return summary
-  list(K = K, nruns = nruns, nmodes = nmodes)
+  return(listOutput)
 }

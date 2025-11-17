@@ -632,54 +632,77 @@ Esto refleja que cada valor de *K* puede capturar **niveles diferentes de estruc
 
 
 ### Visualización de los diferentes modos por K
+Cuando usamos algoritmos como <em>sNMF</em>, para un mismo número de clusters (K), solemos realizar varias corridas independientes.
+Aunque todas las corridas usan el mismo <em>K</em>, el algoritmo puede llegar a soluciones ligeramente distintas porque:
+- empieza con diferentes condiciones iniciales,
+- la función que optimiza puede tener mínimos locales,
+- los datos pueden sostener más de una partición válida. <br>
 
-> Cuando usamos algoritmos como <em>sNMF</em>, para un mismo número de clusters (K), solemos realizar varias corridas independientes.
-> Aunque todas las corridas usan el mismo <em>K</em>, el algoritmo puede llegar a soluciones ligeramente distintas porque:
-> - empieza con diferentes condiciones iniciales,
-> - la función que optimiza puede tener mínimos locales,
-> - los datos pueden sostener más de una partición válida. <br>
-> Estas diferentes soluciones estables se llaman **“modos”**. Un **modo** es un patrón consistente de agrupamiento que aparece de forma repetida en varias corridas, es decir una solución que el algoritmo encuentra varias veces porque los datos permiten interpretarse de más de una manera.
+Estas diferentes soluciones estables se llaman **“modos”**. Un **modo** es un patrón consistente de agrupamiento que aparece de forma repetida en varias corridas, es decir una solución que el algoritmo encuentra varias veces porque los datos permiten interpretarse de más de una manera.
 
-> Cada modo representa una interpretación alternativa de la estructura genética/variación estadística en la muestra.
-> Visualizar los modos permite:
-> - Detectar soluciones mayoritarias: el modo que aparece en la mayoría de corridas refleja la partición más estable o más apoyada por los datos.
-> - Identificar soluciones minoritarias pero biológicamente interesantes: modos menos frecuentes pueden capturar patrones sutiles u homogéneos en subgrupos.
-> - Distinguir variación real de ruido técnico: si hay muchos modos muy distintos y ninguno predominante, puede indicar que el <em>K</em> es demasiado grande, ya que los datos no soportan una partición clara, o que falta información.
-> - Evitar seleccionar al azar una corrida “bonita”: cada corrida individual es solo una realización y los modos integran información sobre todas las corridas.
+Cada modo representa una interpretación alternativa de la estructura genética/variación estadística en la muestra.
+Visualizar los modos permite:
+- Detectar soluciones mayoritarias: el modo que aparece en la mayoría de corridas refleja la partición más estable o más apoyada por los datos.
+- Identificar soluciones minoritarias pero biológicamente interesantes: modos menos frecuentes pueden capturar patrones sutiles u homogéneos en subgrupos.
+- Distinguir variación real de ruido técnico: si hay muchos modos muy distintos y ninguno predominante, puede indicar que el <em>K</em> es demasiado grande, ya que los datos no soportan una partición clara, o que falta información.
+- Evitar seleccionar al azar una corrida “bonita”: cada corrida individual es solo una realización y los modos integran información sobre todas las corridas.
 
-La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong), sin embargo es bastante facíl realizar lo mismo en R con los resuldatos de <em>sNMF</em>.
+La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong), sin embargo es bastante facíl realizar algo similar en R con los resultados de <em>sNMF</em> (ver funciones en `Modulo3/ModeDetection.R`)
 
 ```r
-####################
-## PONG-like clustering of snmf replicates for all K. 
-####################
-## Vamos a usar la distancia euclidiana entre diferentes iteraciones pero se pueden usar otras métricas.
-
-if(! require(proxy)){install.packages("proxy");require(proxy)}
-
-
-# vamos a guardar los ficheros creados en <pref>.snmf_modes
-dir.create(paste(pref,".snmf_modes",sep=""))
-
-
-
-# --------------------------
-# PROCESS ALL K VALUES
-# --------------------------
-
-summary_list <- lapply(2:Kmax, process_K,proj=admProj)
-summary_table <- do.call(rbind, lapply(summary_list, as.data.frame))
-
-write.table(summary_table,
-            file = "snmf_modes/summary_modes_all_K.txt",
-            row.names = FALSE, quote = FALSE)
-
-message("\nDONE! Results stored in snmf_modes/\n")
-
-
-
+source("Modulo3/ModeDetection.R")
+summary_list <- list()
+for(k in c(2:Kmax)){
+  summary_list[[paste("K =",k)]]<-detectModes(k,admProj,0.005)
+}
 
 ```
+
+Veamos por ejemplo un K para el cual tenemos 2 modos (K=7)
+Vamos a graficar los 4 runs (alineamos los colores sobre el mejor resultado para *K* = 8)
+```
+###read Q for Kmax
+best = listBest[[paste("K=",Kmax,sep="")]]
+# display the Q-matrix
+Q.Kmax <- t(as.matrix(Q(admProj, K = Kmax, run = best)))
+Q.Kmax<-Q.Kmax[,metaPlot$orderInInd]
+names(Q.Kmax)<-metaPlot$id  
+
+
+par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
+posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
+plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
+text(x=posX,y=rep(-1,nrow(metaPlot)),
+        srt=90,adj=c(0,0.5),col=metaPlot$Color,
+        labels=metaPlot$Label,cex=0.7)
+
+k=7
+for(mode in c(1:length(summary_list[[paste("K =",k)]]))){
+  for(run in summary_list[[paste("K =",k)]][[mode]][["listRuns"]]){
+    Qk <- t(as.matrix(Q(admProj, K = k, run = run)))
+    Qk<-Qk[,metaPlot$orderInInd]
+    returnAlign<-align_Q_down(Q.Kmax,Qk)
+    ColAligned<-returnAlign[[2]]
+    Qk<-returnAlign[[1]]
+    listColorsSub<-listColors[ sort(ColAligned) ]
+    bp<-barplot(Qk, 
+        border = NA, 
+        ylab=paste("Mode ",mode,"\nRun ",run,sep=""),
+        line=-1,
+        axes=F,
+        space = 0, 
+        col = listColorsSub, 
+        )
+      
+  }
+}
+plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
+text(x=posX,y=rep(-1,nrow(metaPlot)),
+        srt=90,adj=c(0,0.5),col=metaPlot$Color,
+        labels=metaPlot$id,cex=0.7)
+points(x=posX,y=rep(1,nrow(metaPlot)),
+        pch=ifelse(metaPlot$SG,16,NA))
+
 
 ### Discusión
 #### Sobre el concepto de "Ancestría"
