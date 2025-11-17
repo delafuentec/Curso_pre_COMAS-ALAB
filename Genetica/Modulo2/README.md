@@ -255,9 +255,7 @@ Se asume que la mayoría de los pares en el conjunto de datos no están emparent
 
 Siguiendo los planteamientos de *READv2*, se define el **valor medio esperado del PMR** para una relación de grado *k* = 0, 1 o 2 como:
 
-\
-p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right).
-\
+$$ p_k = \bar{p} \left(1 - \frac{1}{k + 1}\right). $$
 
 Una vez definidos estos valores esperados, evaluamos si el PMR observado para un par de individuos es **significativamente menor** que cada uno de los valores esperados para los distintos grados de relación.  
 El parentesco asignado será entonces el **menor valor de *k*** para el cual la diferencia **no resulta significativa**, tal como se ilustra en la figura siguiente.
