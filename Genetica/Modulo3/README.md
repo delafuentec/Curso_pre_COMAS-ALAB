@@ -1,13 +1,31 @@
 # Analisis de diversidad y estructura genetica
 
-En este modulo, vamos a realizar 2 analisis tipicos de genetica de poblaciones humanas:
-1. Un analisis en Componentes Principales (ACP)
-2. Un análisis de estimación de proporciones de componentes genéticos
+En este módulo realizaremos **dos análisis clásicos en genética de poblaciones humanas**:
 
-> Estos analisis se suelen hacer con <em>smartpca</em> del software [<em>EIGENSOFT</em>](https://github.com/DReichLab/EIG) y <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], pero su implementación en el paquete <em>LEA</em> de **R** son muy similares.
-Además el algoritmo para las estimaciones de proporciones de componentes genéticos es más robusto y rápido que <em>ADMIXTURE</em>.
+1. **Análisis en Componentes Principales (ACP)**  
+2. **Estimación de proporciones de componentes genéticos**
 
-Vamos a leer los datos filtrados que generamos en el modulo anterior.
+> Tradicionalmente, estos análisis se realizan con los programas **smartpca** (del paquete  
+> [EIGENSOFT](https://github.com/DReichLab/EIG)) y **ADMIXTURE**  
+> (https://dalexander.github.io/admixture/).  
+> Sin embargo, el paquete **LEA** de R implementa métodos muy similares —con la ventaja de que  
+> el algoritmo utilizado para estimar proporciones de componentes genéticos es **más robusto,  
+> menos sensible al ruido y mucho más rápido** que el de *ADMIXTURE*.  
+
+A lo largo del módulo exploraremos cómo ejecutar estos análisis, cómo interpretar sus resultados  
+y qué aspectos considerar al trabajar con datos genómicos, especialmente en contextos con  
+coberturas desiguales o datos de ADN antiguo.
+
+## Lectura de los datos filtrados
+
+En este paso vamos a cargar los **datos filtrados** que generamos en el módulo anterior.  
+Estos archivos ya contienen:
+
+- solo los individuos seleccionados,  
+- las variantes con suficiente información,  
+- y el formato adecuado para trabajar con las funciones del paquete **LEA**.
+
+A partir de estos datos realizaremos los análisis de ACP y de estimación de componentes genéticos.
 
 ```r
 require(LEA)
@@ -17,28 +35,49 @@ pref="Modulo3/filteredDataSet"
 
 ```
 
-## ACP
-En este analísis, se reduce el número de dimensiones en grandes conjuntos de datos a componentes principales que conservan la mayor parte de la información original.
+## Análisis en Componentes Principales (ACP)
+
+El ACP permite **reducir la dimensionalidad** de un conjunto de datos genéticos muy grande, resumiendo la variación en unos pocos componentes principales que capturan la mayor parte de la información.
+
 ### Primer ACP a escala continental
-Vamos a realizar un primer analisis incorporando todos los individuos antiguos que conforman nuestra conjunto de datos filtrado.
-Podemos explorar los individuos analizados leyendo el fichero **ind** y cruzandolo con los metadatos
+
+Como primer paso, realizaremos un ACP incluyendo **todos los individuos antiguos** presentes en nuestro conjunto de datos filtrado (Módulo anterior).  
+Esto nos permitirá visualizar las principales estructuras de variación genética a gran escala.
+
+Antes de correr el análisis, podemos explorar qué individuos están presentes en el dataset leyendo el archivo `.ind` y vinculándolo con nuestros metadatos.
 ```r
 ind<-read.table(paste(pref,".ind",sep=""),stringsAsFactors=F,header=F)
 names(ind)<-c("id","sex","pop")
 meta=read.table("PatagoniaDataSetWithOutgroups_ALAB2025/Ancient.metadataPerind.txt",stringsAsFactors = F,header=T)
 ### generate table of the number of individual per region
 table(meta$Region[ meta$id %in% ind$id])
+```
+
 #### Correr el ACP
 ```r
 pc = pca(paste(pref,".geno",sep=""), scale = TRUE)
 ```
-Los resultados se crean en una carpeta <pref>.pca. 
+Los resultados del ACP se guardarán automáticamente en una carpeta llamada `<pref>.pca`,  
+donde `<pref>` corresponde al prefijo que usamos para los archivos de entrada.
+Primero vamos a examinar el porcentaje de varianza explicada por cada componente principal.
+
 ```r
 ### we can read the eigenvalues file
 eigenvalues<-read.table(paste(pref,".pca/filteredDataSet.eigenvalues",sep=""),stringsAsFactors=F,header=F)
 ### let see the porcentage of variance explained per principal components
 plot(eigenvalues$V1/sum(eigenvalues$V1)*100, lwd=5, col="mediumseagreen",xlab=("PCs"),ylab="% variance explained")
 ```
+Al visualizar los *eigenvalues*, observamos que la proporción de varianza explicada disminuye conforme aumenta el número de componentes principales (un patrón inherente al método).  
+Sin embargo, el patrón no sigue la forma clásica esperada en un ACP: normalmente se observa un “codo” (*elbow*), donde los primeros componentes capturan una gran parte de la variación y, a partir de cierto punto, la varianza explicada por los componentes restantes cae a un nivel casi constante. Más allá de ese “piso”, cada componente adicional aporta muy poca información biológica.
+
+En nuestro caso, este patrón no aparece claramente. Esto se debe a que estamos trabajando con datos de **ADN antiguo**, que suelen presentar:
+- **Altos niveles de datos faltantes**, distribuidos de forma heterogénea entre individuos.  
+- **Coberturas muy variables**, que afectan la estimación de las covarianzas entre individuos.  
+- **Menor señal genética por individuo**, lo que tiende a “aplanar” la distribución de varianza explicada.  
+
+Como consecuencia, los valores propios (*eigenvalues*) no muestran un “codo” definido y la disminución de varianza explicada es más gradual y ruidosa que en un ACP de genomas modernos o completos.
+
+Ahora vamos a graficar las combinaciones de componentes principales de a pares: PC2 vs. PC1, PC4 vs. PC3, …, PC10 vs. PC9.
 
 ```r
 ### we can read the projections of the individuals: one line per individual.
@@ -51,7 +90,7 @@ projections$pop=ind$pop
 projections<-merge(projections,meta,by=c("id","pop"))
 
 ###let's plot the first 10 PCs
-#pdf(paste(pref,".PCAWithAll.pdf",sep=""),height=10)
+pdf(paste(pref,".PCAWithAll.pdf",sep=""),height=10)
 par(mfrow=c(3,2))
 forLeg<-unique(projections[,c("Region","pop","Color","Point")])
 forLeg<-forLeg[ order(forLeg$Region,forLeg$pop),]
@@ -66,11 +105,9 @@ for(i in seq(1,9,2)){
           xlab=paste("PC",i),
           ylab=paste("PC",i+1))
 }
-#dev.off()
+dev.off()
 ```
-Se generaron los graficos de PC2 vs PC1, PC4 vs PC3, ..., P10 vs PC9.
-
-
+Los gráficos están en un pdf: `<pref>".PCAWithAll.pdf`
 > Atencion: En smartpca de EIGENSOFT: El archivo llamado eigenvectors (*.evec) no contiene los eigenvectores de los SNPs, sino las proyecciones de los individuos sobre los componentes principales.<br>
 > Cada fila = un individuo<br>
 > Cada columna = PC1, PC2, …<br>
@@ -103,12 +140,17 @@ Vemos entonces que es Sumidouro5 (~10400BP) que se diferencia de los otros. Sumi
 Más recientemente, datos genómicos han revelado en Sumidouro 5 una señal de ascendencia mitocondrial D4h3a y un perfil autosómico que no se corresponde completamente con otros individuos tempranos de Lagoa Santa, lo que sugiere conexiones genéticas más amplias (incluso con poblaciones amazónicas ancestrales), ([Moreno-Mayar et al. 2018](https://www.science.org/doi/10.1126/science.aav2621),[Ferraz et al. 2023](https://doi.org/10.1038/s41559-023-02114-9)). <br>
 Esta combinación de rasgos morfológicos arcaicos y una ascendencia genética poco común indica que Sumidouro 5 pudo pertenecer a un linaje parcialmente distinto a otros pobladores tempranos de Lagoa Santa, aportando evidencia de una mayor diversidad biológica en los primeros habitantes del este de Sudamérica y de posibles rutas de migración complejas durante el Holoceno temprano.
 
-### ACP enfocandose en procesos mas tardios de Sudmerica
-Ahora vamos a rehacer el analisis pero sacando los individuos de Norte America, y los grupos tempranos de Chile (Los Rieles ~12000BP) y de Lagoa Santa (Brazil).
-Para eso vamos a leer los datos al formato *eigenstrat* para generar un sub-conjunto sin estos individuos
+### ACP enfocado en procesos más tardíos de Sudamérica
+
+Ahora vamos a repetir el análisis, esta vez excluyendo a los individuos de Norteamérica, así como a los grupos más tempranos de Chile (Los Rieles, ~12.000 BP) y de Lagoa Santa (Brasil).  
+El objetivo es focalizarnos en dinámicas más recientes dentro de Sudamérica, evitando que eventos poblacionales muy antiguos estructuren el espacio de variación genética.
 
 #### Generar sub-conjunto
-Primero vamos a convertir los datos en un objeto `genLight`.
+Para ello, primero leeremos los datos en formato *eigenstrat* y generaremos un sub-conjunto sin estos individuos.
+Como primer paso, vamos a convertir los datos en un objeto `genLight`.
+
+```{r}
+# Aquí iría el código para convertir a genLight
 ```r
 require(dartR.base)
 ### read file
@@ -165,7 +207,15 @@ gl@other$ind.metrics <- data.frame(
 gl <- gl.recalc.metrics(gl)
 ```
 
-Ahora, vamos a generar la lista de individuos que queremos dejar en el subconjunto de datos. 
+Ahora vamos a generar la lista de individuos que queremos conservar en el subconjunto de datos.  
+Para ello, filtraremos el archivo de información de individuos según los criterios definidos anteriormente.
+
+```{r}
+# Ejemplo de filtrado de individuos a conservar
+# inds_to_keep <- ind_info %>% 
+#     filter(!Region %in% c("NorthAmerica"),
+#            !Site %in% c("LosRieles", "LagoaSanta")) %>% 
+#     pull(IndividualID)
 
 ```r
 # get list of inds to remove 
@@ -196,7 +246,9 @@ print(paste("from",nrow(snp),"snps",nLoc(gl)," remain in the sub-dataset"))
 
 
 ```
-Ahora podemos escribir los datos del sub-conjunto , tal como lo hicimos en el Modulo2. Los vamos a escribir en ficheros llamados `<pref>_subset.{geno,snp,ind}`.
+Ahora podemos generar el subconjunto de datos.  
+Como paso adicional de control de calidad, volveremos a filtrar las variantes monomórficas y aquellas con menos de 2 individuos con valores.  
+Además, eliminaremos los individuos que tengan menos de **10.000 SNPs** disponibles, para asegurar que el análisis de ACP tenga suficiente información genética por individuo.
 
 ```r
 geno_mat <- as.matrix(gl)
@@ -218,19 +270,22 @@ write.table(snp_sub, paste(pref,"_subset.snp",sep=""),col.names=F,row.names=F,qu
 
 #### ACP con el sub-conjunto
 
-Ahora podemos hacer el ACP en este sub-conjunto
+#### ACP con el sub-conjunto
+
+Con el sub-conjunto ya filtrado y depurado, podemos proceder a realizar el ACP.  
+Este análisis permitirá explorar la variación genética enfocándonos en procesos más tardíos de la historia poblacional sudamericana, sin la influencia de los individuos de América del Norte ni de los grupos muy tempranos de Chile y Brasil.
+
+El procedimiento es idéntico al aplicado previamente: generamos el archivo en formato *eigenstrat*, ejecutamos el ACP y luego inspeccionamos tanto los valores propios como la distribución de los individuos en los distintos planos principales.
 ```r
 pc_sub = pca(paste(pref,"_subset.geno",sep=""), scale = TRUE)
 ```
-Los resultados se crean en una carpeta <pref>.pca. 
+Los resultados del ACP se guardarán automáticamente en una carpeta llamada `<pref>_subset.pca`,  
+donde `<pref>_subset` corresponde al prefijo que usamos para los archivos de entrada.
 ```r
 ### we can read the eigenvalues file
 eigenvalues_sub<-read.table(paste(pref,"_subset.pca/filteredDataSet_subset.eigenvalues",sep=""),stringsAsFactors=F,header=F)
 ### let see the porcentage of variance explained per principal components
 plot(eigenvalues_sub$V1/sum(eigenvalues_sub$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
-```
-
-```r
 
 ### we can read the projections of the individuals: one line per individual.
 ### the individuals are ordered as in the input file (thus reading <pref>.ind.txt we know which column corresponds to which individual)
@@ -242,7 +297,7 @@ projections_sub$pop=ind_sub$pop
 projections_sub<-merge(projections_sub,meta,by=c("id","pop"))
 
 ###let's plot the first 10 PCs
-#pdf(paste(pref,".PCAWithSubSet.pdf",sep=""),height=10)
+pdf(paste(pref,".PCAWithSubSet.pdf",sep=""),height=10)
 par(mfrow=c(3,2))
 forLeg_sub<-unique(projections_sub[,c("Region","pop","Color","Point")])
 forLeg_sub<-forLeg_sub[ order(forLeg_sub$Region,forLeg_sub$pop),]
@@ -257,12 +312,20 @@ for(i in seq(1,9,2)){
           xlab=paste("PC",i),
           ylab=paste("PC",i+1))
 }
-#dev.off()
+dev.off()
 ```
-
+Los gráficos están en un pdf: `<pref>".PCAWithSubSet.pdf`
 Add some interpreation
 
-> speak of mssing data and PCA
+### Limitaciones del ACP con datos de ADN antiguo
+El ACP aplicado exclusivamente a individuos antiguos puede producir resultados poco fiables. Esto ocurre porque el ADN antiguo presenta altos niveles de daño, fragmentación y, sobre todo, una gran proporción de datos faltantes. Estos problemas generan desplazamientos artificiales en los componentes principales y pueden distorsionar las relaciones biológicas reales entre individuos o poblaciones.
+Existen, sin embargo, soluciones parcialmente efectivas. Una de ellas es usar métodos de proyección:
+ - [**lsqproject**](https://github.com/DReichLab/EIG/blob/master/POPGEN/lsqproject.pdf)
+ - y/o proyección de individuos antiguos sobre un ACP calculado únicamente con individuos modernos. De este modo, la estructura genética principal se define con datos completos y de alta calidad, y los genomas antiguos se ubican en ese espacio sin influir en la orientación de los ejes.
+Sin embargo, la segunda solución suele ser limitada en poblaciones de Ámerica ya que la diversidad genética indígena de Ámerica de las poblaciones modernas suele ser poco representativa de la existente en poblaciones previas a la invasión europea.
+
+Aun así, incluso con estas estrategias, el ACP puede seguir siendo sensible al patrón de datos faltantes típico del ADN antiguo. Por este motivo, una alternativa más robusta consiste en emplear un **MDS (Multidimensional Scaling)** basado en distancias genéticas derivadas del **f<sub>3</sub>-outgroup**, que proporciona una medida menos sesgada de divergencia genética. Este método se presenta como un ejercicio opcional al final del módulo.
+
 
 
 ## Análisis de estimación de proporciones de componentes genéticos
