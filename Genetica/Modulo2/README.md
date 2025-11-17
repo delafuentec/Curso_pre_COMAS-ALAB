@@ -402,12 +402,13 @@ Observamos que el par **AM66 – AM71** presenta un error estándar del PMR muy 
 Aun así, *BREADR* clasifica este par como de **1er grado**.  
 Esta asignación se debe al número limitado de SNPs disponibles en esta comparación.
 
-Analicemos este par con mayor detalle.
+Analicemos este par con mayor detalle (y para el par IPK12 - IPK13 de modo comparativo).
  ```r
  ### call rate para ambos:
  datosGeno$other$ind.metrics[datosGeno$other$ind.metrics$id %in% c("AM66","AM71"),]
  ### plotSlice
  plotSLICE(relatednessPatagonia,"AM66 - AM71")
+plotSLICE(relatednessPatagonia,"IPK12 - IPK13")
  ```
 Para estos dos individuos, observamos que las distribuciones de los valores de PMR esperados para distinguir entre distintos grados de parentesco se solapan de manera considerable, lo que dificulta discriminar correctamente el grado de parentesco para este par de individuos.  
 Del mismo modo, al examinar los resultados de PMR para pares clasificados como de **2º grado** (gráfico generado con `plotLOAF`), vemos que varios pares presentan valores por encima del nivel esperado para este grado, y que la significancia estadística entre “2º grado” y “no aparentados” es muy similar. Esto sugiere la posibilidad de **falsos positivos**.
