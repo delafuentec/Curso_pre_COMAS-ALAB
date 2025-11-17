@@ -456,7 +456,7 @@ for(line in c(1:nrow(Pairs))){
     sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind1,
                                       "NumKin"=1,
                                       "ListKin"=Ind2,
-                                      "Call.rate"=datosGeno$other$ind.metrics$Call.rate[metricsInds_forKeptSNPs$id==Ind1]))
+                                      "Call.rate"=datosGeno$other$ind.metrics$Call.rate[datosGeno$other$ind.metrics$id==Ind1]))
   }
   
   if(Ind2 %in% sumUpPairs$id){
@@ -468,7 +468,7 @@ for(line in c(1:nrow(Pairs))){
     sumUpPairs=rbind(sumUpPairs,cbind("id"=Ind2,
                                       "NumKin"=1,
                                       "ListKin"=Ind1,
-                                      "Call.rate"=metricsInds_forKeptSNPs$Call.rate[metricsInds_forKeptSNPs$id==Ind2]))
+                                      "Call.rate"=datosGeno$other$ind.metrics$Call.rate[datosGeno$other$ind.metrics$id==Ind2]))
   }
 
 }
