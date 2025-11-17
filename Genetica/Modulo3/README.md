@@ -661,110 +661,13 @@ if(! require(proxy)){install.packages("proxy");require(proxy)}
 # vamos a guardar los ficheros creados en <pref>.snmf_modes
 dir.create(paste(pref,".snmf_modes",sep=""))
 
-##################
-# Definición de la función de detección de modo para un K
-##################
-
-process_K <- function(k,proj) {
-    message("Processing K = ", k)
-
-    nruns <- proj$Kproject[[as.character(k)]]$nrun
-    message("Number of runs detected: ", nruns)
-
-    # ----------------------------------------------------
-    # Extract Q matrices from all runs
-    # ----------------------------------------------------
-    Qlist <- lapply(1:nruns, function(r) Q(proj, K = K, run = r))
-
-    # ----------------------------------------------------
-    # Align Q matrices (fix label switching)
-    # ----------------------------------------------------
-    aligned <- LEA::align_Q_matrices(Qlist)
-
-    # Convert the aligned list into a single matrix
-    # Each row = run, flattened Q-matrix
-    flat <- lapply(aligned, function(Q) as.vector(t(Q)))
-    flat <- do.call(rbind, flat)
-
-    # ----------------------------------------------------
-    # Compute distances among runs
-    # ----------------------------------------------------
-    D <- proxy::dist(flat, method = distance_method)
-
-    # ----------------------------------------------------
-    # Cluster runs into modes (hierarchical clustering)
-    # ----------------------------------------------------
-    hc <- hclust(D, method = "average")
-
-    # Automatic mode detection:
-    # rule: cut at 10% of maximum height (adjust if needed)
-    threshold <- 0.10 * max(hc$height)
-    modes <- cutree(hc, h = threshold)
-
-    nmodes <- length(unique(modes))
-    message("Identified modes for K=", K, ": ", nmodes)
-
-    # ----------------------------------------------------
-    # Compute average Q matrix for each mode
-    # ----------------------------------------------------
-    mode_Q <- lapply(unique(modes), function(m) {
-        selected <- aligned[modes == m]
-        Reduce("+", selected) / length(selected)
-    })
-
-    # ----------------------------------------------------
-    # Save results
-    # ----------------------------------------------------
-    outdir <- paste0("snmf_modes/K", K)
-    dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
-
-    # Save clustering of runs
-    write.table(
-        data.frame(Run = 1:nruns, Mode = modes),
-        file = file.path(outdir, "run_modes.txt"),
-        row.names = FALSE, quote = FALSE
-    )
-
-    # Save mode-average Q matrices
-    for (i in seq_along(mode_Q)) {
-        write.table(
-            mode_Q[[i]],
-            file = file.path(outdir, paste0("mode_", i, "_Qmatrix.txt")),
-            row.names = FALSE, col.names = FALSE, quote = FALSE
-        )
-    }
-
-    # ----------------------------------------------------
-    # Plot modes (simple barplot for each mode)
-    # ----------------------------------------------------
-    for (i in seq_along(mode_Q)) {
-
-        df <- data.frame(
-            Individual = 1:nrow(mode_Q[[i]]),
-            mode_Q[[i]]
-        )
-        df_long <- reshape2::melt(df, id.vars = "Individual")
-
-        p <- ggplot(df_long, aes(x = Individual, y = value, fill = variable)) +
-            geom_bar(stat = "identity", width = 1) +
-            theme_minimal() +
-            ggtitle(paste("K =", K, " | Mode", i)) +
-            ylab("Ancestry proportion")
-
-        ggsave(file.path(outdir, paste0("mode_", i, "_plot.png")),
-               p, width = 10, height = 4)
-    }
-
-    # Return summary
-    list(K = K, nruns = nruns, nmodes = nmodes)
-}
 
 
 # --------------------------
 # PROCESS ALL K VALUES
 # --------------------------
 
-summary_list <- lapply(Kmin:Kmax, process_K)
+summary_list <- lapply(2:Kmax, process_K,proj=admProj)
 summary_table <- do.call(rbind, lapply(summary_list, as.data.frame))
 
 write.table(summary_table,
