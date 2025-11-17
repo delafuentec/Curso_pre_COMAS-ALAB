@@ -293,20 +293,26 @@ relatedness_allAncientTogether<-addPops(tableRel=relatedness_allAncientTogether,
                                         )
 
 ```
-Veamos cuántos pares de individuos aparecen como aparentados y a qué región y población pertenecen.
+Veamos cuántos pares de individuos aparecen como aparentados y a qué región pertenecen.
 
 ```r
-###Number of related pairs indivuduals:
+print("Number of related pairs indivuduals")
 related_allAncientTogether<-relatedness_allAncientTogether[ relatedness_allAncientTogether$relationship!="Unrelated",]
 nrow(related_allAncientTogether)
 table(related_allAncientTogether$relationship)
 
-### we see a lot of related pairs. Let's see in which region
+print("we see a lot of related pairs. Let's see in which region")
+
 table(related_allAncientTogether$Region1,related_allAncientTogether$Region2)
 
-###Let's see in which groups we have pairs of up to 2-degree
-second_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
-table(second_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
+###Let's see in which groups we have pairs of up to 2nd-degree
+#second_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree","Second_Degree"),]
+#table(second_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
+
+print("Let's see in which groups we have pairs of up to 1st-degree"
+first_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree"),]
+table(first_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
+
 
 ### We can already see some temporal/spatial inconsistencies 
 ```
