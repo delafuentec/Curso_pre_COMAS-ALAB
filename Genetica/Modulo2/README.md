@@ -313,7 +313,7 @@ table(related_allAncientTogether$Region1,related_allAncientTogether$Region2)
 
 print("Let's see in which groups we have pairs of up to 1st-degree")
 first_allAncientTogether<-related_allAncientTogether[ related_allAncientTogether$relationship %in% c("Same_Twins","First_Degree"),]
-table(first_allAncientTogether$Pop1,second_allAncientTogether$Pop2)
+table(first_allAncientTogether$Pop1,first_allAncientTogether$Pop2)
 
 ### We can already see some temporal/spatial inconsistencies 
 ```
