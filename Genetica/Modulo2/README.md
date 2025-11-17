@@ -531,8 +531,8 @@ Como primer paso, eliminaremos los SNPs con datos disponibles para **solo un ind
 ###filter  SNPs for call.rate (we force to recalculate the metrics and remove monomorhisms)
 nLoc_init=datosGeno$n.loc
 nInd_init=length(datosGeno$ind.names)
-datosGeno_filter<-gl.filter.callrate(datosGeno, threshold=2/66,recalc=TRUE,mono.rm=TRUE) 
-nLoc_callRate=datosGeno_filter$n.loc
+datosGeno<-gl.filter.callrate(datosGeno, threshold=2/66,recalc=TRUE,mono.rm=TRUE) 
+nLoc_callRate=datosGeno$n.loc
 print(paste("N SNPs before call.rate:",nLoc_init,"; N SNPs after call.rate and monomorphism filtering:",nLoc_callRate))
 ```
 Pueden aparecer algunos *warnings messages*, pero verán que solo corresponden a mensajes asociados a los histogramas que se generan.
@@ -540,7 +540,7 @@ Pueden aparecer algunos *warnings messages*, pero verán que solo corresponden a
 Luego, vamos a eliminar los individuos que conservan **más de 10,000 variantes** tras este filtrado inicial, así como aquellos que identificamos previamente para evitar parentescos en la muestra.
 
 ```r
-metricsInds_forKeptSNPs <- datosGeno_filter$other$ind.metrics
+metricsInds_forKeptSNPs <- datosGeno$other$ind.metrics
 ###add a column of the number of called snps (Call.rate*nLoc_callrate)
 metricsInds_forKeptSNPs$CalledSNPs=metricsInds_forKeptSNPs$Call.rate*nLoc_callRate
 ###save in a vector individuals with less than 10000 SNPs
@@ -551,10 +551,10 @@ print(paste("of which  ",sum(INDs_to_exclude %in% listToRemove$id)," already fla
 ### update the list to exlude with list from kinship
 INDs_to_exclude<-unique(c(INDs_to_exclude,listToRemove$id))
 ### we can now remove those individuals (and we ask to recalculate)
-datosGeno_filter<-gl.drop.ind(x=datosGeno_filter,ind.list=INDs_to_exclude,recalc = TRUE,mono.rm=TRUE)
+datosGeno<-gl.drop.ind(x=datosGeno,ind.list=INDs_to_exclude,recalc = TRUE,mono.rm=TRUE)
 ##
-nInd_final=length(datosGeno_filter$ind.names)
-nLoc_final=datosGeno_filter$n.loc
+nInd_final=length(datosGeno$ind.names)
+nLoc_final=datosGeno$n.loc
 print(paste("filtered dataset contains:",nInd_final,"inds and",nLoc_final,"snps"))
 
 ```
@@ -565,7 +565,7 @@ Los paquetes que estamos usando no incluyen una función para exportar directame
 ```r
 prefOUT="Modulo3/filteredDataSet"
 ### Convert genlight genotype data to a numeric matrix
-geno_mat <- as.matrix(datosGeno_filter)
+geno_mat <- as.matrix(datosGeno)
 # Replace missing data with 9 (per convention)
 geno_mat[is.na(geno_mat)] <- 9
 ###check size
@@ -573,11 +573,11 @@ dim(geno_mat)
 ##write the genotype data. Watchout you have to transpose the matrix
 write.table(t(geno_mat), paste(prefOUT,".geno",sep=""),col.names=F,row.names=F,quote=F,sep="")
 ##write the individual annotation file
-indData<-datosGeno_filter$other$ind.metrics[,c("id","Sex","Family")]
+indData<-datosGeno$other$ind.metrics[,c("id","Sex","Family")]
 indData$Sex[is.na(indData$Sex)]<-"U"
 write.table(indData, paste(prefOUT,".ind",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ##write the snp annotation file
-snpData<-datosGeno_filter$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
+snpData<-datosGeno$other$loc.metrics[,c("AlleleID","chromosome","cM","position","allele.1","allele.2")]
 write.table(snpData, paste(prefOUT,".snp",sep=""),col.names=F,row.names=F,quote=F,sep="\t")
 ```
 
