@@ -1,4 +1,4 @@
-# Analisis de diversidad y estructura genetica
+# Analisis de diversidad y estructura genética
 
 En este módulo realizaremos **dos análisis clásicos en genética de poblaciones humanas**:
 
@@ -96,7 +96,7 @@ forLeg<-unique(projections[,c("Region","pop","Color","Point")])
 forLeg<-forLeg[ order(forLeg$Region,forLeg$pop),]
 plot(0,0,"n",axes=F,ann=F)
 legend("center",pch=forLeg$Point,pt.bg=forLeg$Color,col=ifelse(forLeg$Point<21,forLeg$Color,"black"),
-        legend=paste(forLeg$Region,forLeg$pop),ncol=1,cex=0.4,pt.lwd=0.5)
+        legend=paste(forLeg$Region,forLeg$pop),ncol=1,cex=0.5,pt.lwd=0.5)
 for(i in seq(1,9,2)){
   plot(projections[,paste("V",i,sep="")],projections[,paste("V",i+1,sep="")],
           pch=projections$Point,
@@ -142,15 +142,13 @@ Esta combinación de rasgos morfológicos arcaicos y una ascendencia genética p
 
 ### ACP enfocado en procesos más tardíos de Sudamérica
 
-Ahora vamos a repetir el análisis, esta vez excluyendo a los individuos de Norteamérica, así como a los grupos más tempranos de Chile (Los Rieles, ~12.000 BP) y de Lagoa Santa (Brasil).  
-El objetivo es focalizarnos en dinámicas más recientes dentro de Sudamérica, evitando que eventos poblacionales muy antiguos estructuren el espacio de variación genética.
+Ahora vamos a repetir el análisis, esta vez guardando solo los individuos de Central Chile del Holoceno Medio y Tardío, de la Pampa y del Sur de Patagonia.  
+El objetivo es focalizarnos en dinámicas más recientes en el Sur de Patagionia.
 
 #### Generar sub-conjunto
 Para ello, primero leeremos los datos en formato *eigenstrat* y generaremos un sub-conjunto sin estos individuos.
 Como primer paso, vamos a convertir los datos en un objeto `genLight`.
 
-```{r}
-# Aquí iría el código para convertir a genLight
 ```r
 require(dartR.base)
 ### read file
@@ -210,24 +208,13 @@ gl <- gl.recalc.metrics(gl)
 Ahora vamos a generar la lista de individuos que queremos conservar en el subconjunto de datos.  
 Para ello, filtraremos el archivo de información de individuos según los criterios definidos anteriormente.
 
-```{r}
-# Ejemplo de filtrado de individuos a conservar
-# inds_to_keep <- ind_info %>% 
-#     filter(!Region %in% c("NorthAmerica"),
-#            !Site %in% c("LosRieles", "LagoaSanta")) %>% 
-#     pull(IndividualID)
 
 ```r
-# get list of inds to remove 
-toRemoveID<-meta$id [ meta$Region %in% c("Beringia_EH","CentralChile_EH","SouthernNorthAmerica_EH") | 
-		      grepl("Brazil_Sumidouro",meta$pop)]
-# make list of remaining individuals
-toKeepID<-ind$id[ ! ind$id %in% toRemoveID]
+# make list of  individuals to keep
+KeptPops<-meta$pop[ grepl("SouthPatagonia",meta$Region) |  grepl("Pampa",meta$Region) | grepl("CentralChile_MH",meta$Region) | grepl("CentralChile_LH",meta$Region) ] 
+toKeepID<-ind$id[  ind$pop %in% KeptPops]
 # check from which regions come from the remaining individuals
 print(table(meta$Region[ meta$id %in% toKeepID]))
-# check the remaining groups from Brazil_EH
-print(table(meta$pop[ meta$Region == "Brazil_EH" & meta$id %in% toKeepID]))
-
 ##looks ok --> generate subdataset, removing monorphisms (need to recalculate the metrics for further filtering)
 ```
 
@@ -238,15 +225,9 @@ Además, eliminaremos los individuos que tengan menos de **10.000 SNPs** disponi
 ```r
 gl<-gl.keep.ind(gl,ind.list =toKeepID,recalc = T,mono.rm = T)
 gl<-gl.filter.callrate(gl, threshold=2/nInd(gl),recalc=T)
-
-### 
-
-
 ###check numbers
 print(paste("from",nrow(ind),"individuals, we wanted to keep",length(toKeepID),", and the sub-dataset has ",nInd(gl)))
 print(paste("from",nrow(snp),"snps",nLoc(gl)," remain in the sub-dataset"))
-
-
 ```
 
 Ahora podemos escribir los ficheros, de la misma forma que vimos en el Módulo 2.
@@ -283,7 +264,7 @@ donde `<pref>_subset` corresponde al prefijo que usamos para los archivos de ent
 ### we can read the eigenvalues file
 eigenvalues_sub<-read.table(paste(pref,"_subset.pca/filteredDataSet_subset.eigenvalues",sep=""),stringsAsFactors=F,header=F)
 ### let see the porcentage of variance explained per principal components
-plot(eigenvalues_sub$V1/sum(eigenvalues_sub$V1)*100, lwd=5, col="red",xlab=("PCs"),ylab="% variance explained")
+plot(eigenvalues_sub$V1/sum(eigenvalues_sub$V1)*100, lwd=5, col="mediumseagreen",xlab=("PCs"),ylab="% variance explained",main="For subset")
 
 ### we can read the projections of the individuals: one line per individual.
 ### the individuals are ordered as in the input file (thus reading <pref>.ind.txt we know which column corresponds to which individual)
@@ -301,7 +282,7 @@ forLeg_sub<-unique(projections_sub[,c("Region","pop","Color","Point")])
 forLeg_sub<-forLeg_sub[ order(forLeg_sub$Region,forLeg_sub$pop),]
 plot(0,0,"n",axes=F,ann=F)
 legend("center",pch=forLeg_sub$Point,pt.bg=forLeg_sub$Color,col=ifelse(forLeg_sub$Point<21,forLeg_sub$Color,"black"),
-        legend=paste(forLeg_sub$Region,forLeg_sub$pop),ncol=1,cex=0.4,pt.lwd=0.5)
+        legend=paste(forLeg_sub$Region,forLeg_sub$pop),ncol=1,cex=0.5,pt.lwd=0.5)
 for(i in seq(1,9,2)){
   plot(projections_sub[,paste("V",i,sep="")],projections_sub[,paste("V",i+1,sep="")],
           pch=projections_sub$Point,
@@ -327,53 +308,82 @@ Aun así, incluso con estas estrategias, el ACP puede seguir siendo sensible al 
 
 
 ## Análisis de estimación de proporciones de componentes genéticos
+
 ### Introducción al método
-Vamos a usar el algoritmo  sNMF (Sparse Non-negative Matrix Factorization) descrito en [Frichot & François, 2015](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12382).
-Similar a <em>ADMIXTURE</em>[https://dalexander.github.io/admixture/], <em>sNMF</em> es un método que toma una  matriz de genotipos y trata de resumir la variación genética en un conjunto de componentes.
-En términos prácticos, sNMF:
-1. Identifica *K* componentes genéticos:
-    discrimina los patrones de estructura poblacional a cada variante en *K* grupos de individuos.
-2.Estima las frecuencias alélicas típicas de cada componente:
-    según la contribución de cada variantes a los *K* componentes (matriz `.P`) para discriminar entre esto *K* componentes.
-3. Calcula para cada individuo cuánto contribuye cada componente:
-    Genera una matriz (`.Q`) que indica, por ejemplo, si un individuo puede describirse como 40% del componente 1, 30% del componente 2, etc.
 
-No asume poblaciones discretas ni grupos biológicos "reales", simplemente resume los datos genéticos en un número *K* de patrones que ayudan a describir la estructura multidimensional.
+En esta sección utilizaremos el algoritmo **sNMF (Sparse Non-negative Matrix Factorization)**, descrito en  
+[Frichot & François, 2015](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12382).  
+Este método es conceptualmente similar a **ADMIXTURE** (https://dalexander.github.io/admixture/), pero suele ser más robusto y computacionalmente eficiente, especialmente cuando se trabaja con conjuntos de datos grandes o con genomas incompletos.
 
-> En resumen:
-Tanto <em>sNMF</em> como <em>ADMIXTURE</em>  descomponen los datos genéticos en K patrones de variación y estima cuánto contribuye cada patrón a cada individuo.
-Es una forma de representar estructuras complejas de variación sin asumir poblaciones discretas.
+El objetivo de sNMF es resumir la variación genética observada en una matriz de genotipos mediante un conjunto de *K* componentes latentes. En términos prácticos, el método realiza los siguientes pasos:
 
-### Correr el algoritmo
-Vamos a realizar el analisis por un numero de **poblaciones ancestral** (o cluster) **K** variando de 2 a 6. Para cada **K** haremos 4 repeticiones independientes.
-> Se suelen hacer en los estudios entre 10 y 30 repeticiones por **K**.
+1. **Identifica un número K de componentes genéticos**  
+   Agrupa patrones de covariación genética entre individuos, produciendo *K* ejes o patrones básicos de estructura.
 
+2. **Estima las frecuencias alélicas características de cada componente**  
+   Esto se almacena en la matriz `.P`, que resume cómo contribuye cada variante genética a cada uno de los *K* componentes.
+
+3. **Estima la contribución de cada componente en cada individuo**  
+   Produce la matriz `.Q`, que indica, por ejemplo, si un individuo puede representarse como 40% componente 1, 30% componente 2, etc.
+
+Es importante destacar que estos componentes **no representan poblaciones biológicas discretas ni grupos “puros”**, sino patrones matemáticos que permiten describir la estructura genética de forma compacta en un espacio de dimensión *K*.
+
+> **En resumen:**  
+> sNMF, igual que ADMIXTURE, descompone la variación genética en *K* patrones y estima cuánto contribuye cada uno a cada individuo. Es una representación flexible de la estructura genética que no presupone la existencia de poblaciones discretas.
+
+### WEjecutar el algoritmo
+Vamos a ejecutar el análisis variando el número de **componentes (K)** de 2 a 6.  
+Para cada valor de **K** realizaremos **4 repeticiones independientes** con diferente inicialización.
+
+> Nota: en estudios publicados se suelen hacer entre **10 y 30 repeticiones por K** para asegurar estabilidad y detectar modos alternativos; aquí usamos 4 repeticiones por motivos de tiempo, pero para un análisis definitivo conviene aumentar el número de replicados.
+
+Para cada K compararemos las repeticiones usando el criterio de **cross-entropy** (error de predicción sobre genotipos enmascarados) y escogeremos la réplica con menor cross-entropy como “mejor corrida” para ese K. Más adelante también veremos cómo agrupar réplicas en “modos” cuando haya múltiples soluciones estables.
 
 ```r
-Kmax=6
+Kmax=8
 admProj = snmf(paste(pref,".geno",sep=""),
                 K = 2:Kmax, 
                 entropy = TRUE, 
                 repetitions = 4,
                 project = "new")
 ```
-Los resultados se escriben en una carpeta `<pref>.snmf/` y el objeto creado (`admProj` permite acceder facilmente a los mismos).
 
-### Selección del mejor <em>K</em> y de la mejor iteración por <em>K</em>
+Los resultados del análisis se guardan automáticamente en una carpeta llamada  
+`<pref>.snmf/`.  
+Además, el objeto `admProj` que genera la función `snmf()` permite acceder de forma sencilla a todas las salidas: valores de cross-entropy, matrices **Q**, matrices **P**, número de iteraciones y demás información relevante.
 
-Para cada número de poblacionaes ancestrales (clusters), <em>K</em>, vamos a ver cómo las diferentes iteraciones explican los datos (tiene menor entropía crzuada).
-> Cada corrida del algoritmo produce un valor llamado cross-entropy o entropy score. <br>
-> Este valor mide qué tan bien el modelo con un número dado de clusters (K) explica los datos genéticos observados.<br>
-> Cuanto más baja sea, mejor ajusta el modelo a los datos.<br>
-> **¿Qué significa exactamente?**  El algoritmo snmf intenta factorizar la matriz de genotipos **G ≈ Q × F***, con :
-> - una matriz ***Q***, que representa proporciones de ancestría por individuo; y
-> - una matriz ***F***, que representa frecuencias alélicas por población ancestral. <br>
-> Durante el cálculo, <em>sNMF</em> evalúa qué tan bien estas matrices reconstruyen los genotipos observados.
-> Esa diferencia entre lo observado y lo esperado se resume en un único valor: la entropía cruzada.
-> Si la entropía es alta, significa que el modelo no puede explicar bien la variación genética con ese número de clusters (K), o esa corrida del algoritmo se quedó atrapada en un óptimo local.
-> Si la entropía es baja, significa que el modelo explica mejor la estructura genética.
-> Por eso, la mejor corrida para un K dado es la que tiene el menor valor de entropía.
-> **La entropía cruzada es equivalente al escore de Cross-Validation en Admixture**
+### Selección del mejor *K* y de la mejor repetición por *K*
+
+Para cada valor de *K*, el algoritmo genera varias repeticiones independientes.  
+La métrica principal para evaluar y comparar estas repeticiones es el **cross-entropy**, que cuantifica qué tan bien el modelo puede predecir genotipos enmascarados.
+
+En términos prácticos:
+
+- El *K* óptimo suele encontrarse en el punto donde el cross-entropy **deja de disminuir de manera marcada** (el típico “punto de saturación”).  
+- Dentro de cada *K*, la **mejor repetición** es simplemente aquella con el **cross-entropy más bajo**, es decir, la que mejor ajusta los datos.
+
+Este procedimiento es análogo al de *ADMIXTURE*, donde se selecciona el *K* que minimiza el error de validación cruzada y, para ese *K*, la corrida con el menor error.  
+El objeto `admProj` facilita extraer toda esta información y seleccionar de forma sistemática la solución óptima.
+
+
+Para cada número de componentes (*K*), vamos a evaluar cómo las diferentes iteraciones del algoritmo explican los datos.  
+La medida clave es la **entropía cruzada** (*cross-entropy*): cuanto más baja, mejor el ajuste del modelo.
+
+> **¿Qué mide exactamente la entropía cruzada?**  
+> El algoritmo *sNMF* busca aproximar la matriz de genotipos  
+> **G ≈ Q × P**, donde:
+> - **Q** resume, para cada individuo, cuánto contribuye cada uno de los *K* componentes genéticos;
+> - **P** contiene las frecuencias alélicas características de esos componentes.
+>
+> Durante la optimización, *sNMF* compara los genotipos observados con los genotipos “reconstruidos” a partir de **Q** y **P**.  
+> La discrepancia entre ambos se resume en un único valor: **la entropía cruzada**.
+>
+> - Una **entropía alta** indica que el modelo no logra explicar bien los datos con ese *K*  
+>   (o que la iteración quedó atrapada en un óptimo local).  
+> - Una **entropía baja** indica un mejor ajuste.
+>
+> Por eso, para cada *K*, la **mejor iteración** es la que tiene la entropía más baja.  
+> Y comparar entropías entre diferentes valores de *K* es equivalente al procedimiento de **Cross-Validation en ADMIXTURE**.
 
 ```r
 ### for each K get bet score
@@ -381,7 +391,7 @@ listEntro<-list()
 for(k in c(2:Kmax)){
   listEntro[[paste("K=",k,sep="")]]<-cross.entropy(admProj, K = k)
 }
-boxplot(listEntro,main="Cross-Entropopy per K across diferent iteracions")
+boxplot(listEntro,main="Cross-Entropopy per K across diferent iterations")
 ```
 Vemos entonces que el modelo con, *K* = 2 es el que mejor se ajusta a los datos, independetemiente de las iteraciones. En general, es un patrón que se obsera cuando se analizan solo datos de ADN antiguo, por el tema de valores faltantes. Volveremos sobre este problema más adelante.
 
@@ -397,12 +407,14 @@ print(unlist(listBest))
 ```
 
 ### Visualización de los resultados
-Vamos a graficar los resultados. 
-> Es siempre engoroso generar manualmente gráficos lindos para los análisis de estimación de proporciones de componentes genéticos: 
-> 1. hay que ordenar los individuos según el sentido biologíco esperado para poder visualizar mejor lo que puede explicar la estructura genética capturada
-> 2. hay que hacer corresponder los colores de cada componente a diferentes <em>K</em>.
 
-Vamos a reorganizar primero los individuos por región tal como guardado en el objeto `meta`.
+Vamos a graficar las estimaciones de los componentes genéticos.  
+
+> Generar gráficos claros y comparables para este tipo de análisis suele ser trabajoso porque:
+> 1. Es necesario **ordenar los individuos** de manera consistente con la estructura biológica esperada, para facilitar la interpretación visual.
+> 2. Hay que **mantener colores coherentes entre distintos valores de *K***, ya que los componentes pueden cambiar de posición entre corridas.
+
+Como primer paso, vamos a reorganizar los individuos según su región, utilizando la información contenida en el objeto `meta`.
 
 ```r
 ### preparamos el orden de los individuos en el gráfico
@@ -444,10 +456,14 @@ metaPlot$Label<-sapply(metaPlot$pop,change,USE.NAMES=F)
 metaPlot$SG<-grepl(".SG",metaPlot$pop)
 ```
 
-Ahora vamos a leer los resultados para cada <em>K</em> y reordenar la matriz Q para que los individuos estén en el orden deseado (tal como guardado en la columna `orderPlot` de la tabla que acabamos de generar), y graficar.
-Añadimos un punto negro (rótulo abajo) para los individuos secuenciados con shotgun.
+Ahora vamos a leer los resultados para cada valor de *K* y reordenar la matriz **Q** de acuerdo con el orden deseado de individuos (almacenado en la columna `orderPlot` de la tabla que acabamos de generar).  
+Luego graficaremos los resultados.
+
+Para facilitar la interpretación, añadiremos también un punto negro bajo cada barra para identificar a los individuos secuenciados mediante *shotgun*.
+
 ```r
-listColors<-c("darkgreen","cadetblue","darkorange4","red3","blue1","rosybrown")
+pdf(paste(pref,".SNMF.MixedColors.pdf",sep=""),height=10)
+listColors<-c("darkgreen","cadetblue","darkorange4","red3","blue1","rosybrown","lightblue3","slateblue1")
 par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
 
 posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
@@ -464,8 +480,8 @@ for(k in c(Kmax:2)){
   bp<-barplot(Q.matrix, 
         border = NA, 
         ylab=paste("K =",k),
-        line=-1,
         axes=F,
+        line=-1,
         space = 0, 
         col = listColors[c(1:k)], 
         )
@@ -478,15 +494,23 @@ text(x=posX,y=rep(-1,nrow(metaPlot)),
         labels=metaPlot$id,cex=0.7)
 points(x=posX,y=rep(1,nrow(metaPlot)),
         pch=ifelse(metaPlot$SG,16,NA))
-
+dev.off()
 ```
 
-> Los gráficos de *sNMF* (o *Admixture*) NO usan colores coherentes entre diferentes valores de *K*. Para obtener colores consistentes, debemos alinear los clusters entre *Ks* y usar una misma paleta fija. <br>
-> Brevemente, vamos a seguir la siguiente estrategia
-> - Elegimos un *K* de referencia (mejor que sea Kmax), y asignamos un color a cada componente en base a lo que observamos previamente.
-> - Para cada otro *K), alineamos sus columnas con las del K de referencia usando el algoritmo Húngaro (maximize correlation).
+Estos gráficos muestran, para cada individuo, cómo se descompone su variación genética en *K* componentes inferidos por el modelo.  
+Cada barra corresponde a un individuo y los colores representan la contribución relativa de cada componente.  
+Así, patrones compartidos de colores entre individuos o regiones reflejan semejanzas genéticas que el algoritmo resumió en esos componentes.
 
-Empezamos con la asignación de un color a cada componente para el *Kmax* . Es un intento de automización, pero es posible que el código aabjo requiera ediciones porque los resultados que se obtienen en cada corrida pueden diferir.
+> Los gráficos producidos por *sNMF* (o *Admixture*) **no mantienen colores coherentes entre distintos valores de *K***.  
+> Para comparar fácilmente los resultados, necesitamos **alinear los componentes entre *Ks*** y aplicar una **misma paleta de colores fija**.  
+> En este curso seguiremos la siguiente estrategia:
+>
+> - Elegimos un *K* de referencia (generalmente el *K* máximo) y asignamos un color fijo a cada uno de sus componentes, basándonos en la interpretación biológica preliminar.  
+> - Para cada otro *K*, alineamos sus columnas con las del *K* de referencia utilizando el **algoritmo Húngaro**, que encuentra la combinación que maximiza la similitud entre componentes.
+
+Empezamos asignando un color fijo a cada componente del *Kmax*. 
+Este paso busca automatizar el proceso de mantener colores coherentes entre distintos valores de *K*.  
+Sin embargo, es importante tener en cuenta que los resultados de *sNMF* pueden variar entre corridas, por lo que es posible que el código de abajo necesite pequeños ajustes manuales para lograr una correspondencia visualmente coherente en todos los *K* en las corridas realizadas en cada computadora.
 ```r
 library(clue)
 
@@ -497,38 +521,54 @@ best = listBest[[paste("K=",Kmax,sep="")]]
 Q.Kmax <- t(as.matrix(Q(admProj, K = Kmax, run = best)))
 Q.Kmax<-data.frame(Q.Kmax[,metaPlot$orderInInd],stringsAsFactors=F)
 names(Q.Kmax)<-metaPlot$id  
+
 ##assign "rosybrown" for the component maxized in Beringia
 colBer<-which(Q.Kmax[,"USR1"]==max(Q.Kmax[,"USR1"]))
 listColors[colBer]<-"rosybrown"
+
 ##assign "cadetblue" for the component maxized in SouthPatagonia Terrestre (e.g. I12364)
 colTer<-which(Q.Kmax[,"I12364"]==max(Q.Kmax[,"I12364"]))
 listColors[colTer]<-"cadetblue"
+
 ##assign "blue1" for the component maxized in SouthPatagonia Martime(e.g. I12942)
 colMar<-which(Q.Kmax[,"I12942"]==max(Q.Kmax[,"I12942"]))
 listColors[colMar]<-"blue1"
+
+##assign "slateblue3" for the component maxized in other SouthPatagonia Terrestre(e.g. IPK13)
+colMar<-which(Q.Kmax[,"IPK13"]==max(Q.Kmax[,"IPK13"]))
+listColors[colMar]<-"slateblue3"
+
 ##assign "red3" for the component maxized in Central Chile (e.g. I1754)
 colChil<-which(Q.Kmax[,"I1754"]==max(Q.Kmax[,"I1754"]))
 listColors[colChil]<-"red3"
+
 ##assign "darkorange4" for the component maxized in CentralAndes (e.g. I0038)
 colAnd<-which(Q.Kmax[,"I0038"]==max(Q.Kmax[,"I0038"]))
 listColors[colAnd]<-"darkorange4"
+
 ##assign "darkgreen" for the component maxized in Brazil (e.g. Sumidouro7)
 colBra<-which(Q.Kmax[,"Sumidouro7"]==max(Q.Kmax[,"Sumidouro7"]))
 listColors[colBra]<-"darkgreen"
+
+##assign "lightblue3" for the component maxized in MH southPatagonia (e.g. A460)
+colMHPat<-which(Q.Kmax[,"A460"]==max(Q.Kmax[,"A460"]))
+listColors[colMHPat]<-"lightblue3"
+
 ```
 
-Ahora vamos a tratar de alinear los clusteres. Para esto, escribí una función `align_Q_down()` guardada en el ficher `Modulo3/Align_Q_down.R` que hace lo siguiente:
-Yendo de *K* a *K−1*:
-1. Calcula el promedio de las distancias euclidianas entre las proporciones estimadas para el componente i del modelo con K in el componente j del modelo con K-1.
-2. Esto genera  una matriz de confusión para buscar los clusteres del modelo con K-1 grupos correspondientes a clusteres con modelo con K grupos.
-3. Aplica un algoritmo hungaro para asiñar las mejores corerspondencias en base a esta matriz de confusión
-4. Retorna las correspondencias
+Ahora vamos a alinear los *clusters*. Para ello he creado la función `align_Q_down()` (archivo `Modulo3/Align_Q_down.R`) que, al pasar de *K* a *K−1*, realiza los siguientes pasos:
+
+1. Calcula la **distancia euclidiana media** entre las proporciones estimadas del componente *i* en el modelo *K* y las del componente *j* en el modelo *K−1*.  
+2. Con esas distancias construye una **matriz de costos** que cuantifica la disimilitud entre cada par de componentes (*i, j*).  
+3. Aplica el **algoritmo húngaro** sobre la matriz de costos para obtener la asignación óptima de filas (componentes de *K−1*) a columnas (componentes de *K*).  
+4. Devuelve las correspondencias encontradas, que usaremos para reordenar las matrices **Q** y mantener coherencia de colores entre los distintos valores de *K*.
 
 ```r
 
 ## in the file Modulo3/Align_Q_down.R, I defined a function trying to fit the best colors for K-1 to the ones used for K
 source("Modulo3/Align_Q_down.R")
-### now apply
+### now apply and plot
+pdf(paste(pref,".SNMF.OrderedColors.pdf",sep=""),height=10)
 Qref <- t(as.matrix(Q(admProj, K = Kmax, run = best)))
 Qref<- Qref[,metaPlot$orderInInd]
 par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
@@ -577,13 +617,14 @@ text(x=posX,y=rep(-1,nrow(metaPlot)),
 points(x=posX,y=rep(1,nrow(metaPlot)),
         pch=ifelse(metaPlot$SG,16,NA))
 
-
+dev.off()
 ```
 
-Vemos entonces que es más facíl interpretar!
-Sin embargo, a veces los colores no corresponden del todo, porque a un un K dado, unos individuos tienen proporciones cerca del 1 para un componente, y ya no para K superiores. Esto demuestra que cada K puede capturar diferentes estructuras. Ver por ejemplo el caso de los Arquipelagos occidentales con K = 5 y 4 vs con otros K.
+Vemos entonces que así resulta más fácil interpretar las estructuras inferidas.  
+Sin embargo, los colores no siempre corresponden perfectamente: para un cierto *K*, algunos individuos pueden mostrar una proporción cercana a 1 para un componente, pero esa señal puede fragmentarse cuando aumentamos *K*.  
+Esto refleja que cada valor de *K* puede capturar **niveles diferentes de estructura poblacional**, y por lo tanto no existe una correspondencia totalmente rígida entre componentes de distintos *K*.
 
-AÑADIR INTERPRETACION
+
 
 
 
