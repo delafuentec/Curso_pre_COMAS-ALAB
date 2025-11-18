@@ -340,7 +340,7 @@ Para cada valor de **K** realizaremos **4 repeticiones independientes** con dife
 Para cada K compararemos las repeticiones usando el criterio de **cross-entropy** (error de predicción sobre genotipos enmascarados) y escogeremos la réplica con menor cross-entropy como “mejor corrida” para ese K. Más adelante también veremos cómo agrupar réplicas en “modos” cuando haya múltiples soluciones estables.
 
 ```r
-Kmax=6
+Kmax=8
 admProj = snmf(paste(pref,".geno",sep=""),
                 K = 2:Kmax, 
                 entropy = TRUE, 
