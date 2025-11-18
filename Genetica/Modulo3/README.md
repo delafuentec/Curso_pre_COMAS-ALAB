@@ -622,7 +622,7 @@ dev.off()
 ```
 
 Vemos entonces que así resulta más fácil interpretar las estructuras inferidas.  
-Sin embargo, los colores no siempre corresponden perfectamente: para un cierto *K*, algunos individuos pueden mostrar una proporción cercana a 1 para un componente, pero esa señal puede fragmentarse cuando aumentamos *K*.  
+Sin embargo, los colores no siempre corresponden perfectamente: para un cierto *K*, algunos individuos pueden mostrar una proporción cercana a 1 para un componente, pero esa señal puede fragmentarse cuando aumentamos *K*, o el individuo tener una proporción cercana a 1 para otro componente.
 Esto refleja que cada valor de *K* puede capturar **niveles diferentes de estructura poblacional**, y por lo tanto no existe una correspondencia totalmente rígida entre componentes de distintos *K*.
 
 
@@ -679,8 +679,8 @@ Visualizar los modos permite:
 - Evitar seleccionar al azar una corrida “bonita”: cada corrida individual es solo una realización y los modos integran información sobre todas las corridas.
 
 > La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong).
-En lo que sigue vamos  a definir los modos de manera mucho más sencilla, solo basada en el promedio de distancias euclidiana y máximia entre las estimaciones entre los runs.
 
+En lo que sigue vamos  a definir los modos de manera mucho más sencilla, solo basada en el promedio de distancias euclidiana y máximia entre las estimaciones entre los runs.
 $$ d_{\text{mean}}(\mathbf{x}, \mathbf{y}) 
 = \frac{1}{n} \sum_{i=1}^{n} \sqrt{(x_i - y_i)^2}
 = \frac{1}{n} \sum_{i=1}^{n} |x_i - y_i| $$
