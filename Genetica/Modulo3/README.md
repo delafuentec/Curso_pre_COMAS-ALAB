@@ -6,11 +6,8 @@ En este módulo realizaremos **dos análisis clásicos en genética de poblacion
 2. **Estimación de proporciones de componentes genéticos**
 
 > Tradicionalmente, estos análisis se realizan con los programas **smartpca** (del paquete  
-> [EIGENSOFT](https://github.com/DReichLab/EIG)) y **ADMIXTURE**  
-> (https://dalexander.github.io/admixture/).  
-> Sin embargo, el paquete **LEA** de R implementa métodos muy similares —con la ventaja de que  
-> el algoritmo utilizado para estimar proporciones de componentes genéticos es **más robusto,  
-> menos sensible al ruido y mucho más rápido** que el de *ADMIXTURE*.  
+> [EIGENSOFT](https://github.com/DReichLab/EIG)) y [**ADMIXTURE**]((https://dalexander.github.io/admixture/).  
+> Sin embargo, el paquete **LEA** de R implementa métodos muy similares —con la ventaja de que el algoritmo utilizado para estimar proporciones de componentes genéticos es **más robusto**, menos sensible al ruido y mucho **más rápido** que el de *ADMIXTURE*.  
 
 A lo largo del módulo exploraremos cómo ejecutar estos análisis, cómo interpretar sus resultados  
 y qué aspectos considerar al trabajar con datos genómicos, especialmente en contextos con coberturas desiguales o datos de ADN antiguo.
@@ -18,6 +15,7 @@ y qué aspectos considerar al trabajar con datos genómicos, especialmente en co
 ## Lectura de los datos filtrados
 
 En este paso vamos a cargar los **datos filtrados** que generamos en el módulo anterior.
+** Si no se pudo generar esytos ficheros, los pueden descaragar en el siguiente enlace [https://dl.pasteur.fr/fop/t4P2tE2Y/DatosModulo3.tar.gz](https://dl.pasteur.fr/fop/t4P2tE2Y/DatosModulo3.tar.gz).**
 
 Estos archivos ya contienen:
 
@@ -342,7 +340,7 @@ Para cada valor de **K** realizaremos **4 repeticiones independientes** con dife
 Para cada K compararemos las repeticiones usando el criterio de **cross-entropy** (error de predicción sobre genotipos enmascarados) y escogeremos la réplica con menor cross-entropy como “mejor corrida” para ese K. Más adelante también veremos cómo agrupar réplicas en “modos” cuando haya múltiples soluciones estables.
 
 ```r
-Kmax=8
+Kmax=6
 admProj = snmf(paste(pref,".geno",sep=""),
                 K = 2:Kmax, 
                 entropy = TRUE, 
@@ -706,6 +704,16 @@ for(k in c(2:4)){
 
 
 ### Discusión
+#### Sobre los datos analizados
+En este ejercicio analizamos **pocos genomas pseudo-haploides con datos faltantes**, lo que introduce mucho ruido para el algoritmo *sNMF*.  
+También **trabajamos con un número reducido de variantes**, ya que nos concentramos únicamente en las transversiones.  
+Además, el **número de individuos es desigual entre regiones**, lo que puede sesgar los resultados; en nuestro caso, hacia resaltar estructura entre poblaciones del sur de Patagonia.
+
+> En un estudio real, es recomendable:
+> - contar con un número similar de individuos que representen los componentes genéticos esperados,
+> - incluir más individuos, para aumentar la robustez del algoritmo frente a diferencias genéticas pequeñas,
+> - anclar los análisis con genomas de buena calidad, por ejemplo incorporando genomas modernos.
+
 #### Sobre el concepto de "Ancestría"
 En la literatura se suele hablar de “ancestrías” para describir los componentes identificados con *ADMIXTURE* o *sNMF* (por ejemplo: “este individuo presenta un 40% de ancestría XXX”). Aunque esta forma de comunicar los resultados es práctica, ha sido criticada porque no refleja con exactitud lo que realiza el algoritmo ([Coop, 2022)[https://gcbias.org/wp-content/uploads/2022/07/genetic_similarity_and_genetic_ancestry_groups_current.pdf]. Además, el término “ancestría” puede sugerir la existencia de poblaciones genéticamente “puras”, evocando conceptos asociados a la idea de raza ([Kampourakis & Peterson, 2023)[https://doi.org/10.1093/genetics/iyad002]).
 Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.

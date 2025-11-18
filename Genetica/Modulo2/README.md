@@ -127,6 +127,7 @@ Por esta razón, al limitar los análisis a **transversiones** —que **no se ve
 Es lo que haremos en los modulos 2 y 3.
 
 ## Lectura de los datos
+Los datos se pueden descargar en el siguiente enlace: [https://dl.pasteur.fr/fop/GUXE6909/DatosModulo2.tar.gz](https://dl.pasteur.fr/fop/GUXE6909/DatosModulo2.tar.gz).
 
 Existen varios paquetes de **R** que permiten leer y procesar estos formatos de genotipos.  
 En este curso utilizaremos el paquete *dartR.base*, que incluye la función `gl.read.PLINK()`, la cual permite importar directamente archivos en formato **PLINK** en un objeto [`genlight`](https://rdrr.io/cran/adegenet/man/genlight.html).  
