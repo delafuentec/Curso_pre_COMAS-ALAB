@@ -638,7 +638,7 @@ Aunque todas las corridas usan el mismo <em>K</em>, el algoritmo puede llegar a 
 
 Veamos las 4 corridas para *K* de 2 a 4, es decir vamos a graficar para cada *K* los 4 runs.
 
-```
+```r
 par(mfcol=c(4,3),mar=c(0.5,3,0.5,0.5))
 
 for(k in c(2:4)){
