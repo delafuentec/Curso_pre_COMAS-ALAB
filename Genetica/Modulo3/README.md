@@ -15,7 +15,7 @@ y qué aspectos considerar al trabajar con datos genómicos, especialmente en co
 ## Lectura de los datos filtrados
 
 En este paso vamos a cargar los **datos filtrados** que generamos en el módulo anterior.
-** Si no se pudo generar esytos ficheros, los pueden descaragar en el siguiente enlace [https://dl.pasteur.fr/fop/t4P2tE2Y/DatosModulo3.tar.gz](https://dl.pasteur.fr/fop/t4P2tE2Y/DatosModulo3.tar.gz).**
+**Si no se pudo generar esytos ficheros, los pueden descaragar en el siguiente enlace [https://dl.pasteur.fr/fop/t4P2tE2Y/DatosModulo3.tar.gz](https://dl.pasteur.fr/fop/t4P2tE2Y/DatosModulo3.tar.gz).**
 
 Estos archivos ya contienen:
 
