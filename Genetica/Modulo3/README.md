@@ -666,13 +666,8 @@ for(k in c(2:4)){
         space = 0, 
         col = listColorsSub, 
         )
-      
-  
   }
-  
-
 }
-
 ```
 
 Vemos entonces que podemos diferentes resultados entre las corridas, con algunas corridas muy similares.
@@ -687,6 +682,7 @@ Visualizar los modos permite:
 
 > La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong).
 En lo que sigue vamos  a definir los modos de manera mucho más sencilla, solo basada en el promedio de distancias euclidiana y máximia entre las estimaciones entre los runs.
+
 $$ d_{\text{mean}}(\mathbf{x}, \mathbf{y}) 
 = \frac{1}{n} \sum_{i=1}^{n} \sqrt{(x_i - y_i)^2}
 = \frac{1}{n} \sum_{i=1}^{n} |x_i - y_i| $$
@@ -719,18 +715,9 @@ Si bien en publicaciones especializadas se continúa utilizando este término po
 Brevemente, advierten que diferentes hábitos para interpretar los resultados de este tipo de análisis pueden llevar a una mal interpretación de la historia evolutiva que se pretende explicar.
 <img width="926" height="576" alt="image" src="https://github.com/user-attachments/assets/68c684df-96f6-476e-b196-5690404b05e6" />
 
-A esto, se añade el problema que diferentes escenarios pueden llevar a observar resultados similares, como lo muestran en su figura 2 abajo mostrada.
+A esto, se añade el problema que diferentes escenarios pueden llevar a observar resultados similares, como lo muestran en su figura 2:<br>
 <img width="703" height="699" alt="image" src="https://github.com/user-attachments/assets/7ce467e4-12b6-4785-a802-7383f74d3f0e" />
 
-
-
-
-## BONUS: <em>f<sub>3</sub></em>-outgroup
-
-Let's see 
-```r
-require(admixtools)
-```
 
 
 
