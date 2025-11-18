@@ -2,6 +2,7 @@
 if(! require(clue)){install.packages("proxy");require(proxy)}
 if(! require(proxy)){install.packages("proxy");require(proxy)}
 if(! require(stringr)){install.packages("stringr");require(stringr)}
+if(! require(mclust)){install.packages("mclust");require(mclust)}
 # Función para alinear las columnas de diferentes iteraciones (runs) de sNMF
 # para un mismo valor de K usando correlación máxima entre componentes
 # Función para alinear las columnas de diferentes iteraciones (runs) de sNMF
@@ -22,14 +23,13 @@ align_Q_runs <- function(Qlist) {
     dist_mat <- matrix(NA,numK,numK)
     for(c1 in c(1:numK)){
       for(c2 in c(1:numK)){
-        dist_mat[c1,c2]<-dist_mat[c2,c1]<-sqrt(mean((Q_ref[,c1] - Q_ref[,c2])^2))
+        dist_mat[c1,c2]<-dist_mat[c2,c1]<-sqrt(sum((Q_ref[,c1] - Q_curr[,c2])^2))
       }
     }
+    
     # Encontrar el mejor emparejamiento usando el algoritmo húngaro
     # install.packages("clue") si no está
-    library(clue)
     match_idx <- solve_LSAP(dist_mat, maximum = FALSE)
-    
     # Reordenar columnas de la corrida actual
     Q_curr_aligned <- Q_curr[, match_idx]
     
@@ -42,19 +42,21 @@ align_Q_runs <- function(Qlist) {
 
 ###euclidian distance among different Q 
 dist_among_runs<-function(Qlist){
-  numK=ncol(Qlist[[1]])  
+  numK=ncol(Qlist[[1]])
+  numI<-nrow(Qlist[[1]])
   numR=length(Qlist)
-  dist_mat <- matrix(NA,numR,numR)
+  dist_mat <- matrix(0,numR,numR)
   for(r1 in c(1:numR)){
     Q1=Qlist[[r1]]
+    
     for(r2 in c(1:numR)){
       Q2=Qlist[[r2]]
-      tmpDist <- 0
+      tmpDist <- rep(0,numI)
       for(c1 in c(1:numK)){
-          tmpDist<-tmpDist+mean((Q1[,c1] - Q2[,c1])^2)
+          tmpDist<-tmpDist+(Q1[,c1] - Q2[,c1])^2
       }
-      tmpDist<-sqrt(tmpDist)
-      dist_mat[r1,r2]<-dist_mat[r2,r1]<-mean(tmpDist)
+      
+      dist_mat[r1,r2]<-dist_mat[r2,r1]<-mean(sqrt(tmpDist))
   
     }
   }
@@ -62,6 +64,29 @@ dist_among_runs<-function(Qlist){
   return(dist_mat)
 }
 
+
+max_dist_among_runs<-function(Qlist){
+  numK=ncol(Qlist[[1]])
+  numI<-nrow(Qlist[[1]])
+  numR=length(Qlist)
+  dist_mat <- matrix(0,numR,numR)
+  for(r1 in c(1:numR)){
+    Q1=Qlist[[r1]]
+    
+    for(r2 in c(1:numR)){
+      Q2=Qlist[[r2]]
+      tmpDist <- -Inf
+      for(c1 in c(1:numK)){
+        tmpDist<-max(c(tmpDist,abs(Q1[,c1] - Q2[,c1])))
+      }
+      
+      dist_mat[r1,r2]<-dist_mat[r2,r1]<-tmpDist
+      
+    }
+  }
+  colnames(dist_mat)<-row.names(dist_mat)<-paste0("Run",c(1:numR))
+  return(dist_mat)
+}
 
 
 # Function to get the best representive runs (the most similar to all runs listed)
@@ -98,50 +123,71 @@ compute_Qmean <- function(alignedList) {
 }
 
 
-##definition de grandes en un hclust
-groupsHC <- function(hc, alpha = 0.05) {
-  # root merge height
+library(mclust)
 
-  Hroot <- max(hc$height)-min(hc$height)
+
+# Function for automatic thresholds (for mean and max dist)
+auto_thresholds <- function(D) {
+  dm <- as.vector(D[lower.tri(D)])
   
-  # splits to keep must exceed threshold
+  # Fit 2-component Gaussian mixture
+  mc <- Mclust(dm, G = 2,modelNames="E")
   
-  threshold <- alpha * Hroot
-  # find all internal nodes whose height ≥ threshold
-  good_nodes <- which(hc$height >= threshold)
+  mu  <- mc$parameters$mean
+  sdv <- sqrt(mc$parameters$variance$sigmasq)
+  # identify low and high components
+  low  <- which.min(mu)
+  high <- setdiff(1:2, low)
   
-  # No significant splits → only 1 mode
-  if (length(good_nodes) == 0)
-    return(list(modes = list(unlist(as.list(hc$labels))), n = 1))
-  
-  # Each such node defines a subtree → mode
-  extract_tips <- function(node, merge, labels) {
-    if (node < 0)
-      return(labels[-node])
-    children <- merge[node, ]
-    c(extract_tips(children[1], merge, labels),
-      extract_tips(children[2], merge, labels))
-  }
-  
-  modes <- c()
-  used_tips <- character()
-  
-  for (node in good_nodes) {
-    tips <- extract_tips(node, hc$merge, hc$labels)
-    # Avoid duplicates from nested nodes
-    if (!any(tips %in% used_tips)) {
-      modes[[length(modes)+1]] <- tips
-      used_tips <- c(used_tips, tips)
-    }#else{
-    #  modes[[length(modes)+1]] <- tips[ ! tips %in% used_tips]
-    #  used_tips <- unique(c(used_tips, tips))
-    #}
-  }
+  # Threshold  (mean between high and low)
+  thr <- ((mu[low]+2*sdv) + (mu[high]-2*sdv)) / 2
   
   
-  return(list(modes = modes, n = length(modes)))
+  
+  return(list(thr,
+       mu = mu,
+       sd = sdv))
 }
 
+#Function of Mode inference from distance thresholds
+find_modes <- function(Dmean,Dmax, thr_mean, thr_max) {
+  if(!is.matrix(Dmean)!="matrix"){Dmean=as.matrix(Dmean)}
+  if(!is.matrix(Dmax)!="matrix"){Dmax=as.matrix(Dmax)}
+  R <- nrow(Dmean)
+  remaining <- c(1:R)
+  modes <- list()
+  # Precompute distances
+  
+  avg_dist <- sapply(c(1:R), function(i) mean(Dmean[i, -i]))
+
+  while (length(remaining) > 0) {
+    
+    # start with run that is most "central"
+    seed <- remaining[ which.min(avg_dist[remaining]) ]
+    group <- seed
+    
+    added <- TRUE
+    while (added) {
+      added <- FALSE
+      candidates <- setdiff(remaining, group)
+      
+      for (c in candidates) {
+        
+        Meandists <- Dmean[c, group]
+        Maxdists <- Dmax[c, group]
+        if (mean(Meandists) <= thr_mean && max(Maxdists) <= thr_max) {
+          group <- c(group, c)
+          added <- TRUE
+        }
+      }
+    }
+    
+    modes[[length(modes) + 1]] <- group
+    remaining <- setdiff(remaining, group)
+  }
+  
+  return(list(modes=modes,nmodes=length(modes),thr_mean=thr_mean,thr_max=thr_max))
+}
 
 
 
@@ -149,7 +195,7 @@ groupsHC <- function(hc, alpha = 0.05) {
 # Definición de la función de detección de modo para un K
 ##################
 
-detectModes <- function(k,proj,alpha=0.25) {
+detectModes <- function(k,proj,th_mean="auto",th_max=0.1) {
   ##get number of runs
   ce <- cross.entropy(proj,K=k)
   nruns<-nrow(ce)
@@ -163,19 +209,16 @@ detectModes <- function(k,proj,alpha=0.25) {
   aligned <- align_Q_runs(Qs)
   
   ## Compute distances among runs
-  D <- dist_among_runs(aligned)
-  
-  #print(D)
-  # Cluster runs into modes (hierarchical clustering)
-  hc <- hclust(dist(D), method = "average")
-  plot(hc,main=paste0("hclust from euclidian distance among runs\nK = ",k),hang=-1,ylim=c(4,0))
-  # Automatic mode detection:
-  # rule: cut at 10% of maximum height (can be adjusted if needed)
-  groupsF <- groupsHC(hc,alpha)
+  meanD <- dist_among_runs(aligned)
+  maxD <- max_dist_among_runs(aligned)
+  if(th_mean=="auto"){
+    th_mean <- auto_thresholds(meanD)[[1]]
+  }
+
+  groupsF <- find_modes(meanD,maxD,th_mean,th_max)
   nmodes<-groupsF[[2]]
   Listmodes<-groupsF[[1]]
-  
-  
+
   message("Identified modes for K=", k, ": ", nmodes)
   
   # Keep results
@@ -185,7 +228,7 @@ detectModes <- function(k,proj,alpha=0.25) {
     modes<-as.numeric(str_remove(Listmodes[[mode]],"Run"))
     selected <- aligned[modes]
     mismatch=compute_mismatch(selected)
-    representativeRun=get_representative_run(selected,paste0("Run",listRuns))
+    representativeRun=get_representative_run(selected,Listmodes[[mode]])
     meanQ=compute_Qmean(selected)
     
     listOutput[[paste0("mode",mode)]]<-list(

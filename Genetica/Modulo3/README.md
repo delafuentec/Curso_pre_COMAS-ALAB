@@ -13,20 +13,21 @@ En este módulo realizaremos **dos análisis clásicos en genética de poblacion
 > menos sensible al ruido y mucho más rápido** que el de *ADMIXTURE*.  
 
 A lo largo del módulo exploraremos cómo ejecutar estos análisis, cómo interpretar sus resultados  
-y qué aspectos considerar al trabajar con datos genómicos, especialmente en contextos con  
-coberturas desiguales o datos de ADN antiguo.
+y qué aspectos considerar al trabajar con datos genómicos, especialmente en contextos con coberturas desiguales o datos de ADN antiguo.
 
 ## Lectura de los datos filtrados
 
-En este paso vamos a cargar los **datos filtrados** que generamos en el módulo anterior.  
+En este paso vamos a cargar los **datos filtrados** que generamos en el módulo anterior.
+
 Estos archivos ya contienen:
 
 - solo los individuos seleccionados,  
 - las variantes con suficiente información,  
 - y el formato adecuado para trabajar con las funciones del paquete **LEA**.
 
-A partir de estos datos realizaremos los análisis de ACP y de estimación de componentes genéticos.
+A partir de estos datos realizaremos los análisis de ACP y de estimación proporciones de componentes genéticos.
 
+> Recuerden que analizamos solo las transversiones, es decir que reducimos mucho el número de variantes analizados. 
 ```r
 require(LEA)
 ### you maybe need to change the directory below
@@ -303,7 +304,8 @@ Existen, sin embargo, soluciones parcialmente efectivas. Una de ellas es usar m�
  - y/o proyección de individuos antiguos sobre un ACP calculado únicamente con individuos modernos. De este modo, la estructura genética principal se define con datos completos y de alta calidad, y los genomas antiguos se ubican en ese espacio sin influir en la orientación de los ejes.
 Sin embargo, la segunda solución suele ser limitada en poblaciones de Ámerica ya que la diversidad genética indígena de Ámerica de las poblaciones modernas suele ser poco representativa de la existente en poblaciones previas a la invasión europea.
 
-Aun así, incluso con estas estrategias, el ACP puede seguir siendo sensible al patrón de datos faltantes típico del ADN antiguo. Por este motivo, una alternativa más robusta consiste en emplear un **MDS (Multidimensional Scaling)** basado en distancias genéticas derivadas del **f<sub>3</sub>-outgroup**, que proporciona una medida menos sesgada de divergencia genética. Este método se presenta como un ejercicio opcional al final del módulo.
+Aun así, incluso con estas estrategias, el ACP puede seguir siendo sensible al patrón de datos faltantes típico del ADN antiguo. Por este motivo, una alternativa más robusta consiste en emplear un **MDS (Multidimensional Scaling)** basado en distancias genéticas derivadas del **f<sub>3</sub>-outgroup**, que proporciona una medida menos sesgada de divergencia genética. <br>
+Este método se abordará en un módulo posterior.
 
 
 
@@ -345,7 +347,7 @@ admProj = snmf(paste(pref,".geno",sep=""),
                 K = 2:Kmax, 
                 entropy = TRUE, 
                 repetitions = 4,
-                project = "new")
+                project = "new",seed = 20112025)
 ```
 
 Los resultados del análisis se guardan automáticamente en una carpeta llamada  
@@ -510,7 +512,7 @@ Así, patrones compartidos de colores entre individuos o regiones reflejan semej
 
 Empezamos asignando un color fijo a cada componente del *Kmax*. 
 Este paso busca automatizar el proceso de mantener colores coherentes entre distintos valores de *K*.  
-Sin embargo, es importante tener en cuenta que los resultados de *sNMF* pueden variar entre corridas, por lo que es posible que el código de abajo necesite pequeños ajustes manuales para lograr una correspondencia visualmente coherente en todos los *K* en las corridas realizadas en cada computadora.
+Sin embargo, es importante tener en cuenta que los resultados de *sNMF* pueden variar entre corridas, por lo que es posible que el código de abajo necesite pequeños ajustes manuales para lograr una correspondencia visualmente coherente en todos los *K* en las corridas realizadas en cada computadora. Par evitar este problema corrimos `sNMF` con un `seed` establecido.
 ```r
 library(clue)
 
@@ -534,10 +536,6 @@ listColors[colTer]<-"cadetblue"
 colMar<-which(Q.Kmax[,"I12942"]==max(Q.Kmax[,"I12942"]))
 listColors[colMar]<-"blue1"
 
-##assign "slateblue3" for the component maxized in other SouthPatagonia Terrestre(e.g. IPK13)
-colMar<-which(Q.Kmax[,"IPK13"]==max(Q.Kmax[,"IPK13"]))
-listColors[colMar]<-"slateblue3"
-
 ##assign "red3" for the component maxized in Central Chile (e.g. I1754)
 colChil<-which(Q.Kmax[,"I1754"]==max(Q.Kmax[,"I1754"]))
 listColors[colChil]<-"red3"
@@ -553,6 +551,11 @@ listColors[colBra]<-"darkgreen"
 ##assign "lightblue3" for the component maxized in MH southPatagonia (e.g. A460)
 colMHPat<-which(Q.Kmax[,"A460"]==max(Q.Kmax[,"A460"]))
 listColors[colMHPat]<-"lightblue3"
+
+##assign "pink" for the component maxized in other North America Terrestre(e.g. Anzick)
+colNor<-which(Q.Kmax[,"Anzick"]==max(Q.Kmax[,"Anzick"]))
+listColors[colNor]<-"pink"
+
 
 ```
 
@@ -626,11 +629,6 @@ Esto refleja que cada valor de *K* puede capturar **niveles diferentes de estruc
 
 
 
-
-
-
-
-
 ### Visualización de los diferentes modos por K
 Cuando usamos algoritmos como <em>sNMF</em>, para un mismo número de clusters (K), solemos realizar varias corridas independientes.
 Aunque todas las corridas usan el mismo <em>K</em>, el algoritmo puede llegar a soluciones ligeramente distintas porque:
@@ -638,47 +636,22 @@ Aunque todas las corridas usan el mismo <em>K</em>, el algoritmo puede llegar a 
 - la función que optimiza puede tener mínimos locales,
 - los datos pueden sostener más de una partición válida. <br>
 
-Estas diferentes soluciones estables se llaman **“modos”**. Un **modo** es un patrón consistente de agrupamiento que aparece de forma repetida en varias corridas, es decir una solución que el algoritmo encuentra varias veces porque los datos permiten interpretarse de más de una manera.
-
-Cada modo representa una interpretación alternativa de la estructura genética/variación estadística en la muestra.
-Visualizar los modos permite:
-- Detectar soluciones mayoritarias: el modo que aparece en la mayoría de corridas refleja la partición más estable o más apoyada por los datos.
-- Identificar soluciones minoritarias pero biológicamente interesantes: modos menos frecuentes pueden capturar patrones sutiles u homogéneos en subgrupos.
-- Distinguir variación real de ruido técnico: si hay muchos modos muy distintos y ninguno predominante, puede indicar que el <em>K</em> es demasiado grande, ya que los datos no soportan una partición clara, o que falta información.
-- Evitar seleccionar al azar una corrida “bonita”: cada corrida individual es solo una realización y los modos integran información sobre todas las corridas.
-
-La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong), sin embargo es bastante facíl realizar algo similar en R con los resultados de <em>sNMF</em> (ver funciones en `Modulo3/ModeDetection.R`)
-
-```r
-source("Modulo3/ModeDetection.R")
-summary_list <- list()
-for(k in c(2:Kmax)){
-  summary_list[[paste("K =",k)]]<-detectModes(k,admProj,0.005)
-}
+Veamos las 4 corridas para *K* de 2 a 4, es decir vamos a graficar para cada *K* los 4 runs.
 
 ```
+par(mfcol=c(4,3),mar=c(0.5,3,0.5,0.5))
 
-Veamos por ejemplo un K para el cual tenemos 2 modos (K=7)
-Vamos a graficar los 4 runs (alineamos los colores sobre el mejor resultado para *K* = 8)
-```
-###read Q for Kmax
-best = listBest[[paste("K=",Kmax,sep="")]]
-# display the Q-matrix
-Q.Kmax <- t(as.matrix(Q(admProj, K = Kmax, run = best)))
-Q.Kmax<-Q.Kmax[,metaPlot$orderInInd]
-names(Q.Kmax)<-metaPlot$id  
+for(k in c(2:4)){
+  ###read Q for Kmax
+  best = listBest[[paste("K=",Kmax,sep="")]]
+  # display the Q-matrix
+  Q.Kmax <- t(as.matrix(Q(admProj, K = Kmax, run = best)))
+  Q.Kmax<-Q.Kmax[,metaPlot$orderInInd]
+  names(Q.Kmax)<-metaPlot$id  
 
 
-par(mfrow=c(Kmax+1,1),mar=c(0.5,3,0.5,0.5))
-posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
-plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
-text(x=posX,y=rep(-1,nrow(metaPlot)),
-        srt=90,adj=c(0,0.5),col=metaPlot$Color,
-        labels=metaPlot$Label,cex=0.7)
-
-k=7
-for(mode in c(1:length(summary_list[[paste("K =",k)]]))){
-  for(run in summary_list[[paste("K =",k)]][[mode]][["listRuns"]]){
+  posX=seq(1.5,nrow(metaPlot)-0.5,length.out=nrow(metaPlot))
+  for(run in c(1:4)){
     Qk <- t(as.matrix(Q(admProj, K = k, run = run)))
     Qk<-Qk[,metaPlot$orderInInd]
     returnAlign<-align_Q_down(Q.Kmax,Qk)
@@ -687,21 +660,53 @@ for(mode in c(1:length(summary_list[[paste("K =",k)]]))){
     listColorsSub<-listColors[ sort(ColAligned) ]
     bp<-barplot(Qk, 
         border = NA, 
-        ylab=paste("Mode ",mode,"\nRun ",run,sep=""),
-        line=-1,
+        ylab=paste("K =",k,"\nRun ",run,sep=""),
+        line=0,
         axes=F,
         space = 0, 
         col = listColorsSub, 
         )
       
+  
   }
+  
+
 }
-plot(0,0,"n",axes=F,ann=F,xlim=c(1,nrow(ind)))
-text(x=posX,y=rep(-1,nrow(metaPlot)),
-        srt=90,adj=c(0,0.5),col=metaPlot$Color,
-        labels=metaPlot$id,cex=0.7)
-points(x=posX,y=rep(1,nrow(metaPlot)),
-        pch=ifelse(metaPlot$SG,16,NA))
+
+```
+
+Vemos entonces que podemos diferentes resultados entre las corridas, con algunas corridas muy similares.
+Las diferentes soluciones estables, se suelen llamar **“modos”**.  Un **modo** es un patrón consistente de agrupamiento que aparece de forma repetida en varias corridas, es decir una solución que el algoritmo encuentra varias veces porque los datos permiten interpretarse de más de una manera.
+
+Cada modo representa una interpretación alternativa de la estructura genética/variación estadística en la muestra.
+Visualizar los modos permite:
+- Detectar soluciones mayoritarias: el modo que aparece en la mayoría de corridas refleja la partición más estable o más apoyada por los datos.
+- Identificar soluciones minoritarias pero biológicamente interesantes: modos menos frecuentes pueden capturar patrones sutiles u homogéneos en subgrupos.
+- Distinguir variación real de ruido técnico: si hay muchos modos muy distintos y ninguno predominante, puede indicar que el <em>K</em> es demasiado grande, ya que los datos no soportan una partición clara, o que falta información.
+- Evitar seleccionar al azar una corrida “bonita”: cada corrida individual es solo una realización y los modos integran información sobre todas las corridas.
+
+> La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong).
+En lo que sigue vamos  a definir los modos de manera mucho más sencilla, solo basada en el promedio de distancias euclidiana y máximia entre las estimaciones entre los runs.
+$$ d_{\text{mean}}(\mathbf{x}, \mathbf{y}) 
+= \frac{1}{n} \sum_{i=1}^{n} \sqrt{(x_i - y_i)^2}
+= \frac{1}{n} \sum_{i=1}^{n} |x_i - y_i| $$
+
+y 
+
+$$ d_{\max}(\mathbf{x}, \mathbf{y})
+= \max_{1 \le i \le n} |x_i - y_i| $$
+
+```r
+par(mfrow=c(1,1),mar=c(5,4,2,2)+0.1)
+source("Modulo3/ModeDetection_dist.R")
+summary_list <- list()
+#for(k in c(3:Kmax)){
+for(k in c(2:4)){
+  summary_list[[paste("K =",k)]]<-detectModes(k,admProj,th_mean=0.1,th_max=0.1)
+}
+
+```
+
 
 
 ### Discusión
