@@ -711,11 +711,11 @@ En la literatura se suele hablar de “ancestrías” para describir los compone
 Si bien en publicaciones especializadas se continúa utilizando este término por conveniencia, es recomendable evitarlo en trabajos de divulgación científica, donde puede inducir interpretaciones erróneas o simplificaciones problemáticas.
 
 ### Sobre la interpretación de los resultados de estimación de proporciones de componentes genéticos
-[Lawson et al. 2018](https://www.nature.com/articles/s41467-018-05257-7) advierieron sobre el riesgo de sobre interpretar los resultados de métodos como *ADMIXTURE* o *sNMF*.
-Brevemente, advierten que diferentes hábitos para interpretar los resultados de este tipo de análisis pueden llevar a una mal interpretación de la historia evolutiva que se pretende explicar.
-<img width="926" height="576" alt="image" src="https://github.com/user-attachments/assets/68c684df-96f6-476e-b196-5690404b05e6" />
+[Lawson et al. 2018](https://www.nature.com/articles/s41467-018-05257-7) Advirtieron sobre el riesgo de **sobrerinterpretar** los resultados de métodos como *ADMIXTURE* o *sNMF*. En resumen, señalan que distintos hábitos o prácticas comunes al interpretar este tipo de análisis pueden conducir a **inferencias equivocadas** sobre la historia evolutiva que se pretende reconstruir. 
 
-A esto, se añade el problema que diferentes escenarios pueden llevar a observar resultados similares, como lo muestran en su figura 2:<br>
+A ello se suma que **diferentes escenarios demográficos pueden producir patrones muy similares**, como se ilustra en la segunda figura, lo que refuerza la necesidad de una interpretación prudente.
+
+<img width="926" height="576" alt="image" src="https://github.com/user-attachments/assets/68c684df-96f6-476e-b196-5690404b05e6" />
 <img width="703" height="699" alt="image" src="https://github.com/user-attachments/assets/7ce467e4-12b6-4785-a802-7383f74d3f0e" />
 
 
