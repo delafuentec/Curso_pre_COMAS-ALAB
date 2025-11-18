@@ -512,7 +512,6 @@ Empezamos asignando un color fijo a cada componente del *Kmax*.
 Este paso busca automatizar el proceso de mantener colores coherentes entre distintos valores de *K*.  
 Sin embargo, es importante tener en cuenta que los resultados de *sNMF* pueden variar entre corridas, por lo que es posible que el código de abajo necesite pequeños ajustes manuales para lograr una correspondencia visualmente coherente en todos los *K* en las corridas realizadas en cada computadora. Par evitar este problema corrimos `sNMF` con un `seed` establecido.
 ```r
-library(clue)
 
 listColors<-c()
 ###read Q for Kmax
@@ -681,6 +680,7 @@ Visualizar los modos permite:
 > La herramienta quizás más conocida para realizar la identificación de los modos es [<em>PONG</em>](https://github.com/ramachandran-lab/pong).
 
 En lo que sigue vamos  a definir los modos de manera mucho más sencilla, solo basada en el promedio de distancias euclidiana y máximia entre las estimaciones entre los runs.
+
 $$ d_{\text{mean}}(\mathbf{x}, \mathbf{y}) 
 = \frac{1}{n} \sum_{i=1}^{n} \sqrt{(x_i - y_i)^2}
 = \frac{1}{n} \sum_{i=1}^{n} |x_i - y_i| $$

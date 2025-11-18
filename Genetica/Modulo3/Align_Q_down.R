@@ -1,5 +1,5 @@
 #!/bin/Rscript
-library(clue)
+if(!require(clue)){install.packages("clue");require(clue)}
 
 # # Definition of the function to align cluster
 align_Q_down <- function(QK, QKminus1, fix_thr = 0.99) {
