@@ -106,7 +106,7 @@ IndD M Pop3<br>
 
 Podemos interpretar que el individuo **IndA**, perteneciente a la **población 1**, presenta los siguientes genotipos:
 - `snp1`: C/C  
-- `snp2`: A/C  
+- `snp2`: T/G  
 - `snp3`: faltante  
 - `snp4`: A/A
 
