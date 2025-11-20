@@ -26,7 +26,7 @@ install.packages("plotly")
 ```r
 devtools::install_github("uqrmaie1/admixtools")
 ```
-### 3A: Otra opción para isntallar admixtools2
+### 3A: Otra opción para instalar admixtools2
 ```r
 install.packages("remotes")
 remotes::install_github("uqrmaie1/admixtools")
