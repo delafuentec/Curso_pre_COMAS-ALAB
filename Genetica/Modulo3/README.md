@@ -1,4 +1,4 @@
-# Analisis de diversidad y estructura genética
+# Análisis de diversidad y estructura genética
 
 En este módulo realizaremos **dos análisis clásicos en genética de poblaciones humanas**:
 
@@ -331,7 +331,7 @@ Es importante destacar que estos componentes **no representan poblaciones bioló
 > **En resumen:**  
 > sNMF, igual que ADMIXTURE, descompone la variación genética en *K* patrones y estima cuánto contribuye cada uno a cada individuo. Es una representación flexible de la estructura genética que no presupone la existencia de poblaciones discretas.
 
-### WEjecutar el algoritmo
+### Ejecutar el algoritmo
 Vamos a ejecutar el análisis variando el número de **componentes (K)** de 2 a 6.  
 Para cada valor de **K** realizaremos **4 repeticiones independientes** con diferente inicialización.
 
