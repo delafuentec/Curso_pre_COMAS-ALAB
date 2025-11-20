@@ -44,7 +44,7 @@ library(dplyr)
 
 ### Especificar directorio de trabajo (cambiar según corresponda)
 ```r
-setwd("~/Dropbox/2025/CONFERENCES/ALAB2025/Workshop/Analysis/3.Practico_Fstatistics/")
+setwd("~/Documentos/Modulo3")
 ```
 
 ### Leer archivo con metadatos
