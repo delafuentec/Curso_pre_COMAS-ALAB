@@ -56,7 +56,7 @@ Se trabajará en la plataforma gratuita Galaxy: https://galaxy-main.usegalaxy.or
 
 1. Crearse una cuenta. 
 2. Subir archivos fasta y fastq. 
-3. Acceder al workflow para analizar datos.
+3. Acceder al workflow para analizar datos: https://usegalaxy.org/published/workflow?id=4238587f2feb1627
 4. Correr workflow para las 3 muestras compartidas.
 
 ¿Cuantos reads tiene cada muestra? \
