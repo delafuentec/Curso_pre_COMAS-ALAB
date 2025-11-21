@@ -3,6 +3,7 @@ En esta sección exploraremos la integración entre resultados de análisis gen�
 
 ## Análisis genéticos
 
+### Cálculo de las similitudes genéticas entre groupos.
 Utilizaremos el paquete de R admixtools para estimar el outgroup-ƒ3 entre todos los posibles pares de grupos en la base de datos. Al igual que en el módulo 4 de Genética:
 
 ```r
@@ -20,17 +21,15 @@ library(stringr)
 library(patchwork)
 
 # Especificar directorio de trabajo (cambiar según corresponda)
-setwd("/Documentos/ALAB_2025/Integración/")
+setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB/Integración/")
 
 # Definir input
 prefix <- "AmericaByGroups/Genodata_forCompMorphology"
 
 # Definir poblaciones a analizar. Se utilizaran todos los pares posibles de grupos
 popA = c('PATAGONIA_MARITIMO',
-         'PUERTO_RICO',
          'BRASIL_TARDIO',
          'BRASIL_TEMPRANO',
-         'CUBA',
          'CENTRO_PERU',
          'NORTE_PERU',
          'CALIFORNIA',
@@ -42,10 +41,8 @@ popA = c('PATAGONIA_MARITIMO',
          'PAMPA',
          'ALASKA')
 popB = c('PATAGONIA_MARITIMO',
-         'PUERTO_RICO',
          'BRASIL_TARDIO',
          'BRASIL_TEMPRANO',
-         'CUBA',
          'CENTRO_PERU',
          'NORTE_PERU',
          'CALIFORNIA',
@@ -79,16 +76,14 @@ distGenMDS<-distGenMDS[row.names(distGenMDS) != "ALASKA" , colnames(distGenMDS) 
 
 # Hacer análisis de escalamiento multidimensional (MDS)
 # let's do it on 10 dimensions
-k=5
+k=10
 GenMDS <- as.data.frame(cmdscale(distGenMDS, k = k))
 GenMDS$groupId <- rownames(distGenMDS)
 names(GenMDS)[c(1:k)]<-paste0("Dim",c(1:k))
 # Agregaremos información de región para facilitar visualización
 metadata = data.frame(groupId = c('PATAGONIA_MARITIMO',
-                                  'PUERTO_RICO',
                                   'BRASIL_TARDIO',
                                   'BRASIL_TEMPRANO',
-                                  'CUBA',
                                   'CENTRO_PERU',
                                   'NORTE_PERU',
                                   'CALIFORNIA',
@@ -99,10 +94,8 @@ metadata = data.frame(groupId = c('PATAGONIA_MARITIMO',
                                   'PERICUES',
                                   'PAMPA'),
                       region = c('Patagonia',
-                                 'Caribe',
                                  'Brasil',
                                  'Brasil',
-                                 'Caribe',
                                  'Andes Centro-Sur',
                                  'Andes Centro-Sur',
                                  'Norteamerica',
@@ -113,13 +106,18 @@ metadata = data.frame(groupId = c('PATAGONIA_MARITIMO',
                                  'Mesoamerica',
                                  'Pampa'))
 
-colorVec<-c("orange3","mediumseagreen","darkgrey","deeppink", "rosybrown2","steelblue2",'darkblue')
+colorVec<-c("orange3","mediumseagreen","deeppink", "rosybrown2","steelblue2",'darkblue')
 GenMDS$region = metadata$region[match(GenMDS$groupId, metadata$groupId)]
 
 # Grafico de MDS
 # Graficaremos todos los posibles pares de dimensiones
-dims <- paste0("Dim",c(1:k))
-pairs <- combn(dims, 2, simplify = FALSE)
+#dims <- paste0("Dim",c(1:k))
+#pairs <- combn(dims, 2, simplify = FALSE)
+pairs <- list()
+for(i in c(1:4)){
+  pairs[[i]]<-paste0("Dim",c(i*2-1,i*2))
+
+}
 
 plots <- lapply(pairs, function(p) {
   x <- p[1]
@@ -144,7 +142,7 @@ wrap_plots(plots, ncol = 3)
 Make legend
 ```r
 metadata$groupId<-as.factor(metadata$groupId)
-metadata$Point[ order(metadata$groupId)]<-c(1:14)
+metadata$Point[ order(metadata$groupId)]<-c(1:nrow(metadata))
 metadata$region<-as.factor(metadata$region)
 regN=0
 for(region in unique(sort(metadata$region))){
@@ -158,6 +156,7 @@ legend("center",pch=metadata$Point,col=metadata$Color,legend=metadata$groupId,nc
 
 metadata<-rbind(metadata,
                 cbind("groupId"="ALASKA","region"="NORTE_AMERICA","Point"=16,"Color"="rosybrown2"))
+metadata$Point<-as.numeric(metadata$Point)                
 row.names(metadata)<-metadata$groupId
 ```
 
@@ -186,28 +185,48 @@ plotStats<-plot(GenNJplot,tip.color = dicoPLOT$Color,cex = 1,use.edge.length = F
 points(x=rep(nrow(dicoPLOT)+2.5,nrow(dicoPLOT)),y=c(1:nrow(dicoPLOT)),
        cex=1,pch=as.numeric(dicoPLOT$Point),col=dicoPLOT$Color)
 
-
-
-### we remove ALASKA (we only will use it as outgroup for trees)
-distGenNJ_noOut <- acast(f3res, pop2 ~ pop3, value.var = "est")
-distGenNJ_noOut <- 1/distGenNJ_noOut
-diag(distGenNJ_noOut) <- 0
-distGenNJ_noOut<-distGenNJ_noOut[row.names(distGenNJ_noOut) != "ALASKA" , colnames(distGenNJ_noOut) != "ALASKA"]
-distGenNJ_noOut<-as.dist(distGenNJ_noOut)
-
-GenNJ_noOut<-bionj(distGenNJ_noOut)
-plot(GenNJ_noOut,use.edge.length = F,show.tip.label=T,align.tip.label=T)#,tip.color = dicoPLOT$Color,label.offset=10,cex = 0.3,)
-
 ```
 
 ## Analísis morfólogicos
 
-### Formateo distancias morfólogicas y calculo MDS
+### Cálculo de las distancias morfólogicas entre groupos.
+
+```r
+datosMorf<-read.table("AmericaByGroups/MorphologicMeansPerGroup.csv",stringsAsFactors=F,header=T,sep="\t")
+row.names(datosMorf) <- datosMorf[,1]
+datosMorf <- datosMorf[,-1]
+datosMorf <- as.matrix(datosMorf)
+
+## función de normalización
+normalize_lines <- function(v){ 
+  return(v / sqrt(sum(v^2)))
+}
+
+datosMorf_norm <- t(apply(datosMorf, 1, normalize_lines))
+
+##Distancias Procrustes
+n <- nrow(datosMorf_norm)
+distMorf <- matrix(0, n, n)
+row.names(distMorf) <- colnames(distMorf) <- row.names(datosMorf_norm)
+
+for(i in 1:n){
+  for(j in 1:n){
+    if(i < j){
+      distMorf[i,j] <- distMorf[j,i] <- sqrt(sum((datosMorf_norm[i,] - datosMorf_norm[j,])^2))
+    }
+  }
+}
+
+### Guardar matriz
+write.table(distMorf, "AmericaByGroups/TablasDistancias/MorphologicalDistances.tsv",col.names=T,row.names=T,sep="\t")
+```
+
+### MDS con datos morfólogicos
 ```r
 
-distMorf<-read.csv("AmericaByGroups/MorphologicalDistances.tsv",stringsAsFactors=F,header=T)
-row.names(distMorf)<-distMorf$X
-distMorf<-distMorf[,-1]
+#distMorf<-read.csv("AmericaByGroups/MorphologicalDistances.tsv",stringsAsFactors=F,header=T)
+#row.names(distMorf)<-distMorf$X
+#distMorf<-distMorf[,-1]
 distMorf<-distMorf/max(distMorf)
 distMorfMDS<-distMorf[row.names(distMorf) != "ALASKA" , colnames(distMorf) != "ALASKA"]
 
@@ -222,16 +241,13 @@ MorfMDS<-MorfMDS[ GenMDS$groupId,]
 names(MorfMDS)[c(1:k)]<-paste0("Dim",c(1:k))
 # Grafico de MDS
 # Graficaremos todos los posibles pares de dimensiones
-dims <- paste0("Dim",c(1:k)
-pairs <- combn(dims, 2, simplify = FALSE)
-
 plots <- lapply(pairs, function(p) {
   x <- p[1]
   y <- p[2]
   ggplot(MorfMDS, aes_string(x = x, y = y, color = "region",shape="groupId")) +
     geom_point(size = 3) +
     theme_bw() +
-    scale_shape_manual(values = c(1:15)) +
+    scale_shape_manual(values = c(1:nrow(MorfMDS))) +
     scale_color_manual(values = colorVec) +
     labs(x = x, y = y, shape = "groupId") +
     ggtitle(paste("Morphologic\n",x, " vs ", y,sep=""))+
@@ -242,6 +258,27 @@ plots <- lapply(pairs, function(p) {
 
 # Combinar plots
 wrap_plots(plots, ncol = 3)
+```
+
+
+Make legend
+```r
+metadata$groupId<-as.factor(metadata$groupId)
+metadata$Point[ order(metadata$groupId)]<-c(1:nrow(metadata))
+metadata$region<-as.factor(metadata$region)
+regN=0
+for(region in unique(sort(metadata$region))){
+  regN=regN+1
+  metadata$Color[metadata$region ==region]=colorVec[regN]
+}
+
+plot(0,0,"n",axes=F,ann=F)
+metadata<-metadata[order(metadata$region,metadata$groupId),]
+legend("center",pch=as.numeric(metadata$Point),col=metadata$Color,legend=metadata$groupId,ncol=2)
+
+metadata<-rbind(metadata,
+                cbind("groupId"="ALASKA","region"="NORTE_AMERICA","Point"=16,"Color"="rosybrown2"))
+row.names(metadata)<-metadata$groupId
 ```
 
 
@@ -263,27 +300,7 @@ dicoPLOT<-metadata[MorfNJplot$tip.label,]
 plotStats<-plot(MorfNJplot,tip.color = dicoPLOT$Color,cex = 1,use.edge.length = F,show.tip.label=T,label.offset=5,align.tip.label=T,main="NJ with morphological data")
 points(x=rep(nrow(dicoPLOT)+2.5,nrow(dicoPLOT)),y=c(1:nrow(dicoPLOT)),
        cex=1,pch=as.numeric(dicoPLOT$Point),col=dicoPLOT$Color)
-
-
-
-
-
-
-### we remove ALASKA (we only will use it as outgroup for trees)
-distMorfNJ_noOut <- distMorf[row.names(distMorf) != "ALASKA" , colnames(distMorf) != "ALASKA"]
-distMorfNJ_noOut <- as.dist(distMorfNJ_noOut)
-
-MorfNJ_noOut<-bionj(distMorfNJ_noOut)
-
-plot(MorfNJ_noOut,use.edge.length = F,show.tip.label=T,align.tip.label=T)#,tip.color = dicoPLOT$Color,label.offset=10,cex = 0.3,)
-
-
-par(mfrow=c(3,1))
-for(m in c("ward.D","ward.D2","complete")){
-  plot(hclust(distMorfNJ,method=m),main=paste("morfologia con ",m))
-}
 ```
-
 
 
 ## Comparaciones al fin
@@ -291,12 +308,8 @@ for(m in c("ward.D","ward.D2","complete")){
 Esto es un ensayo. Son análisis explorativos que tratan de responder a la necesidad de dialogo entre las disciplinas. Más allá de articular conclusiones desde diferentes evidencias, pretendemos iniciar una discusión epistemiologíca para articular los datos de diferente índole en un análisis interdisciplinar.
 ### MDS analysis with procrustes
 
-```r
-require(vegan)
-
-
 ### find best match among dimensions (Dim1 from GenMDS corresponds better to DimXX from MorfMDS, and so on)
-
+```
 PROC <- procrustes(GenMDS[,c(1:k)],MorfMDS[,c(1:k)])
 Genomic <- as.data.frame(PROC$X)
 Genomic$dataset <- "Genomic"
@@ -340,63 +353,6 @@ plots <- lapply(pairs, function(p) {
 wrap_plots(plots, ncol = 3)
 
 ```
-### if we want to make sure you reorder the 
-
-```r
-library(clue)
-
-# Compute correlation matrix between dimensions
-corrMDSdim <- abs(cor(GenMDS[, c(1:k)], MorfMDS[, c(1:k)]))
-# Convert to a cost matrix by subtracting from the maximum value
-cost <- max(corrMDSdim) - corrMDSdim
-
-# Solve the Linear Sum Assignment Problem (Hungarian algorithm)
-corres <- solve_LSAP(cost)
-
-# Reorder MorfMDS accordingly
-MorfMDS_reordered <- MorfMDS[, as.vector(corres)]
-names(MorfMDS_reordered)<-paste0("Dim",c(1:k))
-PROCreordered <- procrustes(GenMDS[,c(1:k)],MorfMDS_reordered[,c(1:k)])
-Genomic <- as.data.frame(PROCreordered$X)
-Genomic$dataset <- "Genomic"
-Genomic$groupId <- rownames(PROCreordered$X)
-
-Morphologic <- as.data.frame(PROCreordered$Yrot)
-Morphologic$dataset <- "ReorderedMorphologic"
-Morphologic$groupId <- rownames(PROCreordered$Yrot)
-names(Morphologic)[c(1:k)]<-paste0("Dim",c(1:k))
-
-# Combine
-plot_df_reordered <- rbind(Genomic, Morphologic)
-plot_df_reordered$region = metadata$region[match(plot_df_reordered$groupId, metadata$groupId)]
-names(plot_df_reordered)[c(1:k)]<-paste0("Dim",c(1:k))
-
-plot_df_reordered$groupId=as.factor(plot_df_reordered$groupId)
-
-dims <- paste0("Dim",c(1:k))
-pairs <- combn(dims, 2, simplify = FALSE)
-
-
-# Plot with displacement lines
-plots <- lapply(pairs, function(p) {
-  x <- p[1]
-  y <- p[2]
-  ggplot(plot_df_reordered, aes_string(x = x, y = y, color = "region",shape="groupId")) +
-  geom_path(aes(group = groupId), linewidth = 0.4, alpha = 0.7,arrow=arrow(type = "closed",length=unit(0.1,"inches"))) +   # displacement lines
-  geom_point(size = 3) +
-  theme_bw() +
-  scale_shape_manual(values = c(1:15)) +
-  scale_color_manual(values = colorVec) +
-  labs(x = x, y = y, shape = "groupId") +
-  ggtitle(paste("Genomic --> Morphologic reordered\n",x, " vs ", y,sep=""))+
-  theme(legend.position = "none", 
-  panel.grid.major = element_blank(), 
-  panel.grid.minor = element_blank())
-
-})
-wrap_plots(plots, ncol = 3)
-```
-
 
 ### Neighbour-joining comparison with tanglegram
 
@@ -416,3 +372,23 @@ tanglegram(GenNJchanged,MorfNJchanged,
             match_order_by_labels=F
 )
 
+```
+
+### Poner a prueba la asociación entre matrices dedistancias morfologicas y genéticas.
+####Test de Mantel
+Este método es aceptable para un análisis exploratorio, pero no recomendable como prueba principal, ya que sufre de varias limitaciones:
+- alta inflación de falsos positivos (problemas de autocorrelación espacial en los datos)
+- no distingue bien entre correlación directa y correlación inducida por una variable tercera (geografía, estructura)
+- baja potencia estadística.
+
+```r
+require(vegan)
+
+distGenMDS<-distGenMDS[ colnames(distMorfMDS),colnames(distMorfMDS)]
+mantel_res <- mantel(dist(distMorfMDS), dist(distGenMDS), method = "pearson", permutations = 99)
+
+print(mantel_res)
+
+```
+
+### Now we will 

@@ -1,0 +1,31 @@
+Región	Sitios	Número individuos	Tipo de dato	Referencias
+ALASKA	USA_AK_PaleoAleut, USA_AK_NeoAleut	11	Geneticos (1240K)	FlegontovNature2019
+BRASIL_TARDIO	Brazil_JabuticabeiraII_2400BP	12	Geneticos (1240K)	FerrazNature2023
+BRASIL_TEMPRANO	Brazil_Sumidouro_10100BP	2	Geneticos (shotgun)	MorenoMayarScience2018
+CALIFORNIA	USA_CA_SantaRosa_3000BP, USA_CA_SanCruz_IslandChumash, USA_CA_LSCI, USA_CA_SanMiguel_IslandChumash, USA_CA_Late_SanNicolas	19	Geneticos (1240K y Shotgun)	ScheibScience2018, Nakatsuka_et_al_2023
+CENTRO_PERU	Peru_Lima_LIP_650BP, Peru_Lima_1050BP_MH, Peru_Lima_EIP_1450BP	9	Geneticos (1240K)	NakatsukaCell2020
+CUBA	Cuba_CuevaEsqueletos_Ceramic, Cuba_ElMorrillo_Ceramic	6	Geneticos (1240K)	NagelePosthScience2020
+NORTE_PERU	Peru_ElBrujo_850BP_MH-LIP, Peru_ElBrujo_1300BP_EIP	4	Geneticos (1240K)	NakatsukaCell2020
+PAMPA	Argentina_ArroyoSeco2_7200BP; Argentina_ArroyoSeco2_7700BP	9	Geneticos (1240K)	PosthNakatsukaCell2018
+PATAGONIA_MARITIMO	Chile_WesternArchipelago_800BP.SG, Argentina_BeagleChannel_1900-500BP, Chile_StraitOfMagellan_100BP.SG	7	Geneticos (1240K y Shotgun)	RaghavanScience2015, delaFuentePNAS2018, NakatsukaLuisiNatureCommunications2020
+PATAGONIA_TERRESTRE	Argentina_NorthTierradelFuego_500BP, Chile_NorthTierradelFuego_100BP	7	Geneticos (1240K)	NakatsukaLuisiNatureCommunications2020
+PERICUES	Mexico_Pericues	4	Geneticos (shotgun)	RaghavanScience2015, ScheibScience2018
+PERU_MedioHoloceno	Peru_LaGalgada_4100BP	1	Geneticos (1240K)	PosthNakatsukaCell2018
+PERU_TempranoHoloceno	Peru_Lauricocha_8600BP	3	Geneticos (1240K)	PosthNakatsukaCell2018
+PUERTO_RICO	PuertoRico_SantaElena_Ceramic, PuertoRico_Monserrate_Ceramic, PuertoRico_CaboRojo11_Ceramic, PuertoRico_Collores_Ceramic, PuertoRico_CanasColloresMonserrate_Ceramic, PuertoRico_LosIndios_Ceramic, PuertoRico_PuntaCandelero_Ceramic_o, PuertoRico_PasodelIndio_Ceramic, PuertoRico_Tibes_Ceramic	18	Geneticos (1240K)	NagelePosthScience2020
+SUR_PERU	Peru_Laramate_900BP	6	Geneticos (1240K)	PosthNakatsukaCell2018
+ALASKA	Holoceno tardío	10	Morfológico	Pucciarelli 2008; Pucciarelli et al 2008
+BRASIL_TARDIO	Holoceno tardío	22	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+BRASIL_TEMPRANO	Holoceno temprano	24	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+CALIFORNIA	Holoceno tardío	64	Morfológico	Pucciarelli 2008; Pucciarelli et al 2008
+CENTRO_PERU	Holoceno tardío	20	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+CUBA	Holoceno tardío	2	Morfológico	Pucciarelli 2008
+NORTE_PERU	Holoceno tardío	13	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+PAMPA/ARROYO SECO 2	Holoceno temprano/medio	2	Morfológico	Pucciarelli 2009; Pucciarelli et al 2010
+PATAGONIA_MARITIMO	Holoceno tardío	19	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+PATAGONIA_TERRESTRE	Holoceno tardío	57	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+PERICUES	Holoceno tardío	21	Morfológico	Pucciarelli 2008; Pucciarelli et al 2008
+PERU_MedioHoloceno	Holoceno medio/tarido inicial	4	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+PERU_TempranoHoloceno	Holoceno temprano/medio	5	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
+PUERTO_RICO	Holoceno tardío	12	Morfológico	Pucciarelli 2008
+SUR_PERU	Holoceno tardío	24	Morfológico	Pucciarelli 2008; Pucciarelli et al 2006
