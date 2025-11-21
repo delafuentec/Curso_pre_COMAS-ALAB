@@ -395,22 +395,51 @@ Cumul_eig_gen <- pco_gen$values$Cumul_eig
 keep_gen<-which(Cumul_eig_gen<0.4)
 gen_scores_k <- gen_scores[, keep_gen]
 
-dbrda <- capscale(as.dist(distMorfMDS) ~ gen_scores_k, add = TRUE)
+dbrda_Morf <- capscale(as.dist(distMorfMDS) ~ gen_scores_k, add = TRUE)
 
-anova_all<-anova(dbrda, permutations = 99)
-anova_perAxis<-anova(dbrda, by = "terms", permutations = 99)
+anova_all_Morf<-anova(dbrda_Morf, permutations = 99)
+anova_perAxis_Morf<-anova(dbrda_Morf, by = "terms", permutations = 99)
+plot(dbrda_Morf)
 ```
 
 
 Problemas: la distribución geografía y la temporalidad  pueden ser un factor confundente.
 Acá vamos a simplificar mucho el caso. Aunque las observaciones para un grupo (p.ej. Brasil Tardío) no se obtuvieron para individuos de los mismos sitios, es decir con las mismas coordenadas geograficas ni temporalidad, vamos a considerar que asi fue.
 Por lo cúal:
-- la temporalidad se codifica de 1 a 3 entre los grandes periódos (Holoceno Temprano, Medio y Tardío)
+- la temporalidad se codifica de 1 a 3 entre los grandes periódos (Holoceno Temprano, Medio y Tardío). Ojo, esta aproximación va a aplanar mucho las distancias temporales entre grupos con tan solo 3 valores posibles 0 (mismo periodo), 1 (holoceno medio con holoceno tardio o temprano), 2 (holoceno temprano vs tardío).
 - asignamos para las coordenadas geográficas, las de un punto arbitrario en la región considerada
 
 Vamos a construir matrices de distancias geograficas y temporales.
 
 ```r
+### read metadata
+meta<-read.table("AmericaByGroups/SummaryTable_PublishedData.tsv",stringsAsFactors = F,header=T,sep="\t")
+## info for temporality and geography are repeated across Genetic and Morphological data
+meta<-meta[ meta$Tipo.de.dato == "Morfológico",]
+## we don't analyze Alaska
+meta<-meta[ meta$Región != "ALASKA",]
+
+
+### we asign a numerical value for temporality
+meta$TEMP<-as.numeric(ifelse(meta$Temporalidad=="LH",3,
+                ifelse(meta$Temporalidad=="MH",2,
+                    ifelse(meta$Temporalidad=="EH",1,"UPS???"))))
+distGEO<-matrix(0,nrow(meta),nrow(meta))
+row.names(distGEO)<-colnames(distGEO)<-meta$Región
+distTEMP<-distGEO
+
+for(i in c(1:nrow(distGEO))){
+  for(j in c(1:nrow(distGEO))){
+      distTEMP[i,j]=abs(meta$TEMP[i]-meta$TEMP[j])
+      distGEO[i,j]=sqrt((meta$Latitud[i]-meta$Latitud[j])^2 + 
+                         (meta$Longitud[i]-meta$Longitud[j])^2)
+  }
+}
+
+distGEO<-distGEO/max(distGEO)
+distTEMP<-distTEMP/max(distTEMP)
+```
+
 
 
 
