@@ -1,7 +1,7 @@
 En esta sección exploraremos la integración entre resultados de análisis genéticos y morfológicos. En primer lugar, estimaremos distancias genéticas en dos bases de datos (genética y morfológica), para luego comparar ambos resultados utilizando herramientas disponibles en R.
 
 
-## Analísis genéticos
+## Análisis genéticos
 
 Utilizaremos el paquete de R admixtools para estimar el outgroup-ƒ3 entre todos los posibles pares de grupos en la base de datos. Al igual que en el módulo 4 de Genética:
 
@@ -20,7 +20,7 @@ library(stringr)
 library(patchwork)
 
 # Especificar directorio de trabajo (cambiar según corresponda)
-setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB/Integración/")
+setwd("/Documentos/ALAB_2025/Integración/")
 
 # Definir input
 prefix <- "AmericaByGroups/Genodata_forCompMorphology"
