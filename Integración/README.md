@@ -174,7 +174,7 @@ diag(distGenNJ) <- 0
 distGenNJ<-distGenNJ/max(distGenNJ)
 distGenNJ<-as.dist(distGenNJ)
 GenNJ<-bionj(distGenNJ)
-GenNJ<-root(GenNJ,outgroup = "ALASKA",resolve.root = F)
+GenNJ<-root(GenNJ,outgroup = "ALASKA",resolve.root = T)
 if(sum(! GenNJ$tip.label %in% row.names(metadata) )>0){
   print(paste(MorfNJ$tip.label[! GenNJ$tip.label %in% row.names(metadata)]))
   stop("pb groups not in your metadata")
@@ -252,7 +252,7 @@ wrap_plots(plots, ncol = 3)
 distMorfNJ <- as.dist(distMorf)
 
 MorfNJ<-bionj(distMorfNJ)
-MorfNJ<-root(MorfNJ,outgroup = "ALASKA",resolve.root = F)
+MorfNJ<-root(MorfNJ,outgroup = "ALASKA",resolve.root = T)
 if(sum(! MorfNJ$tip.label %in% row.names(metadata) )>0){
   print(paste(MorfNJ$tip.label[! MorfNJ$tip.label %in% row.names(metadata)]))
   stop("pb groups not in your metadata")
