@@ -175,7 +175,7 @@ distGenNJ<-as.dist(distGenNJ)
 GenNJ<-bionj(distGenNJ)
 GenNJ<-root(GenNJ,outgroup = "ALASKA",resolve.root = T)
 if(sum(! GenNJ$tip.label %in% row.names(metadata) )>0){
-  print(paste(MorfNJ$tip.label[! GenNJ$tip.label %in% row.names(metadata)]))
+  print(paste(GenNJ$tip.label[! GenNJ$tip.label %in% row.names(metadata)]))
   stop("pb groups not in your metadata")
 }
 write.tree(GenNJ,file="NJwithGenomicData.nwk",append = F,tree.names = F)
@@ -263,22 +263,15 @@ wrap_plots(plots, ncol = 3)
 
 Make legend
 ```r
-metadata$groupId<-as.factor(metadata$groupId)
-metadata$Point[ order(metadata$groupId)]<-c(1:nrow(metadata))
-metadata$region<-as.factor(metadata$region)
-regN=0
-for(region in unique(sort(metadata$region))){
-  regN=regN+1
-  metadata$Color[metadata$region ==region]=colorVec[regN]
-}
-
 plot(0,0,"n",axes=F,ann=F)
 metadata<-metadata[order(metadata$region,metadata$groupId),]
-legend("center",pch=as.numeric(metadata$Point),col=metadata$Color,legend=metadata$groupId,ncol=2)
+legend("center",
+        pch=as.numeric(metadata$Point[ row.names(metadata)!="ALASKA"]),
+        col=metadata$Color[ row.names(metadata)!="ALASKA"],
+        legend=metadata$groupId[ row.names(metadata)!="ALASKA"],
+        ncol=2)
 
-metadata<-rbind(metadata,
-                cbind("groupId"="ALASKA","region"="NORTE_AMERICA","Point"=16,"Color"="rosybrown2"))
-row.names(metadata)<-metadata$groupId
+
 ```
 
 
@@ -309,7 +302,7 @@ Esto es un ensayo. Son análisis explorativos que tratan de responder a la neces
 ### MDS analysis with procrustes
 
 ### find best match among dimensions (Dim1 from GenMDS corresponds better to DimXX from MorfMDS, and so on)
-```
+```r
 PROC <- procrustes(GenMDS[,c(1:k)],MorfMDS[,c(1:k)])
 Genomic <- as.data.frame(PROC$X)
 Genomic$dataset <- "Genomic"
@@ -329,8 +322,6 @@ names(plot_df)[c(1:k)]<-paste0("Dim",c(1:k))
 
 plot_df$groupId=as.factor(plot_df$groupId)
 
-dims <- paste0("Dim",c(1:5))
-pairs <- combn(dims, 2, simplify = FALSE)
 
 
 # Plot with displacement lines
@@ -385,10 +376,43 @@ Este método es aceptable para un análisis exploratorio, pero no recomendable c
 require(vegan)
 
 distGenMDS<-distGenMDS[ colnames(distMorfMDS),colnames(distMorfMDS)]
-mantel_res <- mantel(dist(distMorfMDS), dist(distGenMDS), method = "pearson", permutations = 99)
+mantel_res <- mantel(as.dist(distMorfMDS), as.dist(distGenMDS), method = "pearson", permutations = 99,)
 
 print(mantel_res)
 
 ```
 
-### Now we will 
+#### Vamos a poner a prueba si la morfología está asociada a la genética
+Vamos entonces realizar un dbRDA 
+Para esto, hay que hacer un PCoA (muy similar al MDS), en la variable explicativa (distancias genéticas)
+Guardaremos solo las dimensiones que, acumuladas, explican hasta el 70% de la variancia.
+
+```r
+###PCoA on genetic distances and dbRDA
+pco_gen <- pcoa(as.dist(distGenMDS))
+gen_scores <- pco_gen$vectors
+Cumul_eig_gen <- pco_gen$values$Cumul_eig
+keep_gen<-which(Cumul_eig_gen<0.4)
+gen_scores_k <- gen_scores[, keep_gen]
+
+dbrda <- capscale(as.dist(distMorfMDS) ~ gen_scores_k, add = TRUE)
+
+anova_all<-anova(dbrda, permutations = 99)
+anova_perAxis<-anova(dbrda, by = "terms", permutations = 99)
+```
+
+
+Problemas: la distribución geografía y la temporalidad  pueden ser un factor confundente.
+Acá vamos a simplificar mucho el caso. Aunque las observaciones para un grupo (p.ej. Brasil Tardío) no se obtuvieron para individuos de los mismos sitios, es decir con las mismas coordenadas geograficas ni temporalidad, vamos a considerar que asi fue.
+Por lo cúal:
+- la temporalidad se codifica de 1 a 3 entre los grandes periódos (Holoceno Temprano, Medio y Tardío)
+- asignamos para las coordenadas geográficas, las de un punto arbitrario en la región considerada
+
+Vamos a construir matrices de distancias geograficas y temporales.
+
+```r
+
+
+
+
+
