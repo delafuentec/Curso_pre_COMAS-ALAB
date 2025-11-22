@@ -21,7 +21,7 @@ library(stringr)
 library(patchwork)
 
 # Especificar directorio de trabajo (cambiar según corresponda)
-setwd("/pasteur/helix/projects/Hotpaleo/pierre/Projects/Cours/ALAB_2025/Curso_pre_COMAS-ALAB/Integración/")
+setwd("/Documentos/ALAB2025/Integración/")
 
 # Definir input
 prefix <- "AmericaByGroups/Genodata_forCompMorphology"
@@ -32,12 +32,12 @@ popA = c('PATAGONIA_MARITIMO',
          'BRASIL_TEMPRANO',
          'CENTRO_PERU',
          'NORTE_PERU',
-         'CALIFORNIA',
+         'CHANNEL_ISLAND',
          'PATAGONIA_TERRESTRE',
          'PERU_TempranoHoloceno',
          'SUR_PERU',
          'PERU_MedioHoloceno',
-         'PERICUES',
+         'BAJA_CALIFORNIA_SUR',
          'PAMPA',
          'ALASKA')
 popB = c('PATAGONIA_MARITIMO',
@@ -45,12 +45,12 @@ popB = c('PATAGONIA_MARITIMO',
          'BRASIL_TEMPRANO',
          'CENTRO_PERU',
          'NORTE_PERU',
-         'CALIFORNIA',
+         'CHANNEL_ISLAND',
          'PATAGONIA_TERRESTRE',
          'PERU_TempranoHoloceno',
          'SUR_PERU',
          'PERU_MedioHoloceno',
-         'PERICUES',
+         'BAJA_CALIFORNIA_SUR',
          'PAMPA',
          'ALASKA')
 outg = c("Mbuti")
@@ -70,28 +70,29 @@ f3res = f3res %>% filter(pop2 != pop3)
 # Construir matriz de distancias genéticas
 distGenMDS <- acast(f3res, pop2 ~ pop3, value.var = "est")
 diag(distGenMDS) <- 1
-distGenMDS <- 1 - distGenMDS #### / max(mdf, na.rm = TRUE)
+distGenMDS <- 1 - distGenMDS
+
 ### we remove ALASKA (we only will use it as outgroup for trees)
 distGenMDS<-distGenMDS[row.names(distGenMDS) != "ALASKA" , colnames(distGenMDS) != "ALASKA"]
 
 # Hacer análisis de escalamiento multidimensional (MDS)
-# let's do it on 10 dimensions
 k=10
 GenMDS <- as.data.frame(cmdscale(distGenMDS, k = k))
 GenMDS$groupId <- rownames(distGenMDS)
 names(GenMDS)[c(1:k)]<-paste0("Dim",c(1:k))
+
 # Agregaremos información de región para facilitar visualización
 metadata = data.frame(groupId = c('PATAGONIA_MARITIMO',
                                   'BRASIL_TARDIO',
                                   'BRASIL_TEMPRANO',
                                   'CENTRO_PERU',
                                   'NORTE_PERU',
-                                  'CALIFORNIA',
+                                  'CHANNEL_ISLAND',
                                   'PATAGONIA_TERRESTRE',
                                   'PERU_TempranoHoloceno',
                                   'SUR_PERU',
                                   'PERU_MedioHoloceno',
-                                  'PERICUES',
+                                  'BAJA_CALIFORNIA_SUR',
                                   'PAMPA'),
                       region = c('Patagonia',
                                  'Brasil',
@@ -104,62 +105,74 @@ metadata = data.frame(groupId = c('PATAGONIA_MARITIMO',
                                  'Andes Centro-Sur',
                                  'Andes Centro-Sur',
                                  'Mesoamerica',
-                                 'Pampa'))
+                                 'Pampa'),
+                      region_color = c("steelblue2","mediumseagreen","mediumseagreen","orange3","orange3",
+                                       "deeppink","steelblue2","orange3","orange3","orange3",
+                                       "darkgrey","rosybrown2"),
+                      group_shape = c(1:12))
 
-colorVec<-c("orange3","mediumseagreen","deeppink", "rosybrown2","steelblue2",'darkblue')
 GenMDS$region = metadata$region[match(GenMDS$groupId, metadata$groupId)]
+GenMDS$region_color = metadata$region_color[match(GenMDS$groupId, metadata$groupId)]
+GenMDS$group_shape = metadata$group_shape[match(GenMDS$groupId, metadata$groupId)]
+
+GenMDS$region  <- factor(GenMDS$region, levels = c("Norteamerica","Mesoamerica","Andes Centro-Sur", "Brasil","Pampa","Patagonia"))
+
+legend_colors <- setNames(metadata$region_color, metadata$groupId)
+legend_shapes <- setNames(metadata$group_shape, metadata$groupId)
 
 # Grafico de MDS
-# Graficaremos todos los posibles pares de dimensiones
-#dims <- paste0("Dim",c(1:k))
-#pairs <- combn(dims, 2, simplify = FALSE)
-pairs <- list()
-for(i in c(1:4)){
-  pairs[[i]]<-paste0("Dim",c(i*2-1,i*2))
+g1 = ggplot(GenMDS, aes(x = Dim1, y = Dim2, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim1', y = 'Dim2') +
+  theme(legend.position = "right", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))   
 
-}
+g2 = ggplot(GenMDS, aes(x = Dim3, y = Dim4, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim3', y = 'Dim4') +
+  theme(legend.position = "right", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))   
 
-plots <- lapply(pairs, function(p) {
-  x <- p[1]
-  y <- p[2]
-  ggplot(GenMDS, aes_string(x = x, y = y, color = "region",shape="groupId")) +
-    geom_point(size = 3) +
-    theme_bw() +
-    scale_shape_manual(values = c(1:15)) +
-    scale_color_manual(values = colorVec) +
-    labs(x = x, y = y, shape = "groupId") +
-    ggtitle(paste("Genomic\n",x, " vs ", y,sep=""))+
-    theme(legend.position = "none", 
-    panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank())
-})
 
-# Combinar plots
-wrap_plots(plots, ncol = 3)
-#ggsave("mds_america.png", width = 15, height = 15)
+g3 = ggplot(GenMDS, aes(x = Dim5, y = Dim6, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim5', y = 'Dim6') +
+  theme(legend.position = "right", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))       
+
+
+g1 + g2 + g3 + 
+  plot_annotation(
+    title = "Genetica",
+    theme = theme(plot.title = element_text(hjust = 0.5))
+  )
+ggsave("mds_america.png", width = 15, height = 3)
+
 ```
-
-Make legend
-```r
-metadata$groupId<-as.factor(metadata$groupId)
-metadata$Point[ order(metadata$groupId)]<-c(1:nrow(metadata))
-metadata$region<-as.factor(metadata$region)
-regN=0
-for(region in unique(sort(metadata$region))){
-  regN=regN+1
-  metadata$Color[metadata$region ==region]=colorVec[regN]
-}
-
-plot(0,0,"n",axes=F,ann=F)
-metadata<-metadata[order(metadata$region,metadata$groupId),]
-legend("center",pch=metadata$Point,col=metadata$Color,legend=metadata$groupId,ncol=2)
-
-metadata<-rbind(metadata,
-                cbind("groupId"="ALASKA","region"="NORTE_AMERICA","Point"=16,"Color"="rosybrown2"))
-metadata$Point<-as.numeric(metadata$Point)                
-row.names(metadata)<-metadata$groupId
-```
-
 
 ### Arbol de Neighbor-joining con datos genéticos
 
@@ -174,16 +187,38 @@ distGenNJ<-distGenNJ/max(distGenNJ)
 distGenNJ<-as.dist(distGenNJ)
 GenNJ<-bionj(distGenNJ)
 GenNJ<-root(GenNJ,outgroup = "ALASKA",resolve.root = T)
+
 if(sum(! GenNJ$tip.label %in% row.names(metadata) )>0){
   print(paste(GenNJ$tip.label[! GenNJ$tip.label %in% row.names(metadata)]))
   stop("pb groups not in your metadata")
 }
+
 write.tree(GenNJ,file="NJwithGenomicData.nwk",append = F,tree.names = F)
 GenNJplot<-read.tree("NJwithGenomicData.nwk")
-dicoPLOT<-metadata[GenNJplot$tip.label,]
-plotStats<-plot(GenNJplot,tip.color = dicoPLOT$Color,cex = 1,use.edge.length = F,show.tip.label=T,label.offset=5,align.tip.label=T,main="NJ with genomic data")
-points(x=rep(nrow(dicoPLOT)+2.5,nrow(dicoPLOT)),y=c(1:nrow(dicoPLOT)),
-       cex=1,pch=as.numeric(dicoPLOT$Point),col=dicoPLOT$Color)
+dicoPLOT <- metadata[GenNJplot$tip.label, ]
+
+dicoPLOT$Color <- metadata$region_color[ match(GenNJplot$tip.label, metadata$groupId) ]
+dicoPLOT$pch_base <- as.numeric(metadata$group_shape[ match(GenNJplot$tip.label,
+                                                            metadata$groupId)])
+
+pdf("NJ_with_Genomic_Data.pdf", width = 10, height = 10)
+plotStats <- plot(
+  GenNJplot,
+  tip.color = dicoPLOT$Color,
+  cex = 1,
+  use.edge.length = FALSE,
+  show.tip.label = TRUE,
+  label.offset = 5,
+  align.tip.label = TRUE,
+  main = "NJ with genomic data")
+
+points(
+  x = rep(nrow(dicoPLOT) + 2.5, nrow(dicoPLOT)),
+  y = 1:nrow(dicoPLOT),
+  cex = 1.2,
+  pch = dicoPLOT$pch_base,
+  col = dicoPLOT$Color)
+dev.off()
 
 ```
 
