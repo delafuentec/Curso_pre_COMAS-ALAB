@@ -6,8 +6,8 @@ En esta sección exploraremos la integración entre resultados de análisis gen�
 
 ## Análisis genéticos
 
-### Cálculo de las similitudes genéticas entre groupos.
-Utilizaremos el paquete de R admixtools para estimar el outgroup-ƒ3 entre todos los posibles pares de grupos en la base de datos. Al igual que en el módulo 4 de Genética:
+### Cálculo de las similitudes genéticas entre grupos.
+Utilizaremos el paquete de R `admixtools` para estimar el outgroup-ƒ3 entre todos los posibles pares de grupos en la base de datos. Al igual que en el módulo 4 de Genética:
 
 ```r
 # Cargar modulos 
