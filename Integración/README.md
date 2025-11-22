@@ -1,5 +1,8 @@
-En esta sección exploraremos la integración entre resultados de análisis genéticos y morfológicos. En primer lugar, estimaremos distancias genéticas en dos bases de datos (genética y morfológica), para luego comparar ambos resultados utilizando herramientas disponibles en R.
+# Integración datos genéticos y morfométricos
 
+En esta sección exploraremos la integración entre resultados de análisis genéticos y morfométricos. En primer lugar, estimaremos distancias desde los datos genéticos y morfométricos, para luego:
+- hacer analísis descriptivos con ambos y aplicar metódos de comparación de los resultados
+- comparar estas distancias y evaluar su posible asociación.
 
 ## Análisis genéticos
 
