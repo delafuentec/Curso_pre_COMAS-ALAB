@@ -521,7 +521,6 @@ Para esto vamos a realizar un dbRDA.
 >  2.b. Los valores ajustados y los residuos se someten a PCoA separadas. En este procedimiento se maximiza el ajuste entre la matriz de distancias para explicar que contiene las coordenadas PCoA (entonces, para distancias morfológicas) y la variable explicativa (es decir, del PCoA para distancias genéticas).
 
 
-Traducción realizada con la versión gratuita del traductor DeepL.com
 Para hacer este análisis hay que hacer un PCoA (muy similar al MDS), con la variable explicativa (distancias genéticas). Guardaremos solo las dimensiones que, acumuladas, explican hasta el 70% de la varianza.
 
 ```r
