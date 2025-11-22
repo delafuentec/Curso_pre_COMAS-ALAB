@@ -503,6 +503,48 @@ print(mantel_res)
 
 ```
 
+Ahora bien, la distribución geografía y la temporalidad  pueden ser un factores confundentes.
+Aunque las observaciones para un grupo (p.ej. Brasil Tardío) no se obtuvieron para individuos de los mismos sitios, es decir con las mismas coordenadas geográficas ni temporalidad, para el propósito de este ejercicio vamos a considerar que así fue. 
+procedimiento:
+  - La temporalidad se codifica de 1 a 3 entre los grandes períodos (Holoceno Temprano, Medio y Tardío). Ojo, esta aproximación va a aplanar mucho las distancias temporales entre grupos con tan solo 3 valores posibles 0 (mismo periodo), 1 (Holoceno medio con Holoceno tardío o temprano), 2 (Holoceno temprano vs tardío).
+  - Asignamos para las coordenadas geográficas, las de un punto arbitrario en la región considerada.
+
+Vamos a construir matrices de distancias geograficas y temporales:
+
+```r
+### Leer metadata
+meta<-read.table("AmericaByGroups/SummaryTable_PublishedData.tsv",stringsAsFactors = F,header=T,sep="\t")
+## info for temporality and geography are repeated across Genetic and Morphological data
+meta<-meta[ meta$Tipo.de.dato == "Morfológico",]
+## we don't analyze Alaska
+meta<-meta[ meta$Región != "ALASKA",]
+
+
+### Asignamos un valor numérico por rango temporal:
+meta$TEMP<-as.numeric(ifelse(meta$Temporalidad=="LH",3,
+                             ifelse(meta$Temporalidad=="MH",2,
+                                    ifelse(meta$Temporalidad=="EH",1,"UPS???"))))
+distGEO<-matrix(0,nrow(meta),nrow(meta))
+row.names(distGEO)<-colnames(distGEO)<-meta$Región
+distTEMP<-distGEO
+
+for(i in c(1:nrow(distGEO))){
+  for(j in c(1:nrow(distGEO))){
+    distTEMP[i,j]=abs(meta$TEMP[i]-meta$TEMP[j])
+    distGEO[i,j]=sqrt((meta$Latitud[i]-meta$Latitud[j])^2 + 
+                        (meta$Longitud[i]-meta$Longitud[j])^2)
+  }
+}
+
+distGEO<-distGEO/max(distGEO)
+distTEMP<-distTEMP/max(distTEMP)
+```
+Ahora podemos realizar una prueba de Mantel tomando en cuenta estas covariables:
+
+```r
+
+
+```
 ### Evaluar si los patrones de variación morfología están asociada a la variación genética
 
 Para esto vamos a realizar un dbRDA.
@@ -538,47 +580,14 @@ print(anova_all_Morf)
 
 > En un análisis dbRDA, si hay una sola variable explicativa, con `anova()`, se evalúa **si el predictor (genética) explica una proporción significativa de la variación morfológica.**.
 > Si el valor *p* es menor de 0.05: 
-  - El modelo completo explica la morfología significativamente mejor que una asociación aleatoria.  
+  - El modelo completo explica la morfología significativamente mejor que una asociación aleatoria.
 
-Ahora bien, la distribución geografía y la temporalidad  pueden ser un factores confundentes.
-Aunque las observaciones para un grupo (p.ej. Brasil Tardío) no se obtuvieron para individuos de los mismos sitios, es decir con las mismas coordenadas geográficas ni temporalidad, para el propósito de este ejercicio vamos a considerar que así fue. 
-procedimiento:
-  - La temporalidad se codifica de 1 a 3 entre los grandes períodos (Holoceno Temprano, Medio y Tardío). Ojo, esta aproximación va a aplanar mucho las distancias temporales entre grupos con tan solo 3 valores posibles 0 (mismo periodo), 1 (Holoceno medio con Holoceno tardío o temprano), 2 (Holoceno temprano vs tardío).
-  - Asignamos para las coordenadas geográficas, las de un punto arbitrario en la región considerada.
+
+Ahora bien, podemos probar corregir por la temporalidad y la geografía.
+
 
 > Cuando se hace un dbRDA con varias variables explicativas, el procedimiento es igual a lo descrito previamente, solo que en el segundo paso se hace la regresión multivariada en todos los ejes de los PCoA de las diferentes variables explicativas.<br>
   > Es decir, en nuestra caso, se hará la regresión multivariada de los ejes del PCoA de las distancias morfológicas contra los ejes de los PCaA para las distancias genéticas, temporales y geográficas.  
-
-Vamos a construir matrices de distancias geograficas y temporales:
-
-```r
-### Leer metadata
-meta<-read.table("AmericaByGroups/SummaryTable_PublishedData.tsv",stringsAsFactors = F,header=T,sep="\t")
-## info for temporality and geography are repeated across Genetic and Morphological data
-meta<-meta[ meta$Tipo.de.dato == "Morfológico",]
-## we don't analyze Alaska
-meta<-meta[ meta$Región != "ALASKA",]
-
-
-### Asignamos un valor numérico por rango temporal:
-meta$TEMP<-as.numeric(ifelse(meta$Temporalidad=="LH",3,
-                             ifelse(meta$Temporalidad=="MH",2,
-                                    ifelse(meta$Temporalidad=="EH",1,"UPS???"))))
-distGEO<-matrix(0,nrow(meta),nrow(meta))
-row.names(distGEO)<-colnames(distGEO)<-meta$Región
-distTEMP<-distGEO
-
-for(i in c(1:nrow(distGEO))){
-  for(j in c(1:nrow(distGEO))){
-    distTEMP[i,j]=abs(meta$TEMP[i]-meta$TEMP[j])
-    distGEO[i,j]=sqrt((meta$Latitud[i]-meta$Latitud[j])^2 + 
-                        (meta$Longitud[i]-meta$Longitud[j])^2)
-  }
-}
-
-distGEO<-distGEO/max(distGEO)
-distTEMP<-distTEMP/max(distTEMP)
-```
 
 Realizaremos el PCoA para estos dos variables (temporalidad / geografia):
 
