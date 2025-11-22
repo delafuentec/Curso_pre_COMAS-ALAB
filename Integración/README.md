@@ -263,6 +263,7 @@ distMorf<-distMorf/max(distMorf)
 distMorfMDS<-distMorf[row.names(distMorf) != "ALASKA" , colnames(distMorf) != "ALASKA"]
 
 # Hacer análisis de escalamiento multidimensional (MDS)
+k=10
 MorfMDS <- as.data.frame(cmdscale(distMorfMDS, k = k))
 MorfMDS$groupId <- rownames(distMorfMDS)
 
@@ -273,37 +274,56 @@ MorfMDS<-MorfMDS[ GenMDS$groupId,]
 names(MorfMDS)[c(1:k)]<-paste0("Dim",c(1:k))
 
 # Grafico de MDS
-# Graficaremos todos los posibles pares de dimensiones
-plots <- lapply(pairs, function(p) {
-  x <- p[1]
-  y <- p[2]
-  ggplot(MorfMDS, aes_string(x = x, y = y, color = "region",shape="groupId")) +
-    geom_point(size = 3) +
-    theme_bw() +
-    scale_shape_manual(values = c(1:nrow(MorfMDS))) +
-    scale_color_manual(values = colorVec) +
-    labs(x = x, y = y, shape = "groupId") +
-    ggtitle(paste("Morphologic\n",x, " vs ", y,sep=""))+
-    theme(legend.position = "none", 
-    panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank())
-})
+g1 = ggplot(MorfMDS, aes(x = Dim1, y = Dim2, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim1', y = 'Dim2') +
+  theme(legend.position = "right", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))   
 
-# Combinar plots
-wrap_plots(plots, ncol = 3)
-```
+g2 = ggplot(MorfMDS, aes(x = Dim3, y = Dim4, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim3', y = 'Dim4') +
+  theme(legend.position = "right", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))   
 
 
-Make legend
-```r
-plot(0,0,"n",axes=F,ann=F)
-metadata<-metadata[order(metadata$region,metadata$groupId),]
-legend("center",
-        pch=as.numeric(metadata$Point[ row.names(metadata)!="ALASKA"]),
-        col=metadata$Color[ row.names(metadata)!="ALASKA"],
-        legend=metadata$groupId[ row.names(metadata)!="ALASKA"],
-        ncol=2)
+g3 = ggplot(MorfMDS, aes(x = Dim5, y = Dim6, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim5', y = 'Dim6') +
+  theme(legend.position = "right", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))       
 
+
+g1 + g2 + g3 + 
+  plot_annotation(
+    title = "Morfología",
+    theme = theme(plot.title = element_text(hjust = 0.5))
+  )
+ggsave("mds_america_morfologia.png", width = 15, height = 3)
 
 ```
 
@@ -321,17 +341,40 @@ if(sum(! MorfNJ$tip.label %in% row.names(metadata) )>0){
   stop("pb groups not in your metadata")
 }
 write.tree(MorfNJ,file="NJwithMorphologicalData.nwk",append = F,tree.names = F)
-MorfNJplot<-read.tree("NJwithMorphologicalData.nwk")
-dicoPLOT<-metadata[MorfNJplot$tip.label,]
-plotStats<-plot(MorfNJplot,tip.color = dicoPLOT$Color,cex = 1,use.edge.length = F,show.tip.label=T,label.offset=5,align.tip.label=T,main="NJ with morphological data")
-points(x=rep(nrow(dicoPLOT)+2.5,nrow(dicoPLOT)),y=c(1:nrow(dicoPLOT)),
-       cex=1,pch=as.numeric(dicoPLOT$Point),col=dicoPLOT$Color)
+
+MorfNJ<-read.tree("NJwithMorphologicalData.nwk")
+dicoPLOT <- metadata[MorfNJ$tip.label, ]
+
+dicoPLOT$Color <- metadata$region_color[ match(MorfNJ$tip.label, metadata$groupId) ]
+dicoPLOT$pch_base <- as.numeric(metadata$group_shape[ match(MorfNJ$tip.label,
+                                                            metadata$groupId)])
+
+# Hacer figura
+pdf("NJ_with_Morpho_Data.pdf", width = 10, height = 10)
+plotStats <- plot(
+  MorfNJ,
+  tip.color = dicoPLOT$Color,
+  cex = 1,
+  use.edge.length = FALSE,
+  show.tip.label = TRUE,
+  label.offset = 5,
+  align.tip.label = TRUE,
+  main = "NJ with genomic data")
+
+points(
+  x = rep(nrow(dicoPLOT) + 2.5, nrow(dicoPLOT)),
+  y = 1:nrow(dicoPLOT),
+  cex = 1.2,
+  pch = dicoPLOT$pch_base,
+  col = dicoPLOT$Color)
+dev.off()
+
 ```
 
-
-## Comparaciones al fin
+## Comparaciones de datos morfológicos y genéticos
 
 Esto es un ensayo. Son análisis explorativos que tratan de responder a la necesidad de dialogo entre las disciplinas. Más allá de articular conclusiones desde diferentes evidencias, pretendemos iniciar una discusión epistemiologíca para articular los datos de diferente índole en un análisis interdisciplinar.
+
 ### MDS analysis with procrustes
 
 ### find best match among dimensions (Dim1 from GenMDS corresponds better to DimXX from MorfMDS, and so on)
