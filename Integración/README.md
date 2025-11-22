@@ -488,6 +488,9 @@ dev.off()
 ### Poner a prueba la asociación entre matrices de distancias morfológicas y genéticas.
 
 #### Test de Mantel
+
+El test de mantel vectoriza dos matrices, calcula la correlación, y obtiene un p-valor por permutación de los rótulos de una matriz
+
 Este método es aceptable para un análisis exploratorio, pero no recomendable como prueba principal, ya que sufre de varias limitaciones:
   - Alta inflación de falsos positivos (problemas de autocorrelación espacial en los datos)
   - No distingue bien entre correlación directa y correlación inducida por una variable tercera (geografía, estructura)
@@ -539,12 +542,34 @@ for(i in c(1:nrow(distGEO))){
 distGEO<-distGEO/max(distGEO)
 distTEMP<-distTEMP/max(distTEMP)
 ```
-Ahora podemos realizar una prueba de Mantel tomando en cuenta estas covariables:
+Ahora podemos NO podemos realizar una prueba de Mantel tomando en cuenta más de una covariable a la vez, entonces vamos a realizar un *MMRR (Multiple Matrix Regression with Randomization)*, 
+
 
 ```r
+MMRR <- function(Y, X, nperm=999){
+    Y <- as.vector(Y)
+    X <- lapply(X, function(x) as.vector(x))
+    Xmat <- do.call(cbind, X)
+    mod <- lm(Y ~ Xmat)
+    coef <- summary(mod)$coefficients
+    
+    perms <- replicate(nperm, {
+        Yperm <- sample(Y)
+        coef_perm <- coef(lm(Yperm ~ Xmat))[2:(ncol(Xmat)+1)]
+    })
+    
+    pvals <- sapply(1:(ncol(Xmat)), function(i){
+        (sum(abs(perms[i,]) >= abs(coef[i+1,1])) + 1) / (nperm + 1)
+    })
+    
+    list(coefficients = coef, pvals = pvals)
+}
 
-
+MMRR(as.dist(distMorfMDS), list(as.dist(distGenMDS), as.dist(distGEO),as.dist(distTEMP)))
 ```
+> El Multiple Matrix Regression with Randomization (MMRR) ajusta un modelo lineal sobre las valores vectorizadas de una respuesta y de diferentes matrices explicativas. La significancia de la relación con cada matriz se evalúa mediante permutaciones aleatorias de la matriz respuesta, lo que permite determinar si cada matrix "predicora" explica variación más allá de lo esperado por azar. En esencia, es similar a la prueba de Mantel, con la diferencia que son varías matrices explicativas.
+
+
 ### Evaluar si los patrones de variación morfología están asociada a la variación genética
 
 Para esto vamos a realizar un dbRDA.
