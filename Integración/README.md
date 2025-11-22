@@ -383,31 +383,51 @@ print(mantel_res)
 ```
 
 #### Vamos a poner a prueba si la morfología está asociada a la genética
-Vamos entonces realizar un dbRDA 
+Vamos entonces realizar un dbRDA.
+> El análisis de redundancia (RDA) es una ordenación restringida que utiliza distancias euclidianas. <br>
+> El análisis de redundancia basado en la distancia (dbRDA por su sigla en inglés; Legendre y Anderson, 1999) es una forma más general de realizar el mismo tipo de ordenación restringida.<br>
+> Su generalidad se debe a que puede aplicarse a cualquier matriz de distancia o disimilitud. <br>
+> La conexión entre el RDA y el dbRDA es simplemente el paso de expresar una matriz de disimilitud no euclidiana en un espacio euclidiano (lo que hace un PCoA). 
+> Por lo tanto el procedimiento es:
+> 1. Aplicar un PCoA a la matriz de distancia para explicar (en nuestro caso distancias morfólogicas) y mantener todas las coordenadas principales. <br>
+> 2. Realizar un RDA sobre las coordenadas principales. Es decir:
+>  2.a. Las coordenadas principales (de la variable para explicar) se someten a una regresión lineal múltiple multivariante (variables explicativas siendo los ejes de la variable explicativa, en nuestro caso del PCoA a partir de la distancias genéticas).
+>  2.b. Los valores ajustados y los residuos se someten a PCoA separadas. En este procedimiento se maximiza el ajuste entre la matriz de distancias para explicar que contiene las coordenadas PCoA (entonces, para distancias morfólogicas) y la variable explicativa (es decir, del PCoA para distancias genéticas).
+
+
+Traducción realizada con la versión gratuita del traductor DeepL.com
 Para esto, hay que hacer un PCoA (muy similar al MDS), en la variable explicativa (distancias genéticas)
 Guardaremos solo las dimensiones que, acumuladas, explican hasta el 70% de la variancia.
 
 ```r
-###PCoA on genetic distances and dbRDA
+print("PCoA on genetic distances")
 pco_gen <- pcoa(as.dist(distGenMDS))
 gen_scores <- pco_gen$vectors
 Cumul_eig_gen <- pco_gen$values$Cumul_eig
 keep_gen<-which(Cumul_eig_gen<0.4)
 gen_scores_k <- gen_scores[, keep_gen]
 
+
+print("now dbRDA")
 dbrda_Morf <- capscale(as.dist(distMorfMDS) ~ gen_scores_k, add = TRUE)
 
+print("test significance")
 anova_all_Morf<-anova(dbrda_Morf, permutations = 99)
-anova_perAxis_Morf<-anova(dbrda_Morf, by = "terms", permutations = 99)
-plot(dbrda_Morf)
+print(anova_all_Morf)
 ```
 
+> En un análisis dbRDA, si hay una sola variable explicativa, con `anova()`, se evalúa **si el predictor (genética) explica, una proporción significativa de la variación morfológica.**.
+> Si el valor *p* es menor de 0.05: 
+- El modelo completo explica la morfología significativamente mejor que una asociación aleatoria.  
 
-Problemas: la distribución geografía y la temporalidad  pueden ser un factor confundente.
+Ahora bien, la distribución geografía y la temporalidad  pueden ser un factor confundentes.
 Acá vamos a simplificar mucho el caso. Aunque las observaciones para un grupo (p.ej. Brasil Tardío) no se obtuvieron para individuos de los mismos sitios, es decir con las mismas coordenadas geograficas ni temporalidad, vamos a considerar que asi fue.
 Por lo cúal:
 - la temporalidad se codifica de 1 a 3 entre los grandes periódos (Holoceno Temprano, Medio y Tardío). Ojo, esta aproximación va a aplanar mucho las distancias temporales entre grupos con tan solo 3 valores posibles 0 (mismo periodo), 1 (holoceno medio con holoceno tardio o temprano), 2 (holoceno temprano vs tardío).
 - asignamos para las coordenadas geográficas, las de un punto arbitrario en la región considerada
+
+> Cuando se hace un dbRDA con varias variables explicativas, el procedimiento es igual a lo descrito previamente, solo que en el 2o paso se hace la regresión multivariada en todos los ejes de los PCoA de las diferentes variables explicativas.<br>
+> Es decir, en nuestra caso, se hará la regresión multivariada de los ejes del PCoA de las distancias morfólogicas contra los ejes de los PCaA para las distancias genéticas, temporales y geográficas.  
 
 Vamos a construir matrices de distancias geograficas y temporales.
 
@@ -440,8 +460,44 @@ distGEO<-distGEO/max(distGEO)
 distTEMP<-distTEMP/max(distTEMP)
 ```
 
+Ahora vamos a realizar el PCoA para estos dos variables (temporalidad / geografia)
 
+```r
+print("PCoA on geograhic distances")
+pco_geo <- pcoa(as.dist(distGEO))
+pco_geo
+##Only 2 dimensions catch the whole variance, with the first ~ 90%, let's keep both
+geo_scores <- pco_geo$vectors
 
+print("PCoA on temporal distances")
+pco_temp <- pcoa(as.dist(distTEMP))
+pco_temp
+##Only 1 dimension catch the whole variance, with the first ~ 90%, let's keep both
+temp_scores <- pco_temp$vectors
+```
+
+Ahora podemos volver a hacer el dbRDA incorporandos estas dos variables explicativas,
+```r
+print("dbRDA with Genetics+Geography+Temporality")
+dbrda_Morf_covar <- capscale(as.dist(distMorfMDS) ~ gen_scores_k + temp_scores + geo_scores, add = TRUE)
+
+print("test significance")
+anova_all_Morf_covar<-anova(dbrda_Morf_covar, permutations = 99)
+print(anova_all_Morf_covar)
+```
+
+Y probar si este modelo con las variables tempoirales y geográficas es mejor que el modelo sin
+```r
+print("compare models")
+anova(dbrda_Morf, dbrda_Morf_covar, permutations = 999)
+```
+
+Ahora vamos a graficar las 2 primeras dimensiones del dbRDA cuando la variable explicativa el el PCoA basado en distancias genéticas solamente, y cuabndo también consideramos las distancias temporales y geográficas.
+
+```r
+plot(dbrda_Morf, main="Morphology ~ Genetics")
+plot(dbrda_Morf_covar, main="Morphology ~ Genetics + Temporality + Geography")
+```
 
 
 
