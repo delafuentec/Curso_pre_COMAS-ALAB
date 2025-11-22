@@ -482,7 +482,7 @@ tanglegram(GenNJchanged,MorfNJchanged,
            main_right="Morphological",
            sort=TRUE,
            highlight_branches_lwd = FALSE,
-           margin_inner=12,rank_branches=F,
+           margin_inner=12,rank_branches=T,
            match_order_by_labels=T
 )
 dev.off()
