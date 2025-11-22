@@ -376,12 +376,17 @@ dev.off()
 
 ## Comparaciones de datos morfológicos y genéticos
 
-Esto es un ensayo. Son análisis explorativos que tratan de responder a la necesidad de dialogo entre las disciplinas. Más allá de articular conclusiones desde diferentes evidencias, pretendemos iniciar una discusión epistemiologíca para articular los datos de diferente índole en un análisis interdisciplinar.
+En esta sección realizaremos un análisis de carácter exploratorio, cuyo objetivo es tratar de responder a la necesidad de dialogo entre las disciplinas. Más allá de articular conclusiones desde diferentes evidencias, pretendemos iniciar una discusión epistemiológica para articular los datos de diferente índole en un análisis interdisciplinar.
 
-### Comparación de ambos MDS con procrustes
+### MDS analysis with procrustes
 
-Encontrar la mejor transformación de las dimensiones del MDS en base a distancias morfólogicas que se acerca a las dimensiones del MDS en base a distancias genéticas.
+Anteriormente realizamos un MDS de datos genéticos y otro de datos morfológicos. En primera instancia, encontraremos la mejor correspondencia entre dimensiones de los distintos MDS (es decir, Dim1 de GenMDS tiene una mejor correspondencia con DimXX de MorfMDS, etc).
+
 ```r
+
+#install.package('vegan') # si fuese necesario
+require(vegan)
+
 PROC <- procrustes(GenMDS[,c(1:k)],MorfMDS[,c(1:k)])
 Genomic <- as.data.frame(PROC$X)
 Genomic$dataset <- "Genomic"
@@ -392,65 +397,105 @@ Morphologic$dataset <- "Morphologic"
 Morphologic$groupId <- rownames(PROC$Yrot)
 names(Morphologic)[c(1:k)]<-paste0("Dim",c(1:k))
 
-# Combine
+# Combinar
 plot_df <- rbind(Genomic, Morphologic)
 plot_df$region = metadata$region[match(plot_df$groupId, metadata$groupId)]
 names(plot_df)[c(1:k)]<-paste0("Dim",c(1:k))
-# Optional: add a region/color variable (must be aligned with ids)
-# plot_df$region <- your_region_vector[match(plot_df$id, names(your_region_vector))]
 
 plot_df$groupId=as.factor(plot_df$groupId)
 
-
-
-# Plot with displacement lines
-plots <- lapply(pairs, function(p) {
-  x <- p[1]
-  y <- p[2]
-  ggplot(plot_df, aes_string(x = x, y = y, color = "region",shape="groupId")) +
-  geom_path(aes(group = groupId), linewidth = 0.4, alpha = 0.7,arrow=arrow(type = "closed",length=unit(0.1,"inches"))) +   # displacement lines
+# Graficar
+g1 = ggplot(plot_df, aes(x = Dim1, y = Dim2, color = groupId, shape=groupId)) +
   geom_point(size = 3) +
+  geom_path(aes(group = groupId, color = groupId), linewidth = 0.4, alpha = 0.7,
+            arrow=arrow(type = "closed",length=unit(0.1,"inches")),show.legend = FALSE) +
   theme_bw() +
-  scale_shape_manual(values = c(1:15)) +
-  scale_color_manual(values = colorVec) +
-  labs(x = x, y = y, shape = "groupId") +
-  ggtitle(paste("Genomic --> Morphologic\n",x, " vs ", y,sep=""))+
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim1', y = 'Dim2') +
   theme(legend.position = "none", 
-  panel.grid.major = element_blank(), 
-  panel.grid.minor = element_blank())
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))    
 
-})
-wrap_plots(plots, ncol = 3)
+g2 = ggplot(plot_df, aes(x = Dim3, y = Dim4, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  geom_path(aes(group = groupId, color = groupId), linewidth = 0.4, alpha = 0.7,
+            arrow=arrow(type = "closed",length=unit(0.1,"inches")),show.legend = FALSE) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim3', y = 'Dim4') +
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))   
+
+
+g3 = ggplot(plot_df, aes(x = Dim5, y = Dim6, color = groupId, shape=groupId)) +
+  geom_point(size = 3) +
+  geom_path(aes(group = groupId, color = groupId), linewidth = 0.4, alpha = 0.7,
+            arrow=arrow(type = "closed",length=unit(0.1,"inches")),show.legend = FALSE) +
+  theme_bw() +
+  scale_shape_manual(values = legend_shapes, name = 'Grupo') +
+  scale_color_manual(values = legend_colors, name = 'Grupo') +
+  labs(x = 'Dim5', y = 'Dim6') +
+  theme(legend.position = "right", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = rel(0.6)),
+        legend.title = element_text(size = rel(0.8)),
+        legend.key.size = unit(0.7, "lines"),
+        legend.spacing = unit(0.3, "lines"))     
+
+
+g1 + g2 + g3 + 
+  plot_annotation(
+    title = "Genomic --> Morphologic",
+    theme = theme(plot.title = element_text(hjust = 0.5))
+  )
+ggsave("mds_america_genomics-morfologia.png", width = 15, height = 5)
 
 ```
 
 ### Neighbour-joining comparison with tanglegram
-Graficar el reordenamiento de las hojas del arból NJ en base a distancias morfólogicas en comparación al arból NJ en base a distancias genéticas.
 
 ```r
 require(dendextend)
 require(ape)
 library(phytools)
+library(colorspace)
 
 GenNJchanged<-force.ultrametric(root(GenNJ,outgroup = "ALASKA",resolve.root = T))
 MorfNJchanged<-force.ultrametric(root(MorfNJ,outgroup = "ALASKA",resolve.root = T))
+
+#Graficar y guardar PDF
+pdf("NJ_Genomics_vs_Morpho.pdf", width = 10, height = 10)
 tanglegram(GenNJchanged,MorfNJchanged,
-            main_left="Genomic",
-            main_right="Morphological",
-            sort=FALSE,
-            highlight_branches_lwd = FALSE,
-            margin_inner=12,rank_branches=F,
-            match_order_by_labels=F
+           main_left="Genomic",
+           main_right="Morphological",
+           sort=TRUE,
+           highlight_branches_lwd = FALSE,
+           margin_inner=12,rank_branches=F,
+           match_order_by_labels=T
 )
+dev.off()
 
 ```
 
-### Poner a prueba la asociación entre matrices dedistancias morfologicas y genéticas.
-####Test de Mantel
+### Poner a prueba la asociación entre matrices de distancias morfológicas y genéticas.
+
+#### Test de Mantel
 Este método es aceptable para un análisis exploratorio, pero no recomendable como prueba principal, ya que sufre de varias limitaciones:
-- alta inflación de falsos positivos (problemas de autocorrelación espacial en los datos)
-- no distingue bien entre correlación directa y correlación inducida por una variable tercera (geografía, estructura)
-- baja potencia estadística.
+  - Alta inflación de falsos positivos (problemas de autocorrelación espacial en los datos)
+  - No distingue bien entre correlación directa y correlación inducida por una variable tercera (geografía, estructura)
+  - Baja potencia estadística.
 
 ```r
 require(vegan)
@@ -462,22 +507,22 @@ print(mantel_res)
 
 ```
 
-#### Vamos a poner a prueba si la morfología está asociada a la genética
-Vamos entonces realizar un dbRDA.
+### Evaluar si los patrones de variación morfología están asociada a la variación genética
+
+Para esto vamos a realizar un dbRDA.
 > El análisis de redundancia (RDA) es una ordenación restringida que utiliza distancias euclidianas. <br>
-> El análisis de redundancia basado en la distancia (dbRDA por su sigla en inglés; Legendre y Anderson, 1999) es una forma más general de realizar el mismo tipo de ordenación restringida.<br>
-> Su generalidad se debe a que puede aplicarse a cualquier matriz de distancia o disimilitud. <br>
-> La conexión entre el RDA y el dbRDA es simplemente el paso de expresar una matriz de disimilitud no euclidiana en un espacio euclidiano (lo que hace un PCoA). 
+  > El análisis de redundancia basado en la distancia (dbRDA por su sigla en inglés; Legendre y Anderson, 1999) es una forma más general de realizar el mismo tipo de ordenación restringida.<br>
+  > Su generalidad se debe a que puede aplicarse a cualquier matriz de distancia o disimilitud. <br>
+  > La conexión entre el RDA y el dbRDA es simplemente el paso de expresar una matriz de disimilitud no euclidiana en un espacio euclidiano (lo que hace un PCoA). 
 > Por lo tanto el procedimiento es:
-> 1. Aplicar un PCoA a la matriz de distancia para explicar (en nuestro caso distancias morfólogicas) y mantener todas las coordenadas principales. <br>
-> 2. Realizar un RDA sobre las coordenadas principales. Es decir:
->  2.a. Las coordenadas principales (de la variable para explicar) se someten a una regresión lineal múltiple multivariante (variables explicativas siendo los ejes de la variable explicativa, en nuestro caso del PCoA a partir de la distancias genéticas).
->  2.b. Los valores ajustados y los residuos se someten a PCoA separadas. En este procedimiento se maximiza el ajuste entre la matriz de distancias para explicar que contiene las coordenadas PCoA (entonces, para distancias morfólogicas) y la variable explicativa (es decir, del PCoA para distancias genéticas).
+  > 1. Aplicar un PCoA a la matriz de distancia para explicar (en nuestro caso distancias morfológicas) y mantener todas las coordenadas principales. <br>
+  > 2. Realizar un RDA sobre las coordenadas principales. Es decir: <br>
+  >  2.a. Las coordenadas principales (de la variable para explicar) se someten a una regresión lineal múltiple multivariada (variables explicativas siendo los ejes de la variable explicativa, en nuestro caso del PCoA a partir de la distancias genéticas). <br>
+>  2.b. Los valores ajustados y los residuos se someten a PCoA separadas. En este procedimiento se maximiza el ajuste entre la matriz de distancias para explicar que contiene las coordenadas PCoA (entonces, para distancias morfológicas) y la variable explicativa (es decir, del PCoA para distancias genéticas).
 
 
 Traducción realizada con la versión gratuita del traductor DeepL.com
-Para esto, hay que hacer un PCoA (muy similar al MDS), en la variable explicativa (distancias genéticas)
-Guardaremos solo las dimensiones que, acumuladas, explican hasta el 70% de la variancia.
+Para hacer este análisis hay que hacer un PCoA (muy similar al MDS), con la variable explicativa (distancias genéticas). Guardaremos solo las dimensiones que, acumuladas, explican hasta el 70% de la varianza.
 
 ```r
 print("PCoA on genetic distances")
@@ -496,23 +541,23 @@ anova_all_Morf<-anova(dbrda_Morf, permutations = 99)
 print(anova_all_Morf)
 ```
 
-> En un análisis dbRDA, si hay una sola variable explicativa, con `anova()`, se evalúa **si el predictor (genética) explica, una proporción significativa de la variación morfológica.**.
+> En un análisis dbRDA, si hay una sola variable explicativa, con `anova()`, se evalúa **si el predictor (genética) explica una proporción significativa de la variación morfológica.**.
 > Si el valor *p* es menor de 0.05: 
-- El modelo completo explica la morfología significativamente mejor que una asociación aleatoria.  
+  - El modelo completo explica la morfología significativamente mejor que una asociación aleatoria.  
 
-Ahora bien, la distribución geografía y la temporalidad  pueden ser un factor confundentes.
-Acá vamos a simplificar mucho el caso. Aunque las observaciones para un grupo (p.ej. Brasil Tardío) no se obtuvieron para individuos de los mismos sitios, es decir con las mismas coordenadas geograficas ni temporalidad, vamos a considerar que asi fue.
-Por lo cúal:
-- la temporalidad se codifica de 1 a 3 entre los grandes periódos (Holoceno Temprano, Medio y Tardío). Ojo, esta aproximación va a aplanar mucho las distancias temporales entre grupos con tan solo 3 valores posibles 0 (mismo periodo), 1 (holoceno medio con holoceno tardio o temprano), 2 (holoceno temprano vs tardío).
-- asignamos para las coordenadas geográficas, las de un punto arbitrario en la región considerada
+Ahora bien, la distribución geografía y la temporalidad  pueden ser un factores confundentes.
+Aunque las observaciones para un grupo (p.ej. Brasil Tardío) no se obtuvieron para individuos de los mismos sitios, es decir con las mismas coordenadas geográficas ni temporalidad, para el propósito de este ejercicio vamos a considerar que así fue. 
+procedimiento:
+  - La temporalidad se codifica de 1 a 3 entre los grandes períodos (Holoceno Temprano, Medio y Tardío). Ojo, esta aproximación va a aplanar mucho las distancias temporales entre grupos con tan solo 3 valores posibles 0 (mismo periodo), 1 (Holoceno medio con Holoceno tardío o temprano), 2 (Holoceno temprano vs tardío).
+  - Asignamos para las coordenadas geográficas, las de un punto arbitrario en la región considerada.
 
-> Cuando se hace un dbRDA con varias variables explicativas, el procedimiento es igual a lo descrito previamente, solo que en el 2o paso se hace la regresión multivariada en todos los ejes de los PCoA de las diferentes variables explicativas.<br>
-> Es decir, en nuestra caso, se hará la regresión multivariada de los ejes del PCoA de las distancias morfólogicas contra los ejes de los PCaA para las distancias genéticas, temporales y geográficas.  
+> Cuando se hace un dbRDA con varias variables explicativas, el procedimiento es igual a lo descrito previamente, solo que en el segundo paso se hace la regresión multivariada en todos los ejes de los PCoA de las diferentes variables explicativas.<br>
+  > Es decir, en nuestra caso, se hará la regresión multivariada de los ejes del PCoA de las distancias morfológicas contra los ejes de los PCaA para las distancias genéticas, temporales y geográficas.  
 
-Vamos a construir matrices de distancias geograficas y temporales.
+Vamos a construir matrices de distancias geograficas y temporales:
 
 ```r
-### read metadata
+### Leer metadata
 meta<-read.table("AmericaByGroups/SummaryTable_PublishedData.tsv",stringsAsFactors = F,header=T,sep="\t")
 ## info for temporality and geography are repeated across Genetic and Morphological data
 meta<-meta[ meta$Tipo.de.dato == "Morfológico",]
@@ -520,19 +565,19 @@ meta<-meta[ meta$Tipo.de.dato == "Morfológico",]
 meta<-meta[ meta$Región != "ALASKA",]
 
 
-### we asign a numerical value for temporality
+### Asignamos un valor numérico por rango temporal:
 meta$TEMP<-as.numeric(ifelse(meta$Temporalidad=="LH",3,
-                ifelse(meta$Temporalidad=="MH",2,
-                    ifelse(meta$Temporalidad=="EH",1,"UPS???"))))
+                             ifelse(meta$Temporalidad=="MH",2,
+                                    ifelse(meta$Temporalidad=="EH",1,"UPS???"))))
 distGEO<-matrix(0,nrow(meta),nrow(meta))
 row.names(distGEO)<-colnames(distGEO)<-meta$Región
 distTEMP<-distGEO
 
 for(i in c(1:nrow(distGEO))){
   for(j in c(1:nrow(distGEO))){
-      distTEMP[i,j]=abs(meta$TEMP[i]-meta$TEMP[j])
-      distGEO[i,j]=sqrt((meta$Latitud[i]-meta$Latitud[j])^2 + 
-                         (meta$Longitud[i]-meta$Longitud[j])^2)
+    distTEMP[i,j]=abs(meta$TEMP[i]-meta$TEMP[j])
+    distGEO[i,j]=sqrt((meta$Latitud[i]-meta$Latitud[j])^2 + 
+                        (meta$Longitud[i]-meta$Longitud[j])^2)
   }
 }
 
@@ -540,7 +585,7 @@ distGEO<-distGEO/max(distGEO)
 distTEMP<-distTEMP/max(distTEMP)
 ```
 
-Ahora vamos a realizar el PCoA para estos dos variables (temporalidad / geografia)
+Realizaremos el PCoA para estos dos variables (temporalidad / geografia):
 
 ```r
 print("PCoA on geograhic distances")
@@ -556,7 +601,7 @@ pco_temp
 temp_scores <- pco_temp$vectors
 ```
 
-Ahora podemos volver a hacer el dbRDA incorporandos estas dos variables explicativas,
+Ahora podemos volver a hacer el dbRDA incorporando estas dos variables explicativas:
 ```r
 print("dbRDA with Genetics+Geography+Temporality")
 dbrda_Morf_covar <- capscale(as.dist(distMorfMDS) ~ gen_scores_k + temp_scores + geo_scores, add = TRUE)
@@ -566,13 +611,13 @@ anova_all_Morf_covar<-anova(dbrda_Morf_covar, permutations = 99)
 print(anova_all_Morf_covar)
 ```
 
-Y probamos si este modelo con las variables tempoirales y geográficas es mejor que el modelo sin:
+Y probar si este modelo con las variables temporales y geográficas es mejor que el modelo sin:
 ```r
 print("compare models")
 anova(dbrda_Morf, dbrda_Morf_covar, permutations = 999)
 ```
 
-Ahora vamos a graficar las 2 primeras dimensiones del dbRDA cuando la variable explicativa es el PCoA basado en distancias genéticas solamente, y cuando también consideramos las distancias temporales y geográficas.
+Ahora vamos a graficar las 2 primeras dimensiones del dbRDA en dos situaciones: 1) cuando la variable explicativa en el PCoA basado en distancias genéticas solamente, y 2) cuando también consideramos las distancias temporales y geográficas.
 
 ```r
 plot(dbrda_Morf, main="Morphology ~ Genetics")
