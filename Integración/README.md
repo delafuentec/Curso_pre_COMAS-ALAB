@@ -566,13 +566,13 @@ anova_all_Morf_covar<-anova(dbrda_Morf_covar, permutations = 99)
 print(anova_all_Morf_covar)
 ```
 
-Y probar si este modelo con las variables tempoirales y geográficas es mejor que el modelo sin
+Y probamos si este modelo con las variables tempoirales y geográficas es mejor que el modelo sin:
 ```r
 print("compare models")
 anova(dbrda_Morf, dbrda_Morf_covar, permutations = 999)
 ```
 
-Ahora vamos a graficar las 2 primeras dimensiones del dbRDA cuando la variable explicativa el el PCoA basado en distancias genéticas solamente, y cuabndo también consideramos las distancias temporales y geográficas.
+Ahora vamos a graficar las 2 primeras dimensiones del dbRDA cuando la variable explicativa es el PCoA basado en distancias genéticas solamente, y cuando también consideramos las distancias temporales y geográficas.
 
 ```r
 plot(dbrda_Morf, main="Morphology ~ Genetics")
