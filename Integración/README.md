@@ -72,7 +72,7 @@ distGenMDS <- acast(f3res, pop2 ~ pop3, value.var = "est")
 diag(distGenMDS) <- 1
 distGenMDS <- 1 - distGenMDS
 
-### we remove ALASKA (we only will use it as outgroup for trees)
+### Sacaremos Alaska (se utilizará como outgroup en NJ)
 distGenMDS<-distGenMDS[row.names(distGenMDS) != "ALASKA" , colnames(distGenMDS) != "ALASKA"]
 
 # Hacer análisis de escalamiento multidimensional (MDS)
@@ -201,6 +201,7 @@ dicoPLOT$Color <- metadata$region_color[ match(GenNJplot$tip.label, metadata$gro
 dicoPLOT$pch_base <- as.numeric(metadata$group_shape[ match(GenNJplot$tip.label,
                                                             metadata$groupId)])
 
+# Hacer figura
 pdf("NJ_with_Genomic_Data.pdf", width = 10, height = 10)
 plotStats <- plot(
   GenNJplot,
@@ -222,7 +223,7 @@ dev.off()
 
 ```
 
-## Analísis morfólogicos
+## Análisis morfólogicos
 
 ### Cálculo de las distancias morfólogicas entre groupos.
 
