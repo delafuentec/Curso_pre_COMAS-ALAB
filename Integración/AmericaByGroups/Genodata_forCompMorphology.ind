@@ -53,10 +53,10 @@
                I2237 U NORTE_PERU
                I2242 U NORTE_PERU
                I2263 U NORTE_PERU
-               I2708 U CALIFORNIA
-               I3563 U CALIFORNIA
-               I3564 U CALIFORNIA
-               I3565 U CALIFORNIA
+               I2708 U CHANNEL_ISLAND
+               I3563 U CHANNEL_ISLAND
+               I3564 U CHANNEL_ISLAND
+               I3565 U CHANNEL_ISLAND
               I12354 U PATAGONIA_TERRESTRE
               I12363 U PATAGONIA_TERRESTRE
               I12364 U PATAGONIA_TERRESTRE
@@ -88,23 +88,23 @@
                 AM66 U PATAGONIA_MARITIMO
                 AM71 U PATAGONIA_MARITIMO
                 AM73 U PATAGONIA_MARITIMO
-                BC25 U   PERICUES
-                BC29 U   PERICUES
-                BC30 U   PERICUES
+                BC25 U   BAJA_CALIFORNIA_SUR
+                BC29 U   BAJA_CALIFORNIA_SUR
+                BC30 U   BAJA_CALIFORNIA_SUR
                MA577 U PATAGONIA_TERRESTRE
-                B-03 U   PERICUES
-               CR-01 U CALIFORNIA
-               CT-01 U CALIFORNIA
-               CT-02 U CALIFORNIA
-               SM-01 U CALIFORNIA
-               SM-02 U CALIFORNIA
-               SN-03 U CALIFORNIA
-               SN-09 U CALIFORNIA
-               SN-11 U CALIFORNIA
-               SN-13 U CALIFORNIA
-               SN-15 U CALIFORNIA
-               SN-16 U CALIFORNIA
-               SN-38 U CALIFORNIA
-               SN_50 U CALIFORNIA
-               SN-52 U CALIFORNIA
-               SN-53 U CALIFORNIA
+                B-03 U   BAJA_CALIFORNIA_SUR
+               CR-01 U CHANNEL_ISLAND
+               CT-01 U CHANNEL_ISLAND
+               CT-02 U CHANNEL_ISLAND
+               SM-01 U CHANNEL_ISLAND
+               SM-02 U CHANNEL_ISLAND
+               SN-03 U CHANNEL_ISLAND
+               SN-09 U CHANNEL_ISLAND
+               SN-11 U CHANNEL_ISLAND
+               SN-13 U CHANNEL_ISLAND
+               SN-15 U CHANNEL_ISLAND
+               SN-16 U CHANNEL_ISLAND
+               SN-38 U CHANNEL_ISLAND
+               SN_50 U CHANNEL_ISLAND
+               SN-52 U CHANNEL_ISLAND
+               SN-53 U CHANNEL_ISLAND
