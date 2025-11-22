@@ -477,14 +477,10 @@ MorfNJchanged<-force.ultrametric(root(MorfNJ,outgroup = "ALASKA",resolve.root = 
 
 #Graficar y guardar PDF
 pdf("NJ_Genomics_vs_Morpho.pdf", width = 10, height = 10)
-tanglegram(GenNJchanged,MorfNJchanged,
-           main_left="Genomic",
-           main_right="Morphological",
-           sort=TRUE,
-           highlight_branches_lwd = FALSE,
-           margin_inner=12,rank_branches=T,
-           match_order_by_labels=T
-)
+par(oma = c(0, 0, 4, 0)) 
+plot(cophylo(GenNJchanged, MorfNJchanged), lwd=2, fsize=0.8, col="black", dcol="black", lty=c(1,1))
+mtext(at = -0.25, side=3, text = "Genomic", xpd = TRUE)
+mtext(at = 0.25, side=3, text = "Morphology", xpd = TRUE)
 dev.off()
 
 ```
