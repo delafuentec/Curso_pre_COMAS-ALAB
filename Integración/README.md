@@ -63,7 +63,6 @@ f3res = f3res %>% filter(pop2 != pop3)
 
 ```
 
-
 ### Estimación de distancias genéticas y cálculo de MDS
 
 ```r
@@ -260,9 +259,6 @@ write.table(distMorf, "AmericaByGroups/TablasDistancias/MorphologicalDistances.t
 ### MDS con datos morfólogicos
 ```r
 
-#distMorf<-read.csv("AmericaByGroups/MorphologicalDistances.tsv",stringsAsFactors=F,header=T)
-#row.names(distMorf)<-distMorf$X
-#distMorf<-distMorf[,-1]
 distMorf<-distMorf/max(distMorf)
 distMorfMDS<-distMorf[row.names(distMorf) != "ALASKA" , colnames(distMorf) != "ALASKA"]
 
@@ -275,6 +271,7 @@ MorfMDS$region = metadata$region[match(MorfMDS$groupId, metadata$groupId)]
 row.names(MorfMDS)<-MorfMDS$groupId
 MorfMDS<-MorfMDS[ GenMDS$groupId,]
 names(MorfMDS)[c(1:k)]<-paste0("Dim",c(1:k))
+
 # Grafico de MDS
 # Graficaremos todos los posibles pares de dimensiones
 plots <- lapply(pairs, function(p) {
