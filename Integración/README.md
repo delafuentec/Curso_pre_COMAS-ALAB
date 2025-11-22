@@ -176,7 +176,7 @@ ggsave("mds_america.png", width = 15, height = 3)
 
 ```
 
-### Arbol de Neighbor-joining con datos genéticos
+### Árbol de Neighbor-joining con distancias genéticas
 
 ```r
 
@@ -227,7 +227,7 @@ dev.off()
 
 ## Análisis morfólogicos
 
-### Cálculo de las distancias morfólogicas entre groupos.
+### Cálculo de las distancias morfólogicas entre grupos.
 
 ```r
 datosMorf<-read.table("AmericaByGroups/MorphologicMeansPerGroup.csv",stringsAsFactors=F,header=T,sep="\t")
@@ -259,7 +259,7 @@ for(i in 1:n){
 write.table(distMorf, "AmericaByGroups/TablasDistancias/MorphologicalDistances.tsv",col.names=T,row.names=T,sep="\t")
 ```
 
-### MDS con datos morfólogicos
+### MDS con distancias morfólogicas
 ```r
 
 distMorf<-distMorf/max(distMorf)
@@ -331,7 +331,7 @@ ggsave("mds_america_morfologia.png", width = 15, height = 3)
 ```
 
 
-### Arbol de Neighbor-joining desde distancias morfólogicas
+### Árbol de Neighbor-joining desde distancias morfólogicas
 
 ```r
 # Construir matriz de distancias genéticas
@@ -378,9 +378,9 @@ dev.off()
 
 Esto es un ensayo. Son análisis explorativos que tratan de responder a la necesidad de dialogo entre las disciplinas. Más allá de articular conclusiones desde diferentes evidencias, pretendemos iniciar una discusión epistemiologíca para articular los datos de diferente índole en un análisis interdisciplinar.
 
-### MDS analysis with procrustes
+### Comparación de ambos MDS con procrustes
 
-### find best match among dimensions (Dim1 from GenMDS corresponds better to DimXX from MorfMDS, and so on)
+Encontrar la mejor transformación de las dimensiones del MDS en base a distancias morfólogicas que se acerca a las dimensiones del MDS en base a distancias genéticas.
 ```r
 PROC <- procrustes(GenMDS[,c(1:k)],MorfMDS[,c(1:k)])
 Genomic <- as.data.frame(PROC$X)
@@ -425,6 +425,7 @@ wrap_plots(plots, ncol = 3)
 ```
 
 ### Neighbour-joining comparison with tanglegram
+Graficar el reordenamiento de las hojas del arból NJ en base a distancias morfólogicas en comparación al arból NJ en base a distancias genéticas.
 
 ```r
 require(dendextend)
