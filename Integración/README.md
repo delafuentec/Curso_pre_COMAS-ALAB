@@ -542,7 +542,10 @@ for(i in c(1:nrow(distGEO))){
 distGEO<-distGEO/max(distGEO)
 distTEMP<-distTEMP/max(distTEMP)
 ```
-Ahora podemos NO podemos realizar una prueba de Mantel tomando en cuenta más de una covariable a la vez, entonces vamos a realizar un *MMRR (Multiple Matrix Regression with Randomization)*, 
+
+Ahora podemos NO podemos realizar una prueba de Mantel tomando en cuenta más de una covariable a la vez, entonces vamos a realizar un *MMRR (Multiple Matrix Regression with Randomization)*.
+> El Multiple Matrix Regression with Randomization (MMRR) ajusta un modelo lineal sobre las valores vectorizadas de una respuesta y de diferentes matrices explicativas. La significancia de la relación con cada matriz se evalúa mediante permutaciones aleatorias de la matriz respuesta, lo que permite determinar si cada matrix "predicora" explica variación más allá de lo esperado por azar. En esencia, el tratamiento estádistico es similar a la prueba de Mantel, con la diferencia que ahora tenemos una matriz respuesta y varías matrices explicativas.
+
 
 
 ```r
@@ -565,9 +568,9 @@ MMRR <- function(Y, X, nperm=999){
     list(coefficients = coef, pvals = pvals)
 }
 
-MMRR(as.dist(distMorfMDS), list(as.dist(distGenMDS), as.dist(distGEO),as.dist(distTEMP)))
+mmrr<-MMRR(as.dist(distMorfMDS), list(as.dist(distGenMDS), as.dist(distGEO),as.dist(distTEMP)))
+print(mmrr)
 ```
-> El Multiple Matrix Regression with Randomization (MMRR) ajusta un modelo lineal sobre las valores vectorizadas de una respuesta y de diferentes matrices explicativas. La significancia de la relación con cada matriz se evalúa mediante permutaciones aleatorias de la matriz respuesta, lo que permite determinar si cada matrix "predicora" explica variación más allá de lo esperado por azar. En esencia, es similar a la prueba de Mantel, con la diferencia que son varías matrices explicativas.
 
 
 ### Evaluar si los patrones de variación morfología están asociada a la variación genética
