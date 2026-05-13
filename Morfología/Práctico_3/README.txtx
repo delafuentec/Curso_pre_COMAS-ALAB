@@ -1,1 +1,14 @@
-
+Este práctico consiste en el registro de puntos anatómicos (i.e., landmarks) en modelos 3D de mandíbulas de Gorilla (*PLY) con el fin de evaluar dimorfismo sexual
+5 individuos son masculinos (M), 5 son femeninos (F), y uno indeterminado 
+Modelos e información de sexo asociada disponibles en Morphosource: https://www.morphosource.org
+Gorilla-beringei-beringei-F-RG2258
+Gorilla-beringei-beringei-F-RG8607
+Gorilla-beringei-beringei-F-RMCA-2263
+Gorilla-beringei-beringei-M-NMNH-239883
+Gorilla-beringei-beringei-M-RG2257
+Gorilla-beringei-beringei-M-RG2260
+Gorilla-beringei-beringei-M-RG8608
+Gorilla-beringei-beringei-M-RG9405
+Gorilla-beringei-beringei-F-RMCA-27755
+Gorilla-beringei-beringei-F-RMCA-27756
+Gorilla-beringei-beringei-RG-17161
