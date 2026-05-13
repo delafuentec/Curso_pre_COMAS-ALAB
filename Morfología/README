@@ -1,1 +1,97 @@
+# PROGRAMA DEL MÓDULO DE MORFOMETRÍA
 
+## Contenidos teóricos
+
+### 1.	Introducción a la morfometría (60 minutos, Lumila Menéndez, María Clara López-Sosa)
+Morfometria
+Aplicaciones de estudios morfométricos en antropología biológica
+Equipamiento: calibre, microscribe, CTs medicas, microtomografias, escáner de superficie, fotogrametría.
+Tipos de datos: tipos de variables morfometría tradicional vs. geométrica, forma, forma total, tamanio.
+Bases de datos imagenológicas y morfométricas
+Análisis de datos: Distintos tipos de software (abiertos, gratuitos, cerrados, pagos) y principales análisis (GPA, PCA, MT: PCA; análisis más específicos para testear hipótesis)
+### 2.	Temática especial: tomografias (30 minutos, Jorge Cerna, Gabriela Esquina Arenas)
+
+## Cronograma de trabajo
+
+9:00 - 10:45	Introducción y presentación del módulo (60  minutos)
+Introducción tomografías computadas (30 minutos)
+Menéndez et al (2024) 
+Sardi (2017)
+Schaffer y Mitteroecker (2022)
+
+10:45 - 11:00	Receso	
+
+11:00 - 12:30	
+Práctico 1: base de datos de distancias, análisis estadísticos (70 minutos)
+Sardi (2017)
+Base de datos de Pucciarelli para Sudamérica (Paschetta et al 2017) (selección)
+Tutorial (documento): Tutorial prácticos de morfometría
+Programa: Past
+
+14:00 - 16:30
+Práctico 2: Segmentación de un diente de una mandíbula (95 minutos)
+Datos: mandíbula (disponible en link al drive “Práctico 2”)
+Tutorial (documento): Tutorial prácticos de morfometría
+Tutorial (texto): 3D Slicer documentation
+Tutorial (video): Introducción a la segmentación manual (práctico 2)
+Progama: Slicer
+
+16:00 - 18:00
+Práctico 3: modelos 3D, escaneos de superficie, digitalización de puntos, AGP, ACP (90 minutos)
+Datos: mandíbulas de Gorilla (disponible en link al drive “Práctico 3”)
+Tutorial (documento): Protocolo de landmarks para mandíbulas
+Tutorial (documento): Tutorial prácticos de morfometría
+Tutorial (texto): 3D Slicer documentation
+Tutorial (texto): Introducción al módulo de Markups (Landmarks; práctico 3)
+Tutorial (video): Landmarks y curvas sobre modelos
+Tutorial (texto): Modulo de AGP
+Progama: Slicer
+
+##Bases de datos para el desarrollo de los prácticos
+
+Práctico 1: Distancias tradicionales a partir de la la base de datos de Pucciarelli
+Base de datos completa: https://www.repositorio.cenpat-conicet.gob.ar/items/ae101106-df51-4115-b92b-3e1af01d88f4
+
+Práctico 2: Tomografía de mandíbula, segmentación de un diente (Morphosource)
+
+Práctico 3: Modelos 3D de mandíbulas de Gorilla (Morphosource)
+
+##Tutoriales para el desarrollo de los prácticos
+Tutorial prácticos de morfometría, desarrollado por docentes del curso: https://docs.google.com/document/d/1N0lhs6OBkFJReyy35WCrOjtmL007av6V/edit
+Protocolo de landmarks para mandíbulas, desarrollado por docentes del curso: 
+
+##Tutoriales Slicer
+3D Slicer documentation (descripción general; prácticos 2 y 3)
+https://slicer.readthedocs.io/en/5.8/
+
+Introducción a la segmentación manual (práctico 2)
+https://www.youtube.com/watch?v=ZRYMItzwg8g *
+https://www.youtube.com/watch?v=Dn3ANveKQXY 
+
+Introducción al módulo de Markups (Landmarks; práctico 3)
+https://github.com/SlicerMorph/Tutorials/blob/main/Markups_1/README.md
+https://slicer.readthedocs.io/en/5.8/user_guide/modules/markups.html
+
+Landmarks y curvas sobre modelos (práctico 3)
+https://www.youtube.com/watch?v=xrly9atx7xQ *
+
+Módulo de AGP (GPA-Generalized Procrustes Analysis; práctico 3)
+https://github.com/SlicerMorph/Tutorials/tree/main/GPA_1
+
+##Bibliografía obligatoria
+
+Menéndez LP, Quinto-Sánchez M, Rios C. (2024). Breve historia de la antropología virtual y sus aplicaciones al estudio de la variación humana. En: Quinto-Sánchez M, Menéndez LP (Eds), Antropología virtual. Innovación y aplicaciones tecnológicas para la identificación humana. Facultad de Medicina, UNAM, México. 
+Mitteroecker, P., & Schaefer, K. (2022). Thirty years of geometric morphometrics: Achievements, challenges, and the ongoing quest for biological meaningfulness. American journal of biological anthropology, 178, 181-210.
+Sardi, M. L. (2017). El método craneofuncional. En: Paschetta C, González-José R, Lanata L (Eds), De cómo cruzar fronteras en la ciencia: homenaje a Héctor Pucciarelli. Instituto Patagónico de Ciencias Sociales y Humanas e Instituto de Investigaciones en Diversidad Cultural y Procesos de Cambio, Argentina.
+
+##Bibliografía complementaria
+
+Adams, D. C., & Otárola‐Castillo, E. (2013). geomorph: an R package for the collection and analysis of geometric morphometric shape data. Methods in ecology and evolution, 4(4), 393-399.  https://doi.org/10.1111/2041-210X.12035
+Claude, J. (2008). Morphometrics with R. Springer Science & Business Media. https://link.springer.com/book/10.1007/978-0-387-77789-4
+Weber, G. W., & Bookstein, F. L. (2011). Virtual anthropology: a guide to a new interdisciplinary field (p. 423). Wien: Springer.
+Zelditch, M., Swiderski, D., & Sheets, H. D. (2012). Geometric morphometrics for biologists: a primer. academic press.
+
+##Más información de morfometría
+
+https://www.sbmorphometrics.org/
+https://github.com/SlicerMorph/Tutorials
